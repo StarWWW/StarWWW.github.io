@@ -87,9 +87,10 @@ supabaseAnonKey: 'eyJhbGciOi...',
    - Homepage URL: `https://starwww.github.io`
    - Authorization callback URL: `https://xxxxxxxx.supabase.co/auth/v1/callback`
 2. Oluşan **Client ID** ve yeni bir **Client secret**'ı Supabase → **Authentication → Sign In / Providers → GitHub**'a yapıştır, etkinleştir.
-3. Supabase → **Authentication → URL Configuration**:
+3. Supabase → **Authentication → URL Configuration** (bunu atlarsan GitHub'dan sonra `localhost:3000`'e düşersin — Site URL'nin varsayılan değeri o):
    - Site URL: `https://starwww.github.io`
    - Redirect URLs: `https://starwww.github.io/**` ve `http://localhost:8080/**`
+   - **Save**'e basmayı unutma.
 
 ### 5. Kendini yönetici yap
 Sitede terminali aç (<kbd>`</kbd>), `login` yaz, GitHub ile gir. "YETKİN YOK" ekranında sana özel bir SQL satırı çıkar:

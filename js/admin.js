@@ -45,10 +45,11 @@ export async function openAdmin() {
     document.documentElement.style.overflow = 'hidden';
     root.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdmin(); });
   }
+  const authError = readAuthError();
   const { data: { session } } = await sb.auth.getSession();
-  if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
+  cleanAuthUrl();
   user = session?.user || null;
-  if (!user) return renderLogin();
+  if (!user) return renderLogin(authError);
   const { data: adm } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
   if (!adm) return renderNotAdmin();
   renderShell();
@@ -72,7 +73,7 @@ export function closeAdmin() {
   root.remove();
   root = null;
   document.documentElement.style.overflow = '';
-  if (location.hash === '#admin') history.replaceState(null, '', location.pathname);
+  cleanAuthUrl();
   lastFocus?.focus?.();
 }
 
@@ -98,15 +99,35 @@ function wireTop() {
   root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; renderShell(); }));
 }
 
-function renderLogin() {
+// GitHub/Supabase dönüşündeki hata (?error_description=... ya da #error_description=...)
+function readAuthError() {
+  const params = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const msg = params.get('error_description') || hash.get('error_description');
+  return msg ? msg.replace(/\+/g, ' ') : null;
+}
+
+// Giriş dönüşünden kalan ?admin, ?code, #error... parçalarını adres çubuğundan temizler
+function cleanAuthUrl() {
+  const params = new URLSearchParams(location.search);
+  ['admin', 'code', 'error', 'error_code', 'error_description', 'state'].forEach((k) => params.delete(k));
+  const q = params.toString();
+  history.replaceState(null, '', `${location.pathname}${q ? `?${q}` : ''}`);
+}
+
+function renderLogin(authError) {
+  const back = `${location.origin}${location.pathname}`;
   root.innerHTML = `${topBar(false)}<div class="ad-login">
     <h2>${L('KİMSİN?', 'WHO ARE YOU?')}</h2>
     <p>${L('Bu oda sadece star\'a açık. GitHub hesabınla giriş yap.', 'This room is star-only. Sign in with your GitHub account.')}</p>
+    ${authError ? `<p class="ad-err" style="margin:0">${L('Giriş tamamlanamadı', 'Sign-in failed')}: ${esc(authError)}</p>` : ''}
     <button type="button" class="btn btn-acc" data-gh>${L('GITHUB İLE GİR', 'SIGN IN WITH GITHUB')} ↗</button>
+    <p class="px" style="font-size:10px;line-height:1.7;color:var(--grey)">${L('GitHub\'dan sonra localhost\'a ya da başka bir adrese düşüyorsan: Supabase → Authentication → URL Configuration → Redirect URLs listesine şunu ekle:', 'If GitHub sends you to localhost or another address: add this to Supabase → Authentication → URL Configuration → Redirect URLs:')}</p>
+    <code>${esc(back)}**</code>
   </div>`;
   wireTop();
   root.querySelector('[data-gh]').addEventListener('click', async () => {
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: `${location.origin}${location.pathname}#admin` } });
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: `${back}?admin` } });
     if (error) toast(error.message);
   });
   root.querySelector('[data-gh]').focus();

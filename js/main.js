@@ -142,7 +142,9 @@ function boot() {
   initWall();
   initGuestbook();
 
-  if (location.hash === '#admin' || new URLSearchParams(location.search).has('code')) openAdmin();
+  // GitHub girişinden dönüş: ?admin&code=... (ya da hata: ?error_description=... / #error_description=...)
+  const qs = new URLSearchParams(location.search);
+  if (location.hash === '#admin' || qs.has('admin') || qs.has('code') || /error_description=/.test(location.search + location.hash)) openAdmin();
   window.addEventListener('hashchange', () => { if (location.hash === '#admin') openAdmin(); });
 
   store.set('star.visits', (store.get('star.visits', 0) || 0) + 1);
