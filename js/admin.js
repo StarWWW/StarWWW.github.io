@@ -1,0 +1,594 @@
+// KONTROL ODASI — şarkı/oyun ekleme, yetenek puanlama, duvar ve defter moderasyonu.
+// Yazma yetkisini Supabase RLS korur (admins tablosu); bu sayfa sadece arayüz.
+import { CONFIG } from './config.js';
+import { getSupabase } from './supabase.js';
+import { esc, fmtDur, toast } from './util.js';
+import { getLang } from './i18n.js';
+import { pixelate, dominantColor, DB32 } from './pixelate.js';
+import { CATS } from './sections/skills.js';
+import { drawFull, weekStart, WALL_W, WALL_H } from './spray.js';
+
+const L = (tr, en) => (getLang() === 'en' ? en : tr);
+const STATUSES = ['oynuyorum', 'oynadım', 'bitirdim', 'bıraktım', 'favori'];
+const STATUS_EN = { oynuyorum: 'PLAYING', oynadım: 'PLAYED', bitirdim: 'FINISHED', bıraktım: 'DROPPED', favori: 'FAVORITE' };
+const CART_COLORS = ['#AC3232', '#DF7126', '#FBF236', '#99E550', '#6ABE30', '#5FCDE4', '#639BFF', '#3F3F74', '#D77BBA', '#76428A', '#222034', '#9BADB7'];
+
+let root = null;
+let sb = null;
+let user = null;
+let tab = 'music';
+let audio = null;
+let lastFocus = null;
+
+function loadCSS() {
+  if (document.querySelector('link[href="css/admin.css"]')) return Promise.resolve();
+  return new Promise((res) => {
+    const l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = 'css/admin.css';
+    l.onload = res; l.onerror = res;
+    document.head.append(l);
+  });
+}
+
+export async function openAdmin() {
+  sb = await getSupabase();
+  if (!sb) { toast(L('Supabase ayarlanmamış — js/config.js', 'Supabase is not configured — js/config.js')); return; }
+  await loadCSS();
+  if (!root) {
+    lastFocus = document.activeElement;
+    root = document.createElement('div');
+    root.className = 'ad';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-modal', 'true');
+    root.setAttribute('aria-label', L('Kontrol odası', 'Control room'));
+    document.body.append(root);
+    document.documentElement.style.overflow = 'hidden';
+    root.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdmin(); });
+  }
+  const { data: { session } } = await sb.auth.getSession();
+  if (location.search.includes('code=')) history.replaceState(null, '', location.pathname + location.hash);
+  user = session?.user || null;
+  if (!user) return renderLogin();
+  const { data: adm } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+  if (!adm) return renderNotAdmin();
+  renderShell();
+}
+
+// Yerel test için: sahte bir istemciyle paneli açar (?debug adresinde kullanılır)
+export async function __mount(client, fakeUser, startTab = 'music') {
+  sb = client; user = fakeUser; tab = startTab;
+  await loadCSS();
+  if (!root) {
+    root = document.createElement('div');
+    root.className = 'ad';
+    document.body.append(root);
+  }
+  renderShell();
+}
+
+export function closeAdmin() {
+  if (!root) return;
+  audio?.pause();
+  root.remove();
+  root = null;
+  document.documentElement.style.overflow = '';
+  if (location.hash === '#admin') history.replaceState(null, '', location.pathname);
+  lastFocus?.focus?.();
+}
+
+export async function logout() {
+  sb = sb || await getSupabase();
+  await sb?.auth.signOut();
+  closeAdmin();
+}
+
+function topBar(withTabs) {
+  const meta = user?.user_metadata || {};
+  const tabs = [['music', L('01 MÜZİK EKLE', '01 ADD MUSIC')], ['games', L('02 OYUN EKLE', '02 ADD GAMES')], ['skills', L('03 YETENEKLER', '03 SKILLS')], ['mod', L('04 DUVAR + DEFTER', '04 WALL + BOOK')]];
+  return `<header class="ad-top">
+    <div class="ad-brand"><b>${L('KONTROL ODASI', 'CONTROL ROOM')}</b><span>// ${L('SADECE STAR', 'STAR ONLY')}</span></div>
+    ${withTabs ? `<nav class="ad-tabs" role="tablist">${tabs.map(([k, n]) => `<button type="button" role="tab" aria-selected="${k === tab}" data-tab="${k}">${n}</button>`).join('')}</nav>` : ''}
+    <div class="ad-user">${user ? `${meta.avatar_url ? `<img src="${esc(meta.avatar_url)}" alt="">` : ''}<span>${L('GİRİLDİ', 'SIGNED IN')}<br><b>${esc(meta.user_name || meta.preferred_username || user.email || '')}</b></span><button type="button" class="ad-x" data-logout>${L('ÇIKIŞ', 'LOG OUT')}</button>` : ''}<button type="button" class="ad-x" data-close aria-label="${L('Kapat', 'Close')}">✕</button></div>
+  </header>`;
+}
+
+function wireTop() {
+  root.querySelector('[data-close]')?.addEventListener('click', closeAdmin);
+  root.querySelector('[data-logout]')?.addEventListener('click', logout);
+  root.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { tab = b.dataset.tab; renderShell(); }));
+}
+
+function renderLogin() {
+  root.innerHTML = `${topBar(false)}<div class="ad-login">
+    <h2>${L('KİMSİN?', 'WHO ARE YOU?')}</h2>
+    <p>${L('Bu oda sadece star\'a açık. GitHub hesabınla giriş yap.', 'This room is star-only. Sign in with your GitHub account.')}</p>
+    <button type="button" class="btn btn-acc" data-gh>${L('GITHUB İLE GİR', 'SIGN IN WITH GITHUB')} ↗</button>
+  </div>`;
+  wireTop();
+  root.querySelector('[data-gh]').addEventListener('click', async () => {
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: `${location.origin}${location.pathname}#admin` } });
+    if (error) toast(error.message);
+  });
+  root.querySelector('[data-gh]').focus();
+}
+
+function renderNotAdmin() {
+  root.innerHTML = `${topBar(false)}<div class="ad-login">
+    <h2>${L('YETKİN YOK', 'NO ACCESS')}</h2>
+    <p>${L('Giriş yaptın ama bu hesap yönetici listesinde değil. Sen star isen, aşağıdaki kimliği README\'deki SQL komutuyla admins tablosuna ekle:', 'You are signed in, but this account is not an admin. If you are star, add the id below to the admins table with the SQL command from the README:')}</p>
+    <code>insert into public.admins (user_id) values ('${esc(user.id)}');</code>
+  </div>`;
+  wireTop();
+}
+
+function renderShell() {
+  audio?.pause();
+  root.innerHTML = `${topBar(true)}<div class="ad-body" id="adBody"></div>`;
+  wireTop();
+  const body = root.querySelector('#adBody');
+  ({ music: musicTab, games: gamesTab, skills: skillsTab, mod: modTab })[tab](body);
+  root.querySelector(`[data-tab="${tab}"]`)?.focus();
+}
+
+const artImg = (url, wide = false) => `<div class="ad-art${wide ? ' wide' : ''}"><img alt="" data-px="${esc(url || '')}" data-wide="${wide ? 1 : ''}"></div>`;
+function hydrateArt(scope) {
+  scope.querySelectorAll('img[data-px]').forEach((im) => {
+    if (!im.dataset.px) return;
+    const p = im.dataset.wide ? pixelate(im.dataset.px, 48, 22) : pixelate(im.dataset.px, 32);
+    p.then((src) => { if (src) im.src = src; });
+  });
+}
+
+function playPreview(url, btn) {
+  if (!url) return;
+  audio = audio || new Audio();
+  if (audio.src === url && !audio.paused) { audio.pause(); btn.textContent = '▶'; return; }
+  root.querySelectorAll('[data-pv]').forEach((b) => { b.textContent = '▶'; });
+  audio.src = url; audio.volume = 0.6;
+  audio.play().catch(() => {});
+  btn.textContent = '❚❚';
+  audio.onended = () => { btn.textContent = '▶'; };
+}
+
+// ---------------- MÜZİK ----------------
+async function musicTab(body) {
+  body.innerHTML = `<div class="ad-grid">
+    <section class="ad-card">
+      <div class="ad-card-h"><b>01 — ${L('ŞARKI ARA', 'SEARCH SONGS')}</b><span>${L('KAYNAK: ITUNES · ANAHTARSIZ', 'SOURCE: ITUNES · NO KEY')}</span></div>
+      <form class="ad-search" id="mSearch"><label class="sr" for="mQ">${L('Şarkı ara', 'Search songs')}</label><input id="mQ" placeholder="megalovania, travelers..." autocomplete="off"><button class="btn btn-acc">${L('ARA', 'SEARCH')} ↵</button></form>
+      <div class="ad-meta" id="mMeta"></div>
+      <ul class="ad-list" id="mRes"></ul>
+      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · 30 SN ÖNİZLEME · APPLE MUSIC LİNKİ', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · 30 SEC PREVIEW · APPLE MUSIC LINK')}</div>
+    </section>
+    <section class="ad-card">
+      <div class="ad-card-h"><b>${L('KİTAPLIK', 'LIBRARY')}</b><span id="mCount"></span></div>
+      <ul class="ad-list" id="mLib"></ul>
+    </section>
+  </div>`;
+  let lib = [];
+  const libIds = () => new Set(lib.map((t) => Number(t.itunes_id)));
+
+  async function loadLib() {
+    const { data, error } = await sb.from('tracks').select('*').order('sort', { ascending: true }).order('created_at', { ascending: true });
+    if (error) { body.querySelector('#mLib').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
+    lib = data;
+    body.querySelector('#mCount').textContent = `${lib.length} ${L('PARÇA', 'TRACKS')}`;
+    body.querySelector('#mLib').innerHTML = lib.length ? lib.map((t, i) => `<li class="ad-row" data-id="${t.id}">
+      ${artImg(t.artwork_url)}<div><div class="ad-t">${esc(t.title)}</div><div class="ad-s">${esc(t.artist)} · ${esc(t.album || '')}</div></div>
+      <span class="ad-d">${fmtDur(t.duration_ms)}</span>
+      <div class="ad-acts"><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
+      : `<li class="ad-empty">${L('Kitaplık boş. Soldan şarkı ara ve ekle.', 'Library is empty. Search and add songs on the left.')}</li>`;
+    hydrateArt(body.querySelector('#mLib'));
+  }
+
+  body.querySelector('#mLib').addEventListener('click', async (e) => {
+    const row = e.target.closest('[data-id]'); if (!row) return;
+    const i = lib.findIndex((t) => String(t.id) === row.dataset.id);
+    if (e.target.closest('[data-del]')) {
+      if (!confirm(L(`"${lib[i].title}" silinsin mi?`, `Delete "${lib[i].title}"?`))) return;
+      await sb.from('tracks').delete().eq('id', lib[i].id);
+      return loadLib();
+    }
+    const j = e.target.closest('[data-up]') ? i - 1 : e.target.closest('[data-down]') ? i + 1 : -1;
+    if (j < 0 || j >= lib.length) return;
+    const order = lib.map((t) => t.id);
+    [order[i], order[j]] = [order[j], order[i]];
+    await Promise.all(order.map((id, k) => sb.from('tracks').update({ sort: k }).eq('id', id)));
+    loadLib();
+  });
+
+  let results = [];
+  body.querySelector('#mSearch').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = body.querySelector('#mQ').value.trim();
+    if (!q) return;
+    const meta = body.querySelector('#mMeta');
+    meta.textContent = L('aranıyor...', 'searching...');
+    const t0 = performance.now();
+    try {
+      const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ term: q, entity: 'song', limit: '25', country: 'TR' })}`);
+      results = (await r.json()).results || [];
+    } catch (err) { meta.textContent = String(err); return; }
+    meta.textContent = `${results.length} ${L('SONUÇ', 'RESULTS')} · ${((performance.now() - t0) / 1000).toFixed(1)} ${L('SN', 'S')}`;
+    renderResults();
+  });
+
+  function renderResults() {
+    const have = libIds();
+    const ul = body.querySelector('#mRes');
+    ul.innerHTML = results.map((r, i) => `<li class="ad-row" data-i="${i}">
+      ${artImg(r.artworkUrl100)}<div><div class="ad-t">${esc(r.trackName)}</div><div class="ad-s">${esc(r.artistName)} · ${esc(r.collectionName || '')} · ${esc((r.releaseDate || '').slice(0, 4))} · ${esc(r.primaryGenreName || '')}</div></div>
+      <span class="ad-d">${fmtDur(r.trackTimeMillis)}</span>
+      <div class="ad-acts">${r.previewUrl ? `<button type="button" data-pv aria-label="${L('Önizle', 'Preview')}">▶</button>` : ''}${have.has(r.trackId) ? `<button type="button" class="ok" disabled>✓ ${L('EKLİ', 'ADDED')}</button>` : `<button type="button" class="add" data-add>+ ${L('EKLE', 'ADD')}</button>`}</div></li>`).join('') || `<li class="ad-empty">${L('Sonuç yok.', 'No results.')}</li>`;
+    hydrateArt(ul);
+  }
+
+  body.querySelector('#mRes').addEventListener('click', async (e) => {
+    const row = e.target.closest('[data-i]'); if (!row) return;
+    const r = results[Number(row.dataset.i)];
+    if (e.target.closest('[data-pv]')) return playPreview(r.previewUrl, e.target.closest('[data-pv]'));
+    const btn = e.target.closest('[data-add]'); if (!btn) return;
+    btn.disabled = true;
+    const store = (r.trackViewUrl || '').split('&')[0];
+    const { error } = await sb.from('tracks').insert({
+      itunes_id: r.trackId, title: r.trackName, artist: r.artistName, album: r.collectionName,
+      track_number: r.trackNumber, track_count: r.trackCount, year: r.releaseDate ? Number(r.releaseDate.slice(0, 4)) : null,
+      genre: r.primaryGenreName, duration_ms: r.trackTimeMillis,
+      artwork_url: (r.artworkUrl100 || '').replace('100x100bb', '600x600bb'), preview_url: r.previewUrl || '', store_url: store,
+      sort: lib.length,
+    });
+    if (error) { toast(error.message); btn.disabled = false; return; }
+    toast(L(`Eklendi: ${r.trackName}`, `Added: ${r.trackName}`));
+    await loadLib();
+    renderResults();
+  });
+
+  await loadLib();
+  body.querySelector('#mQ').focus();
+}
+
+// ---------------- OYUNLAR ----------------
+async function gamesTab(body) {
+  body.innerHTML = `<div class="ad-grid">
+    <section class="ad-card">
+      <div class="ad-card-h"><b>02 — ${L('OYUN ARA', 'SEARCH GAMES')}</b><span>${L('KAYNAK: RAWG + STEAM', 'SOURCE: RAWG + STEAM')}</span></div>
+      <form class="ad-search" id="gSearch"><label class="sr" for="gQ">${L('Oyun ara', 'Search games')}</label><input id="gQ" placeholder="ultrakill, outer wilds..." autocomplete="off"><button class="btn btn-acc">${L('ARA', 'SEARCH')} ↵</button></form>
+      <div class="ad-meta" id="gMeta"></div>
+      <ul class="ad-list" id="gRes" style="max-height:320px"></ul>
+      <div id="gPrev"></div>
+    </section>
+    <section class="ad-card">
+      <div class="ad-card-h"><b>${L('RAF', 'SHELF')}</b><span id="gCount"></span></div>
+      <ul class="ad-list" id="gLib"></ul>
+    </section>
+  </div>`;
+  let shelf = [];
+  let results = [];
+
+  async function loadShelf() {
+    const { data, error } = await sb.from('games').select('*').order('sort', { ascending: true }).order('created_at', { ascending: true });
+    if (error) { body.querySelector('#gLib').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
+    shelf = data;
+    body.querySelector('#gCount').textContent = `${shelf.length} ${L('OYUN', 'GAMES')}`;
+    body.querySelector('#gLib').innerHTML = shelf.length ? shelf.map((g, i) => `<li class="ad-row" data-id="${g.id}" style="grid-template-columns:44px minmax(0,1fr) auto">
+      ${artImg(g.cover_url, true)}
+      <div><div class="ad-t">${esc(g.name)} ${g.now_playing ? `<span class="px" style="font-size:9px;background:var(--acid);padding:2px 5px">${L('ŞU AN', 'NOW')}</span>` : ''}</div>
+      <div class="ad-s"><select data-status style="font-family:var(--f-px);font-size:10px;border:2px solid var(--ink);padding:2px">${STATUSES.map((s) => `<option value="${s}" ${s === g.status ? 'selected' : ''}>${getLang() === 'en' ? STATUS_EN[s] : s.toUpperCase()}</option>`).join('')}</select>
+      <label style="font-family:var(--f-px);font-size:9px;margin-left:8px"><input type="checkbox" data-now ${g.now_playing ? 'checked' : ''}> ${L('ŞU AN', 'NOW')}</label></div></div>
+      <div class="ad-acts"><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === shelf.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
+      : `<li class="ad-empty">${L('Raf boş. Soldan oyun ara ve ekle.', 'Shelf is empty. Search and add games on the left.')}</li>`;
+    hydrateArt(body.querySelector('#gLib'));
+  }
+
+  const lib = body.querySelector('#gLib');
+  lib.addEventListener('click', async (e) => {
+    const row = e.target.closest('[data-id]'); if (!row) return;
+    const i = shelf.findIndex((g) => String(g.id) === row.dataset.id);
+    if (e.target.closest('[data-del]')) {
+      if (!confirm(L(`"${shelf[i].name}" raftan kaldırılsın mı?`, `Remove "${shelf[i].name}" from the shelf?`))) return;
+      await sb.from('games').delete().eq('id', shelf[i].id);
+      return loadShelf();
+    }
+    const j = e.target.closest('[data-up]') ? i - 1 : e.target.closest('[data-down]') ? i + 1 : -1;
+    if (j < 0 || j >= shelf.length) return;
+    const order = shelf.map((g) => g.id);
+    [order[i], order[j]] = [order[j], order[i]];
+    await Promise.all(order.map((id, k) => sb.from('games').update({ sort: k }).eq('id', id)));
+    loadShelf();
+  });
+  lib.addEventListener('change', async (e) => {
+    const row = e.target.closest('[data-id]'); if (!row) return;
+    const id = Number(row.dataset.id) || row.dataset.id;
+    if (e.target.matches('[data-status]')) await sb.from('games').update({ status: e.target.value }).eq('id', id);
+    if (e.target.matches('[data-now]')) {
+      if (e.target.checked) await sb.from('games').update({ now_playing: false }).neq('id', id);
+      await sb.from('games').update({ now_playing: e.target.checked }).eq('id', id);
+    }
+    toast(L('Kaydedildi', 'Saved'));
+    loadShelf();
+  });
+
+  async function invoke(payload) {
+    const { data, error } = await sb.functions.invoke(CONFIG.gameSearchFn, { body: payload });
+    if (error) throw error;
+    return data;
+  }
+
+  body.querySelector('#gSearch').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const q = body.querySelector('#gQ').value.trim();
+    if (!q) return;
+    const meta = body.querySelector('#gMeta');
+    meta.textContent = L('aranıyor...', 'searching...');
+    try {
+      results = (await invoke({ q })).results || [];
+    } catch (err) {
+      meta.textContent = '';
+      body.querySelector('#gRes').innerHTML = `<li class="ad-err">${L('Oyun araması çalışmadı. "game-search" Edge Function\'ı kurulu mu ve RAWG_KEY tanımlı mı? (README → Adım 6)', 'Game search failed. Is the "game-search" Edge Function deployed with RAWG_KEY set? (README → Step 6)')}<br>${esc(err.message || err)}</li>`;
+      return;
+    }
+    meta.textContent = `${results.length} ${L('SONUÇ', 'RESULTS')}`;
+    body.querySelector('#gRes').innerHTML = results.map((r, i) => `<li class="ad-row" data-i="${i}" style="grid-template-columns:44px minmax(0,1fr) auto">
+      ${artImg(r.cover, true)}<div><div class="ad-t">${esc(r.name)}</div><div class="ad-s">${esc((r.released || '').slice(0, 4))} · ${esc((r.platforms || []).slice(0, 3).join(', '))}</div></div>
+      <div class="ad-acts"><button type="button" class="add" data-pick>${L('SEÇ', 'PICK')}</button></div></li>`).join('') || `<li class="ad-empty">${L('Sonuç yok.', 'No results.')}</li>`;
+    hydrateArt(body.querySelector('#gRes'));
+  });
+
+  body.querySelector('#gRes').addEventListener('click', async (e) => {
+    const row = e.target.closest('[data-i]'); if (!row) return;
+    body.querySelectorAll('#gRes .ad-row').forEach((r) => r.classList.toggle('sel', r === row));
+    const r = results[Number(row.dataset.i)];
+    const prev = body.querySelector('#gPrev');
+    prev.innerHTML = `<div class="ad-meta">${L('detaylar çekiliyor...', 'fetching details...')}</div>`;
+    let d;
+    try { d = await invoke({ id: r.id }); } catch (err) { prev.innerHTML = `<div class="ad-err">${esc(err.message || err)}</div>`; return; }
+    const color = await dominantColor(d.cover_url, '#AC3232');
+    renderPreview(d, color);
+  });
+
+  function renderPreview(d, color) {
+    const prev = body.querySelector('#gPrev');
+    let status = 'oynadım';
+    let col = CART_COLORS.includes(color) ? color : (DB32.includes(color) ? color : '#AC3232');
+    const field = (k, label, val) => `<label for="gf-${k}">${label}</label><input id="gf-${k}" data-f="${k}" value="${esc(val ?? '')}">`;
+    prev.innerHTML = `<div class="ad-prev">
+      <div class="px" style="font-size:11px;color:var(--grey)">${L('RAFA BÖYLE GİRECEK — ALANLARI DÜZELTEBİLİRSİN', 'THIS GOES ON THE SHELF — YOU CAN EDIT THE FIELDS')}</div>
+      <div class="ad-prev-top">
+        <div class="ad-prev-cover"><img alt="" id="gpCover"></div>
+        <div class="ad-fields">
+          ${field('name', L('AD', 'NAME'), d.name)}
+          ${field('developers', L('GELİŞTİRİCİ', 'DEVELOPER'), (d.developers || []).join(', '))}
+          ${field('publishers', L('YAYINCI', 'PUBLISHER'), (d.publishers || []).join(', '))}
+          ${field('released', L('ÇIKIŞ', 'RELEASED'), d.released)}
+          ${field('genres', L('TÜR', 'GENRE'), (d.genres || []).join(', '))}
+          ${field('platforms', 'PLATFORM', (d.platforms || []).join(', '))}
+          ${field('metacritic', 'METACRITIC', d.metacritic)}
+        </div>
+      </div>
+      <div class="ad-seg" role="radiogroup" aria-label="${L('Durum', 'Status')}">${STATUSES.map((s) => `<button type="button" role="radio" aria-checked="${s === status}" data-st="${s}">${getLang() === 'en' ? STATUS_EN[s] : s.toUpperCase()}</button>`).join('')}</div>
+      <div class="ad-line"><span>${L('KARTUŞ RENGİ', 'CARTRIDGE COLOR')}</span><div class="ad-sw" role="radiogroup">${CART_COLORS.map((c) => `<button type="button" role="radio" aria-checked="${c === col}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div>
+        <label><input type="checkbox" id="gNow"> ${L('"ŞU AN" ROZETİ', '"NOW" BADGE')}</label></div>
+      <div class="ad-line"><textarea id="gNote" rows="2" maxlength="160" placeholder="${L('notun (isteğe bağlı)', 'your note (optional)')}"></textarea></div>
+      <button type="button" class="btn btn-or" id="gAdd">${L('RAFA KOY', 'PUT ON SHELF')} ↘</button>
+    </div>`;
+    if (d.cover_url) pixelate(d.cover_url, 64, 30).then((src) => { const im = prev.querySelector('#gpCover'); if (im && src) im.src = src; });
+    prev.querySelector('.ad-seg').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-st]'); if (!b) return;
+      status = b.dataset.st;
+      prev.querySelectorAll('[data-st]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+      if (status === 'oynuyorum') prev.querySelector('#gNow').checked = true;
+    });
+    prev.querySelector('.ad-sw').addEventListener('click', (e) => {
+      const b = e.target.closest('[data-c]'); if (!b) return;
+      col = b.dataset.c;
+      prev.querySelectorAll('[data-c]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+    });
+    prev.querySelector('#gAdd').addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      const f = (k) => prev.querySelector(`[data-f="${k}"]`).value.trim();
+      const arr = (k) => f(k).split(',').map((s) => s.trim()).filter(Boolean);
+      const now = prev.querySelector('#gNow').checked;
+      if (now) await sb.from('games').update({ now_playing: false }).eq('now_playing', true);
+      const { error } = await sb.from('games').insert({
+        name: f('name'), developers: arr('developers'), publishers: arr('publishers'), released: f('released') || null,
+        genres: arr('genres'), platforms: arr('platforms'), metacritic: Number(f('metacritic')) || null,
+        cover_url: d.cover_url || '', store_url: d.store_url || '', steam_appid: d.steam_appid || null, rawg_id: d.rawg_id || null,
+        color: col, status, now_playing: now, note: prev.querySelector('#gNote').value.trim(), sort: shelf.length,
+      });
+      if (error) { toast(error.message); btn.disabled = false; return; }
+      toast(L(`Rafa kondu: ${f('name')}`, `On the shelf: ${f('name')}`));
+      prev.innerHTML = '';
+      loadShelf();
+    });
+  }
+
+  await loadShelf();
+  body.querySelector('#gQ').focus();
+}
+
+// ---------------- YETENEKLER ----------------
+async function skillsTab(body) {
+  body.innerHTML = `<section class="ad-card">
+    <div class="ad-card-h"><b>03 — ${L('YETENEKLER', 'SKILLS')}</b><span id="sCount"></span></div>
+    <div class="ad-sk" id="sList"></div>
+    <form class="ad-sk-add" id="sAdd">
+      <label class="sr" for="sName">${L('Yeni öğe', 'New item')}</label><input id="sName" placeholder="${L('yeni öğe adı', 'new item name')}" maxlength="40">
+      <label class="sr" for="sCat">${L('Kategori', 'Category')}</label><select id="sCat">${CATS.map(([k]) => `<option value="${k}">${k.toUpperCase()}</option>`).join('')}</select>
+      <button class="btn">+ ${L('EKLE', 'ADD')}</button>
+      <button type="button" class="btn btn-acc" id="sSave" style="margin-left:auto">${L('KAYDET', 'SAVE')}</button>
+    </form>
+    <div class="ad-foot">${L('PUANI 0 OLAN ÖĞE SİTEDE GÖRÜNMEZ. TURUNCU = KAYDEDİLMEMİŞ.', 'ITEMS RATED 0 ARE HIDDEN ON THE SITE. ORANGE = UNSAVED.')}</div>
+  </section>`;
+  let skills = [];
+  const dirty = new Map();
+
+  async function load() {
+    const { data, error } = await sb.from('skills').select('*').order('sort', { ascending: true }).order('name', { ascending: true });
+    if (error) { body.querySelector('#sList').innerHTML = `<div class="ad-err">${esc(error.message)}</div>`; return; }
+    skills = data;
+    if (!skills.length) {
+      body.querySelector('#sList').innerHTML = `<div class="ad-empty">${L('Tablo boş.', 'Table is empty.')} <button type="button" class="btn" id="sSeed">${L('HAZIR LİSTEYİ YÜKLE (43 ÖĞE)', 'LOAD THE STARTER LIST (43 ITEMS)')}</button></div>`;
+      body.querySelector('#sSeed').addEventListener('click', async () => {
+        const seed = await (await fetch('data/skills.json')).json();
+        const { error: e2 } = await sb.from('skills').insert(seed.map((s, i) => ({ ...s, sort: i })));
+        if (e2) toast(e2.message); else load();
+      });
+      return;
+    }
+    render();
+  }
+
+  function render() {
+    const rated = skills.filter((s) => (dirty.get(s.id) ?? s.level) > 0).length;
+    body.querySelector('#sCount').textContent = `${skills.length} ${L('ÖĞE', 'ITEMS')} · ${rated} ${L('PUANLANDI', 'RATED')}`;
+    body.querySelector('#sList').innerHTML = CATS.map(([k]) => {
+      const items = skills.filter((s) => s.category === k);
+      if (!items.length) return '';
+      return `<h4>${k.toUpperCase()}</h4>${items.map((s) => {
+        const v = dirty.get(s.id) ?? s.level;
+        return `<div class="ad-sk-row${dirty.has(s.id) ? ' dirty' : ''}" data-id="${s.id}"><span id="skn-${s.id}">${esc(s.name)}</span><input type="range" min="0" max="10" value="${v}" aria-labelledby="skn-${s.id}"><output>${v ? `LV ${v}` : '—'}</output><button type="button" data-del aria-label="${L('Sil', 'Delete')}: ${esc(s.name)}">✕</button></div>`;
+      }).join('')}`;
+    }).join('');
+  }
+
+  body.querySelector('#sList').addEventListener('input', (e) => {
+    if (!e.target.matches('input[type="range"]')) return;
+    const row = e.target.closest('[data-id]');
+    const id = Number(row.dataset.id);
+    const v = Number(e.target.value);
+    dirty.set(id, v);
+    row.classList.add('dirty');
+    row.querySelector('output').textContent = v ? `LV ${v}` : '—';
+  });
+  body.querySelector('#sList').addEventListener('click', async (e) => {
+    if (!e.target.closest('[data-del]')) return;
+    const id = Number(e.target.closest('[data-id]').dataset.id);
+    const s = skills.find((x) => x.id === id);
+    if (!confirm(L(`"${s.name}" silinsin mi?`, `Delete "${s.name}"?`))) return;
+    await sb.from('skills').delete().eq('id', id);
+    dirty.delete(id);
+    load();
+  });
+  body.querySelector('#sAdd').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = body.querySelector('#sName').value.trim();
+    if (!name) return;
+    const { error } = await sb.from('skills').insert({ name, category: body.querySelector('#sCat').value, level: 0, sort: skills.length });
+    if (error) { toast(error.message); return; }
+    body.querySelector('#sName').value = '';
+    load();
+  });
+  body.querySelector('#sSave').addEventListener('click', async () => {
+    if (!dirty.size) { toast(L('Değişiklik yok', 'No changes')); return; }
+    const results = await Promise.all([...dirty].map(([id, level]) => sb.from('skills').update({ level }).eq('id', id)));
+    const err = results.find((r) => r.error);
+    if (err) { toast(err.error.message); return; }
+    toast(L(`${dirty.size} öğe kaydedildi`, `${dirty.size} items saved`));
+    dirty.clear();
+    load();
+  });
+
+  await load();
+}
+
+// ---------------- MODERASYON ----------------
+async function modTab(body) {
+  body.innerHTML = `<div class="ad-grid">
+    <section class="ad-card">
+      <div class="ad-card-h"><b>04 — ${L('DUVAR', 'WALL')}</b><span id="wCount"></span></div>
+      <div class="ad-wall"><canvas id="wCv" width="${WALL_W / 2}" height="${WALL_H / 2}" aria-label="${L('Duvar önizlemesi — silmek için bir çizgiye tıkla', 'Wall preview — click a stroke to select it')}"></canvas></div>
+      <div class="ad-btns">
+        <button type="button" class="btn danger" id="wDelSel" disabled>${L('SEÇİLİYİ SİL', 'DELETE SELECTED')}</button>
+        <button type="button" class="btn" id="wUndo">${L('SON 10 ÇİZGİYİ SİL', 'DELETE LAST 10')}</button>
+        <button type="button" class="btn buff" id="wBuff">${L('ŞİMDİ BUFF\'LA', 'BUFF NOW')}</button>
+      </div>
+    </section>
+    <section class="ad-card">
+      <div class="ad-card-h"><b>${L('DEFTER', 'GUESTBOOK')}</b><span id="bCount"></span></div>
+      <ul class="ad-list" id="bList"></ul>
+      <div class="ad-card-h" style="border-top:4px solid var(--ink)"><b>${L('SKOR TABLOSU', 'LEADERBOARD')}</b><span>TOP 20</span></div>
+      <ul class="ad-list" id="scList"></ul>
+    </section>
+  </div>`;
+  const cv = body.querySelector('#wCv');
+  const ctx = cv.getContext('2d');
+  let strokes = [];
+  let sel = null;
+
+  async function loadWall() {
+    const { data: buff } = await sb.from('wall_buffs').select('at').order('at', { ascending: false }).limit(1);
+    const from = new Date(Math.max(weekStart(), buff?.[0]?.at ? Date.parse(buff[0].at) : 0)).toISOString();
+    const { data, error } = await sb.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', from).order('created_at', { ascending: true }).limit(5000);
+    if (error) { toast(error.message); return; }
+    strokes = data;
+    sel = null;
+    body.querySelector('#wDelSel').disabled = true;
+    body.querySelector('#wCount').textContent = `${strokes.length} ${L('ÇİZGİ', 'STROKES')}`;
+    draw();
+  }
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    strokes.forEach((s) => drawFull(ctx, s, 0.5));
+    if (sel) {
+      ctx.strokeStyle = '#AC3232'; ctx.lineWidth = 3; ctx.setLineDash([6, 4]);
+      const xs = sel.points.map((p) => p[0] * cv.width); const ys = sel.points.map((p) => p[1] * cv.height);
+      const pad = sel.size / 2 + 6;
+      ctx.strokeRect(Math.min(...xs) - pad, Math.min(...ys) - pad, Math.max(...xs) - Math.min(...xs) + pad * 2, Math.max(...ys) - Math.min(...ys) + pad * 2);
+      ctx.setLineDash([]);
+    }
+  }
+  cv.addEventListener('click', (e) => {
+    const r = cv.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width; const y = (e.clientY - r.top) / r.height;
+    let best = null; let bd = 0.03;
+    for (let i = strokes.length - 1; i >= 0; i--) {
+      for (const p of strokes[i].points) {
+        const d = Math.hypot(p[0] - x, (p[1] - y) / 2);
+        if (d < bd) { bd = d; best = strokes[i]; }
+      }
+    }
+    sel = best;
+    body.querySelector('#wDelSel').disabled = !sel;
+    draw();
+  });
+  body.querySelector('#wDelSel').addEventListener('click', async () => {
+    if (!sel) return;
+    await sb.from('wall_strokes').delete().eq('id', sel.id);
+    loadWall();
+  });
+  body.querySelector('#wUndo').addEventListener('click', async () => {
+    const ids = strokes.slice(-10).map((s) => s.id);
+    if (!ids.length || !confirm(L(`Son ${ids.length} çizgi silinsin mi?`, `Delete the last ${ids.length} strokes?`))) return;
+    await sb.from('wall_strokes').delete().in('id', ids);
+    loadWall();
+  });
+  body.querySelector('#wBuff').addEventListener('click', async () => {
+    if (!confirm(L('Duvar şimdi temizlensin mi? (çizgiler arşivde kalır)', 'Wipe the wall now? (strokes stay in the archive)'))) return;
+    const { error } = await sb.from('wall_buffs').insert({});
+    if (error) toast(error.message); else { toast(L('Duvar buff\'landı', 'Wall buffed')); loadWall(); }
+  });
+
+  async function loadBook() {
+    const { data, count } = await sb.from('guestbook').select('id,name,message,created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(40);
+    body.querySelector('#bCount').textContent = `${count ?? 0} ${L('NOT', 'NOTES')}`;
+    body.querySelector('#bList').innerHTML = (data || []).map((n) => `<li class="ad-row" data-id="${esc(n.id)}" style="grid-template-columns:minmax(0,1fr) auto"><div><div class="ad-t" style="font-family:var(--f-hand);font-size:22px;font-weight:700">${esc(n.message)}</div><div class="ad-s">${esc(n.name)} · ${new Date(n.created_at).toLocaleString(getLang() === 'en' ? 'en-GB' : 'tr-TR')}</div></div><div class="ad-acts"><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('') || `<li class="ad-empty">${L('Defter boş.', 'Guestbook is empty.')}</li>`;
+  }
+  body.querySelector('#bList').addEventListener('click', async (e) => {
+    if (!e.target.closest('[data-del]')) return;
+    await sb.from('guestbook').delete().eq('id', e.target.closest('[data-id]').dataset.id);
+    loadBook();
+  });
+
+  async function loadScores() {
+    const { data } = await sb.from('scores').select('id,name,score,rank,created_at').order('score', { ascending: false }).limit(20);
+    body.querySelector('#scList').innerHTML = (data || []).map((s, i) => `<li class="ad-row" data-id="${s.id}" style="grid-template-columns:40px minmax(0,1fr) auto"><span class="ad-d">${i + 1}</span><div><div class="ad-t">${esc(s.name)} · ${esc(s.rank)}</div><div class="ad-s">${Number(s.score).toLocaleString('tr-TR')}</div></div><div class="ad-acts"><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('') || `<li class="ad-empty">${L('Henüz skor yok.', 'No scores yet.')}</li>`;
+  }
+  body.querySelector('#scList').addEventListener('click', async (e) => {
+    if (!e.target.closest('[data-del]')) return;
+    await sb.from('scores').delete().eq('id', e.target.closest('[data-id]').dataset.id);
+    loadScores();
+  });
+
+  await Promise.all([loadWall(), loadBook(), loadScores()]);
+}

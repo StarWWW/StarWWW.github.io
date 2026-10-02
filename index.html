@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="tr" data-mode="real">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>STAR — dijital oda</title>
+<meta name="description" content="star'ın dijital odası: 21 yaşında bilgisayar mühendisliği öğrencisi, UltraTurk'ün baş geliştiricisi. Duvara sprey sık, terminali kurcala, sayfayı yok et.">
+<meta name="theme-color" content="#222034">
+<meta property="og:title" content="STAR — dijital oda">
+<meta property="og:description" content="Oyna. Çevir. Kodla. Tekrarla.">
+<meta property="og:image" content="assets/avatar-real.png">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Caveat:wght@500;700&family=Rubik+Glitch&family=Rubik+Wet+Paint&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  try {
+    if (localStorage.getItem('star.mode') === 'drug') document.documentElement.dataset.mode = 'drug';
+    if (localStorage.getItem('star.lang') === 'en') document.documentElement.lang = 'en';
+  } catch (e) {}
+</script>
+<script type="module" src="js/main.js"></script>
+</head>
+<body>
+<a class="skip" href="#oda" data-i18n="skip">İçeriğe geç</a>
+<div class="frame">
+
+<header class="topbar">
+  <a class="logo" href="#top"><span class="spr" data-sprite="star" data-scale="3"></span><span>STAR<span class="logo-sfx">//ODA</span></span></a>
+  <nav class="nav" aria-label="Bölümler" data-i18n-attr="aria-label:nav.label">
+    <a href="#oda" data-i18n="nav.oda">01 ODA</a>
+    <a href="#projeler" data-i18n="nav.projeler">02 PROJELER</a>
+    <a href="#envanter" data-i18n="nav.envanter">03 ENVANTER</a>
+    <a href="#raf" data-i18n="nav.raf">04 OYUN RAFI</a>
+    <a href="#muzik" data-i18n="nav.muzik">05 MÜZİK</a>
+    <a href="#duvar" data-i18n="nav.duvar">06 DUVAR</a>
+  </nav>
+  <div class="top-ctrl">
+    <div class="lang" role="group" aria-label="Dil / Language">
+      <button type="button" data-lang="tr" aria-pressed="true">TR</button>
+      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+    </div>
+    <button type="button" class="pill" id="modeToggle" aria-pressed="false" aria-label="Modu değiştir: REAL / DRUG" data-i18n-attr="aria-label:mode.label">
+      <span class="pill-real">REAL</span><span class="pill-drug">DRUG</span>
+    </button>
+    <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mobileNav" aria-label="Menü" data-i18n-attr="aria-label:nav.menu">≡</button>
+  </div>
+</header>
+<nav class="mobile-nav" id="mobileNav" aria-label="Bölümler" hidden>
+  <a href="#oda" data-i18n="nav.oda">01 ODA</a>
+  <a href="#projeler" data-i18n="nav.projeler">02 PROJELER</a>
+  <a href="#envanter" data-i18n="nav.envanter">03 ENVANTER</a>
+  <a href="#raf" data-i18n="nav.raf">04 OYUN RAFI</a>
+  <a href="#muzik" data-i18n="nav.muzik">05 MÜZİK</a>
+  <a href="#duvar" data-i18n="nav.duvar">06 DUVAR</a>
+</nav>
+
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track" id="ticker"></div>
+</div>
+
+<main id="main">
+
+<!-- HERO -->
+<section id="top" class="hero">
+  <div class="hero-main">
+    <div class="hero-meta">
+      <span class="box-label" data-i18n="hero.entry">[00] GİRİŞ // ENTRY</span>
+      <span class="term sysline"><span data-i18n="hero.sys">sistem:</span> <b class="mode-name">REAL</b> <span class="blink">█</span></span>
+    </div>
+    <div class="hero-title">
+      <h1 class="star-h1" data-d data-text="STAR"><span class="star-h1-txt">STAR</span></h1>
+      <span class="hero-tag tag" aria-hidden="true" data-d>star</span>
+      <div class="hero-note hand" data-d>
+        <svg width="70" height="60" viewBox="0 0 70 60" aria-hidden="true"><path d="M8 56 C 6 36, 14 18, 34 8"/><path d="M22 6 L36 6 L32 20"/></svg>
+        <span data-i18n="hero.note">bu ben. evet, sadece "star".</span>
+      </div>
+    </div>
+    <div class="hero-copy">
+      <p class="manifesto brut" data-d><span data-i18n="hero.m1">OYNA. ÇEVİR. KODLA.</span><br><span class="mf-box" data-i18n="hero.m2">TEKRARLA.</span></p>
+      <p class="hero-sub" data-d data-i18n="hero.sub">21 yaşında bilgisayar mühendisliği öğrencisi. Burası dijital odam — dokun, boya, kır. Sonra toparlarım.</p>
+      <div class="cta-row">
+        <button type="button" class="btn btn-acc" id="ctaSpray" data-d><span class="spr" data-sprite="spray" data-scale="3"></span><span data-i18n="cta.spray">SPREY MODU</span></button>
+        <button type="button" class="btn" id="ctaTerm" data-d><span class="term cta-tick">` _</span><span data-i18n="cta.term">TERMİNAL</span></button>
+        <button type="button" class="btn btn-dash" id="ctaGame" data-d aria-label="Gizli bir şey var. İpucu: klasik bir kod." data-i18n-attr="aria-label:cta.gameLabel"><span class="desk-only">↑↑↓↓←→←→BA ?</span><span class="mob-only" data-i18n="cta.gameMobile">YOK ET ?</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="hero-side">
+    <div class="halftone" aria-hidden="true"></div>
+    <div class="pill-note hand" aria-hidden="true"><span data-i18n="hero.pill">hapı yut, DRUG moda geç</span>
+      <svg width="34" height="40" viewBox="0 0 34 40"><path d="M4 36 C 14 30, 22 20, 26 6"/><path d="M18 10 L27 4 L31 14"/></svg>
+    </div>
+    <figure class="avatar-win" data-d>
+      <div class="win-bar"><span class="win-name"></span><span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+      <img class="av av-real pixelated" src="assets/avatar-real.png" width="480" height="480" alt="star'ın pixel avatarı: yeşil şapkalı, gözleri kapalı bir karakter" data-i18n-attr="alt:hero.avReal">
+      <img class="av av-drug pixelated" src="assets/avatar-drug.gif" width="480" height="480" alt="star'ın avatarının renk döngülü, psikedelik versiyonu" data-i18n-attr="alt:hero.avDrug">
+      <figcaption><span data-i18n="hero.avCap">480×480 · EL YAPIMI PİKSEL</span><span>MOD: <b class="mode-name">REAL</b></span></figcaption>
+      <div class="lvl-sticker" aria-hidden="true">LVL<br>21</div>
+    </figure>
+    <div class="status term" data-d>
+      <div class="acc">&gt; status --now</div>
+      <div>▶ <span data-i18n="st.playing">OYNUYOR</span>: <span id="stGame">—</span></div>
+      <div>♪ <span data-i18n="st.listening">ÇALIYOR</span>: <span id="stTrack">—</span></div>
+      <div>◉ <span data-i18n="st.where">KONUM</span>: <span data-i18n="st.whereVal">muhtemelen bir oyunda</span><span class="blink">_</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 01 ODA -->
+<section id="oda" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">01</div>
+    <h2 class="sec-title brut" data-d data-i18n="oda.title">ODA</h2>
+    <div class="sec-note hand" data-i18n="oda.note">hakkımda.txt — açmadan önce oku</div>
+  </div>
+  <div class="oda-grid">
+    <div class="oda-card-col">
+      <div class="idcard" data-d>
+        <div class="idcard-head"><span data-i18n="oda.card">KARAKTER KARTI</span><span>#001</span></div>
+        <div class="idcard-who">
+          <img class="pixelated" src="assets/avatar-real.png" width="92" height="92" alt="">
+          <div><div class="brut idcard-name">STAR</div><div class="px idcard-class" data-i18n="oda.class">SINIF: MÜHENDİS (ÇIRAK)</div></div>
+        </div>
+        <dl class="term idcard-dl">
+          <dt data-i18n="oda.k1">SEVİYE</dt><dd>21</dd>
+          <dt data-i18n="oda.k2">BÖLÜM</dt><dd data-i18n="oda.v2">Bilgisayar Mühendisliği</dd>
+          <dt data-i18n="oda.k3">ANA GÖREV</dt><dd>UltraTurk</dd>
+          <dt data-i18n="oda.k4">YAN GÖREV</dt><dd>2048</dd>
+          <dt data-i18n="oda.k5">ZAYIFLIK</dt><dd data-i18n="oda.v5">"bir el daha"</dd>
+          <dt data-i18n="oda.k6">DURUM</dt><dd><span data-i18n="oda.v6">çevrim içi</span> <span class="blink online-dot">●</span></dd>
+        </dl>
+        <div class="barcode" aria-hidden="true"></div>
+      </div>
+    </div>
+    <div class="oda-text">
+      <h3 class="brut oda-hello" data-d><span data-i18n="oda.hello">selam, ben star</span><span class="dot">.</span></h3>
+      <p data-d data-i18n-html="oda.p1">21 yaşındayım, bilgisayar mühendisliği okuyorum. Boş zamanımın çoğu oyunlarda geçiyor; kalanında da ULTRAKILL'in dublajlı Türkçe yaması UltraTurk'ün başındayım <span class="hand">(baş geliştirici + çevirmen)</span>.</p>
+      <p data-d data-i18n-html="oda.p2">LoL, Minecraft, Cyberpunk, ULTRAKILL, VALORANT, Undertale, Outer Wilds… liste uzayıp gidiyor. Gerçekten <mark>çok fazla</mark> oyun oynadım.</p>
+      <p data-d data-i18n="oda.p3">Müzik olmadan kod yazamam. Boş bir kanvas görünce de piksel çizmeden duramam.</p>
+      <p class="px oda-todo" data-d data-i18n="oda.todo">BURADA NE YAPABİLİRSİN → DUVARA SPREY SIK · TERMİNALİ KURCALA · SAYFAYI YERLE BİR ET · DEFTERE NOT BIRAK</p>
+    </div>
+    <div class="oda-notes">
+      <div class="sticky sticky-y" data-d><span class="tape" aria-hidden="true"></span><p class="hand" data-i18n="oda.cow">not: şapkadaki C.O.W. hiçbir anlama gelmiyor. neden yazdım bilmiyorum. sorma.</p></div>
+      <div class="quote-block" data-d><p class="tag">every hello comes with a goodbye</p><p class="px" data-i18n="oda.bio">— GITHUB BIO</p></div>
+      <div class="sticky sticky-p" data-d><p class="hand hand-b" data-i18n="oda.likesT">ilgi alanları:</p><p class="hand" data-i18n-html="oda.likes">✓ oyunlar (çok)<br>✓ müzik (çok çok)<br>✓ pixel art<br>✓ çeviri / yama</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 02 PROJELER -->
+<section id="projeler" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">02</div>
+    <h2 class="sec-title brut" data-d data-i18n="pr.title">PROJELER</h2>
+    <a class="sec-link px" href="https://github.com/StarWWW">GITHUB.COM/STARWWW ↗</a>
+  </div>
+  <div class="proj-grid">
+    <article class="proj-card lift tilt-l">
+      <span class="tape" aria-hidden="true"></span>
+      <div class="proj-top px"><span data-i18n="pr.ut.kind">PROJE_01 // ÇEVİRİ + DUBLAJ</span><span data-i18n="pr.main">ANA GÖREV ★</span></div>
+      <div class="ut-cover" data-d>
+        <p class="px ut-lines">İNSANLIK ÖLDÜ.<br>YAKITIN KAN.<br>CEHENNEM DOLU.</p>
+        <img src="assets/ultraturk-logo.png" width="256" height="256" alt="UltraTurk logosu: Türk bayrağı motifli kırmızı ULTRAKILL tabancası" data-i18n-attr="alt:pr.ut.logoAlt">
+        <span class="px ut-cap" data-i18n="pr.ut.cap">// ULTRAKILL AÇILIŞ EKRANI, TÜRKÇE</span>
+      </div>
+      <div class="proj-body">
+        <div class="ut-head" data-d>
+          <img src="assets/ultraturk-logo.png" width="58" height="58" alt="">
+          <div><h3 class="brut proj-name">ULTRATURK</h3><p class="px proj-kicker" data-i18n="pr.ut.kicker">ULTRAKILL İÇİN DUBLAJLI TÜRKÇE YAMA</p></div>
+        </div>
+        <p data-d data-i18n="pr.ut.desc">Oyunun tamamı Türkçeye çevrildi ve seslendirilen tüm karakterler Türkçe dublajlı. Metinler ve dokular orijinaline olabildiğince sadık kalınarak çevrildi; UltrakULL kütüphanesiyle yapıldı.</p>
+        <div class="role px" data-d><span class="role-tag" data-i18n="pr.ut.role">ROLÜM: BAŞ GELİŞTİRİCİ + ÇEVİRMEN</span><span data-i18n="pr.ut.team">EKİP: STAR · SSTONEY</span></div>
+        <dl class="term cast" data-d>
+          <div><dt>Gabriel</dt><dd>Abdullah Taha Can</dd></div>
+          <div><dt>Minos Prime</dt><dd>Mert Topal</dd></div>
+          <div><dt>Sisyphus Prime</dt><dd>İsa İskenderov</dd></div>
+          <div><dt>Power</dt><dd>Rana Pala</dd></div>
+          <div><dt data-i18n="pr.ut.mix">Miksaj</dt><dd>Doğukan Arda</dd></div>
+          <div><dt>Logo</dt><dd>Horyu</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip chip-red" data-d>v1.1.0</span>
+          <span class="chip" data-d data-i18n="pr.ut.dl">5.000+ İNDİRME</span>
+          <span class="chip chip-y" data-d data-i18n="pr.ut.full">%100 ÇEVRİLDİ</span>
+          <span class="chip chip-p" data-d data-i18n="pr.ut.dub">TAM DUBLAJ</span>
+          <span class="chip" data-d>ULTRAKULL</span>
+          <span class="chip" data-d>BEPINEX 5</span>
+        </div>
+        <div class="btn-row">
+          <a class="btn btn-acc" data-d href="https://thunderstore.io/c/ultrakill/p/UltraTurk/UltraTurk/" target="_blank" rel="noopener">THUNDERSTORE ↗</a>
+          <a class="btn" data-d href="https://www.nexusmods.com/ultrakill/mods/192" target="_blank" rel="noopener">NEXUS ↗</a>
+          <a class="btn" data-d href="https://gamebanana.com/mods/680838" target="_blank" rel="noopener">GAMEBANANA ↗</a>
+          <a class="btn btn-cy" data-d href="https://discord.gg/QSCy8DPRRR" target="_blank" rel="noopener">DISCORD ↗</a>
+        </div>
+      </div>
+    </article>
+    <article class="proj-card lift tilt-r proj-offset">
+      <span class="tape tape-p" aria-hidden="true"></span>
+      <div class="proj-top px"><span data-i18n="pr.g.kind">PROJE_02 // OYUN</span><span data-i18n="pr.side">YAN GÖREV</span></div>
+      <div class="g2048-cover" data-d>
+        <div class="g2048" id="g2048" aria-hidden="true"></div>
+        <span class="hand" data-i18n="pr.g.slogan">kaydır. birleştir. tekrarla.</span>
+      </div>
+      <div class="proj-body">
+        <h3 class="brut proj-name" data-d>2048</h3>
+        <p data-d data-i18n="pr.g.desc">Klasik 2048'in benim versiyonum.</p>
+        <div class="chips"><span class="chip" data-d data-i18n="pr.g.tag">OYUN</span></div>
+        <div class="btn-row">
+          <a class="btn btn-acc" data-d href="#" id="link2048play" data-i18n="pr.g.play">OYNA ↗</a>
+          <a class="btn" data-d href="#" id="link2048code" data-i18n="pr.g.code">KOD ↗</a>
+        </div>
+      </div>
+    </article>
+  </div>
+  <div class="term-win repos">
+    <div class="term-win-bar"><span class="px" data-i18n="pr.repos">terminal — ~/repos — DİĞER REPOLAR (otomatik)</span><span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <div class="term term-body" id="repoList" aria-live="polite">
+      <div><span class="acc">star@oda</span>:<span class="cy">~/repos</span>$ ls --github StarWWW --fork-yok</div>
+      <div class="dim" data-i18n="pr.loading">yükleniyor...</div>
+    </div>
+  </div>
+</section>
+
+<!-- 03 ENVANTER -->
+<section id="envanter" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">03</div>
+    <h2 class="sec-title brut" data-d data-i18n="sk.title">ENVANTER</h2>
+    <div class="sec-note hand" data-i18n="sk.note">LV = kendime verdiğim puan (1–10)</div>
+  </div>
+  <div class="inv-grid">
+    <div class="inv-side">
+      <div class="char-stage" data-d>
+        <div class="char-floor" aria-hidden="true"></div>
+        <div class="char-sprite bob"><span class="spr" data-sprite="jet" data-scale="9"></span></div>
+        <span class="px char-l" data-i18n="sk.char">KARAKTER // STAR</span>
+        <span class="px char-r">LV 21</span>
+      </div>
+      <div role="tablist" class="sk-tabs" id="skTabs" aria-label="Kategoriler" data-i18n-attr="aria-label:sk.cats"></div>
+      <p class="term dim" id="skCount"></p>
+    </div>
+    <div class="inv-main">
+      <div class="inv-head"><span class="px" id="skHead"></span></div>
+      <div class="sk-bars" id="skBars" role="tabpanel"></div>
+      <div class="inv-head inv-head-2"><span class="px" data-i18n="sk.inv">ENVANTER — DİĞER HER ŞEY</span>
+        <span class="px legend"><span><i style="background:var(--cyan)"></i>WEB</span><span><i style="background:var(--orange)"></i><span data-i18n="sk.c.veri">VERİ</span></span><span><i style="background:var(--steel)"></i><span data-i18n="sk.c.arac">ARAÇ</span></span><span><i style="background:var(--pink)"></i><span data-i18n="sk.c.oyun">OYUN+SANAT</span></span></span>
+      </div>
+      <div class="inv-slots" id="skSlots"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 04 OYUN RAFI -->
+<section id="raf" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">04</div>
+    <h2 class="sec-title brut" data-d data-i18n="gm.title">OYUN RAFI</h2>
+    <div class="sec-note hand" data-i18n="gm.note">sadece aklıma gelenler</div>
+  </div>
+  <div class="shelf-wrap">
+    <div class="shelf" id="shelf" role="list" aria-label="Oyunlar" data-i18n-attr="aria-label:gm.list"></div>
+    <div class="shelf-plank" aria-hidden="true"></div>
+    <div class="shelf-foot">
+      <div class="shelf-msg"><span class="spr" data-sprite="pad" data-scale="4"></span><p class="hand" data-i18n-html="gm.msg">gerçekten çok fazla oyun oynadım.<br>bu raf sadece buzdağının görünen kısmı.</p></div>
+      <div class="cart-detail" id="cartDetail" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+<!-- 05 MÜZİK -->
+<section id="muzik" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">05</div>
+    <h2 class="sec-title brut" data-d data-i18n="mu.title">MÜZİK</h2>
+    <div class="sec-note hand" data-i18n="mu.note">cebimdeki mp3 — müziksiz kod yazılmaz</div>
+  </div>
+  <div class="music-grid">
+    <div class="mp3-col">
+      <svg class="lanyard" width="220" height="90" viewBox="0 0 220 90" aria-hidden="true"><path d="M0 10 C 60 0, 120 30, 150 50 S 190 80, 200 86"/><path class="lanyard-dash" d="M0 10 C 60 0, 120 30, 150 50 S 190 80, 200 86"/></svg>
+      <div class="mp3" role="region" aria-label="MP3 çalar" data-i18n-attr="aria-label:mu.player" data-d>
+        <span class="mp3-loop" aria-hidden="true"></span>
+        <div class="mp3-brand"><span class="px b">S★MP3</span><span class="px s">512 MB · BASS+</span><span class="mp3-hold"><span class="px">HOLD</span><i aria-hidden="true"></i></span></div>
+        <div class="mp3-screen">
+          <div class="px mp3-status"><span id="mpState">■ <span data-i18n="mu.stopped">DURDU</span></span><span class="batt" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
+          <div class="mp3-now">
+            <div class="mp3-art"><img id="mpArt" class="pixelated" alt="" width="84" height="84"></div>
+            <div class="mp3-meta">
+              <span class="brut mp3-title"><span id="mpTitle">—</span></span>
+              <span class="term mp3-artist" id="mpArtist"></span>
+              <span class="term mp3-album" id="mpAlbum"></span>
+              <span class="term mp3-album" id="mpInfo"></span>
+            </div>
+          </div>
+          <div class="mp3-prog">
+            <div class="mp3-bar" id="mpBar" role="slider" tabindex="0" aria-label="Konum" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" data-i18n-attr="aria-label:mu.seek"><div class="mp3-fill" id="mpFill"></div><span class="mp3-knob" id="mpKnob"></span></div>
+            <div class="term mp3-times"><span id="mpCur">0:00</span><span class="pv" data-i18n="mu.preview">ÖNİZLEME 0:30</span><span id="mpDur">0:00</span></div>
+          </div>
+        </div>
+        <div class="mp3-pad">
+          <span></span><button type="button" class="px" id="mpVolUp" aria-label="Sesi aç" data-i18n-attr="aria-label:mu.volUp">VOL+</button><span></span>
+          <button type="button" class="px" id="mpPrev" aria-label="Önceki şarkı" data-i18n-attr="aria-label:mu.prev">◀◀</button>
+          <button type="button" class="px mp3-play" id="mpPlay" aria-label="Çal" data-i18n-attr="aria-label:mu.play">▶</button>
+          <button type="button" class="px" id="mpNext" aria-label="Sonraki şarkı" data-i18n-attr="aria-label:mu.next">▶▶</button>
+          <span></span><button type="button" class="px" id="mpVolDown" aria-label="Sesi kıs" data-i18n-attr="aria-label:mu.volDown">VOL−</button><span></span>
+        </div>
+        <span class="tag mp3-sticker" aria-hidden="true">star</span>
+        <span class="spr mp3-spark" data-sprite="sparkle" data-scale="4" aria-hidden="true"></span>
+        <span class="mp3-jack" aria-hidden="true"></span>
+      </div>
+      <svg class="earbuds" width="300" height="120" viewBox="0 0 300 120" aria-hidden="true"><path d="M156 0 C 156 46, 96 40, 84 80 M156 0 C 166 56, 236 48, 226 90"/><circle cx="84" cy="92" r="13"/><circle cx="226" cy="102" r="13"/></svg>
+      <p class="hand mp3-note" data-i18n-html="mu.hint">30 sn önizleme çalar,<br>tamamı için ↗ Apple Music</p>
+      <audio id="mpAudio" preload="none" crossorigin="anonymous"></audio>
+    </div>
+    <div class="library">
+      <div class="lib-head">
+        <span class="px" id="libCount">KİTAPLIK</span>
+        <label class="lib-filter"><span class="px" data-i18n="mu.filter">FİLTRE</span><input class="term" id="libFilter" placeholder="şarkı, sanatçı, albüm..." data-i18n-attr="placeholder:mu.filterPh"></label>
+      </div>
+      <div class="lib-scroll">
+        <table class="lib-table">
+          <thead><tr class="px">
+            <th>#</th><th><span class="sr" data-i18n="mu.th.art">Kapak</span></th><th data-i18n="mu.th.song">ŞARKI</th><th class="hide-s" data-i18n="mu.th.album">ALBÜM</th><th class="hide-s" data-i18n="mu.th.year">YIL</th><th class="hide-m" data-i18n="mu.th.genre">TÜR</th><th data-i18n="mu.th.dur">SÜRE</th><th><span class="sr" data-i18n="mu.th.act">Eylemler</span></th>
+          </tr></thead>
+          <tbody id="libBody"></tbody>
+        </table>
+      </div>
+      <div class="px lib-foot"><span data-i18n="mu.legend">▶ = 30 SN ÖNİZLEME · ↗ = APPLE MUSIC'TE AÇ</span><span data-i18n="mu.legend2">KAPAKLAR OTOMATİK 8-BIT</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 06 DUVAR -->
+<section id="duvar" class="sec">
+  <div class="sec-head">
+    <div class="sec-num">06</div>
+    <h2 class="sec-title brut" data-d data-i18n="wl.title">DUVAR</h2>
+    <div class="sec-note hand" data-i18n="wl.note">herkesin duvarı · her pazartesi buff'lanır</div>
+  </div>
+  <div class="wall-wrap">
+    <div class="wall-scroll">
+      <div class="wall" id="wall">
+        <canvas id="wallCanvas" width="1600" height="800" aria-label="Ziyaretçilerin sprey çizimleri" role="img" data-i18n-attr="aria-label:wl.canvas"></canvas>
+        <div class="wall-cursors" id="wallCursors" aria-hidden="true"></div>
+        <div class="px wall-tagline" id="wallWeek"></div>
+      </div>
+    </div>
+    <div class="wall-tools">
+      <div class="spray-box">
+        <div class="spray-head"><span class="px b"><span class="spr" data-sprite="spray" data-scale="2"></span><span data-i18n="wl.can">SPREY KUTUSU</span></span><span class="px live" id="wallLive"></span></div>
+        <div class="swatches" role="radiogroup" aria-label="Renk" data-i18n-attr="aria-label:wl.color" id="swatches"></div>
+        <div class="nozzles" role="radiogroup" aria-label="Uç kalınlığı" data-i18n-attr="aria-label:wl.size" id="nozzles">
+          <button type="button" role="radio" aria-checked="false" class="px" data-size="10" data-i18n="wl.thin">İNCE</button>
+          <button type="button" role="radio" aria-checked="true" class="px" data-size="22" data-i18n="wl.mid">ORTA</button>
+          <button type="button" role="radio" aria-checked="false" class="px" data-size="40" data-i18n="wl.thick">KALIN</button>
+        </div>
+        <button type="button" class="btn btn-acc spray-toggle" id="sprayToggle" aria-pressed="false"><span data-i18n="wl.toggle">SPREY MODU</span>: <b id="sprayState" data-i18n="wl.off">KAPALI</b></button>
+      </div>
+      <div class="buff">
+        <div class="buff-in">
+          <span class="px buff-l" data-i18n="wl.buffIn">BUFF'A KALAN</span>
+          <span class="term buff-t" id="buffTimer">—</span>
+          <button type="button" class="px buff-a" id="archiveBtn" data-i18n="wl.archive">← ESKİ DUVARLAR (ARŞİV)</button>
+        </div>
+      </div>
+    </div>
+    <p class="px wall-notice" id="wallNotice" hidden></p>
+
+    <div class="gb-grid">
+      <form class="gb-form" id="gbForm" autocomplete="off">
+        <div class="brut gb-title" data-i18n-html="gb.title">ZİYARETÇİ<br>DEFTERİ</div>
+        <label class="px" for="gbName" data-i18n="gb.name">TAKMA AD</label>
+        <input id="gbName" class="term" maxlength="24" placeholder="anon" required>
+        <label class="px" for="gbMsg" data-i18n="gb.msg">MESAJ (EN FAZLA 140)</label>
+        <textarea id="gbMsg" class="term" rows="3" maxlength="140" placeholder="duvara bir şey yapıştır..." data-i18n-attr="placeholder:gb.ph" required></textarea>
+        <button type="submit" class="btn btn-or" data-i18n="gb.send">DUVARA YAPIŞTIR ↘</button>
+        <p class="px gb-status" id="gbStatus" role="status"></p>
+      </form>
+      <div class="gb-notes" id="gbNotes" aria-live="polite"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer id="iletisim" class="foot">
+  <div class="foot-grid">
+    <div class="foot-bye">
+      <div class="px acc" data-i18n="ft.label">[07] İLETİŞİM // ÇIKIŞ</div>
+      <div class="brut bye" data-d>BYE<span class="acc">.</span></div>
+      <p class="tag bye-tag" data-d>every hello comes with a goodbye</p>
+    </div>
+    <div class="foot-links">
+      <div class="contact contact-dc" data-d>
+        <span class="spr" data-sprite="chat" data-scale="4"></span>
+        <div class="contact-txt"><div class="px">DISCORD</div><div class="brut">stariscrazy</div></div>
+        <button type="button" class="btn btn-ink" id="copyDiscord" data-i18n="ft.copy">KOPYALA</button>
+      </div>
+      <a class="contact contact-gh" data-d href="https://github.com/StarWWW" target="_blank" rel="noopener">
+        <span class="px gh-ico" aria-hidden="true">&lt;/&gt;</span>
+        <span class="contact-txt"><span class="px">GITHUB</span><span class="brut">StarWWW</span></span>
+        <span class="px" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+  <div class="px foot-bar">
+    <span data-i18n="ft.copy2">© 2026 STAR · GITHUB PAGES'TE BARINIR · EL YAPIMI, KALIPSIZ</span>
+    <span><span data-i18n="ft.hint">` = TERMİNAL · ↑↑↓↓←→←→BA = ???</span> · <span data-i18n="ft.now">ŞU AN</span>: <b class="mode-name">REAL</b></span>
+  </div>
+</footer>
+</div>
+
+<div class="fx-scan" aria-hidden="true"></div>
+<div class="fx-line" aria-hidden="true"></div>
+
+<div class="terminal" id="terminal" role="dialog" aria-label="Gizli terminal" data-i18n-attr="aria-label:term.label" hidden>
+  <div class="terminal-bar px"><span data-i18n="term.title">~/oda — GİZLİ TERMİNAL</span><button type="button" class="terminal-close px" id="termClose" aria-label="Terminali kapat" data-i18n-attr="aria-label:term.close">` / ESC ✕</button></div>
+  <div class="terminal-out term" id="termOut" aria-live="polite"></div>
+  <form class="terminal-in term" id="termForm">
+    <label for="termInput" class="prompt"><span class="acc">star@oda</span>:<span class="cy">~</span>$</label>
+    <input id="termInput" autocomplete="off" spellcheck="false" autocapitalize="off" enterkeyhint="send">
+  </form>
+</div>
+
+<div class="modal" id="archive" role="dialog" aria-modal="true" aria-labelledby="archiveTitle" hidden>
+  <div class="modal-box">
+    <div class="modal-bar"><span class="px" id="archiveTitle" data-i18n="wl.archiveT">ESKİ DUVARLAR</span><button type="button" class="px modal-x" data-close aria-label="Kapat" data-i18n-attr="aria-label:close">✕</button></div>
+    <div class="archive-grid" id="archiveGrid"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+</body>
+</html>

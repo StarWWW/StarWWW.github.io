@@ -1,0 +1,58 @@
+[
+  {
+    "itunes_id": 6813343186,
+    "title": "Megalovania",
+    "artist": "Toby Fox",
+    "album": "Undertale Soundtrack",
+    "track_number": 100,
+    "track_count": 101,
+    "year": 2015,
+    "genre": "Soundtrack",
+    "duration_ms": 156000,
+    "artwork_url": "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/68/72/02/6872023b-49d0-1a44-e824-c898bb62c7a3/841787181533.png/600x600bb.jpg",
+    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ff/9d/27/ff9d270c-81b2-df99-80f5-5b87048ae88f/mzaf_16037815512034579723.plus.aac.p.m4a",
+    "store_url": "https://music.apple.com/tr/album/megalovania/6813342945?i=6813343186"
+  },
+  {
+    "itunes_id": 1467259940,
+    "title": "Travelers",
+    "artist": "Andrew Prahlow",
+    "album": "Outer Wilds (Original Soundtrack)",
+    "track_number": 20,
+    "track_count": 28,
+    "year": 2019,
+    "genre": "Soundtrack",
+    "duration_ms": 210190,
+    "artwork_url": "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/87/af/e2/87afe22c-d532-53b5-a9f6-43abf37363ce/859732734925_cover.jpg/600x600bb.jpg",
+    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/4d/28/48/4d2848df-10c9-b11b-57ec-2ad2a20441b1/mzaf_3803094667132234958.plus.aac.p.m4a",
+    "store_url": "https://music.apple.com/tr/album/travelers/1467259296?i=1467259940"
+  },
+  {
+    "itunes_id": 1691909949,
+    "title": "The Fire Is Gone (For Piano, Saxophone and Trumpet)",
+    "artist": "Heaven Pierce Her",
+    "album": "Ultrakill: Infinite Hyperdeath (Original Game Soundtrack)",
+    "track_number": 1,
+    "track_count": 19,
+    "year": 2020,
+    "genre": "Soundtrack",
+    "duration_ms": 160056,
+    "artwork_url": "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/b2/6e/6d/b26e6d47-a18b-a9cf-2f32-d16c89b9c0b4/859774675231_cover.jpg/600x600bb.jpg",
+    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/47/bc/f1/47bcf191-f833-247e-eacb-77fc399b861d/mzaf_6744313195644889590.plus.aac.p.m4a",
+    "store_url": "https://music.apple.com/tr/album/the-fire-is-gone-for-piano-saxophone-and-trumpet/1691909937?i=1691909949"
+  },
+  {
+    "itunes_id": 1528217884,
+    "title": "Hopes and Dreams",
+    "artist": "Toby Fox",
+    "album": "Undertale Soundtrack",
+    "track_number": 87,
+    "track_count": 101,
+    "year": 2015,
+    "genre": "Soundtrack",
+    "duration_ms": 181286,
+    "artwork_url": "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/d3/21/9f/d3219f8b-c2ff-2498-0e87-eb57873b6eca/841787181533.png/600x600bb.jpg",
+    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/c8/0c/ef/c80cef70-2fdc-c316-9a46-828e3df18b5c/mzaf_8946137353949873377.plus.aac.p.m4a",
+    "store_url": "https://music.apple.com/tr/album/hopes-and-dreams/1528217465?i=1528217884"
+  }
+]
