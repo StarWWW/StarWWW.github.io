@@ -31,12 +31,12 @@ export async function initSkills() {
     const catName = t(CATS.find(([k]) => k === cur)[1]);
     head.textContent = `${catName} — ${inCat.length}`;
     bars.innerHTML = inCat.length
-      ? inCat.map((s) => `<div class="sk-row" data-d><span class="sk-name">${esc(s.name)}</span><span class="segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < s.level ? 'on' : ''}"></i>`).join('')}</span><span class="sk-lv">LV ${s.level}</span></div>`).join('')
+      ? inCat.map((s, k) => `<div class="sk-row rv" style="--i:${k}" data-d><span class="sk-name">${esc(s.name)}</span><span class="segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i class="${i < s.level ? 'on' : ''}" style="--j:${i}"></i>`).join('')}</span><span class="sk-lv">LV ${s.level}</span></div>`).join('')
       : `<p class="empty-note" style="grid-column:1/-1">${esc(t('sk.empty'))}</p>`;
 
     const others = rated.filter((s) => s.category !== cur).sort(byLevel);
     slots.innerHTML = others.length
-      ? others.map((s) => `<div class="slot" data-d title="${esc(s.name)} — LV ${s.level}"><span class="cat" style="background:${CATCOL[s.category] || 'var(--steel)'}"></span><span class="nm">${esc(s.name)}</span><span class="lv">${s.level}</span></div>`).join('')
+      ? others.map((s, k) => `<div class="slot rv" data-rv="pop" style="--i:${k}" data-d title="${esc(s.name)} — LV ${s.level}"><span class="cat" style="background:${CATCOL[s.category] || 'var(--steel)'}"></span><span class="nm">${esc(s.name)}</span><span class="lv">${s.level}</span></div>`).join('')
       : `<p class="empty-note" style="grid-column:1/-1">${esc(t('sk.invEmpty'))}</p>`;
     count.textContent = t('sk.count', { n: rated.length });
   }

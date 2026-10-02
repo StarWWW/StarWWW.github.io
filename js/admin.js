@@ -2,7 +2,7 @@
 // Yazma yetkisini Supabase RLS korur (admins tablosu); bu sayfa sadece arayüz.
 import { CONFIG } from './config.js';
 import { getSupabase } from './supabase.js';
-import { esc, fmtDur, toast } from './util.js';
+import { esc, fmtDur, toast, API } from './util.js';
 import { getLang } from './i18n.js';
 import { pixelate, dominantColor, DB32 } from './pixelate.js';
 import { CATS } from './sections/skills.js';
@@ -17,7 +17,6 @@ let root = null;
 let sb = null;
 let user = null;
 let tab = 'music';
-let audio = null;
 let lastFocus = null;
 
 function loadCSS() {
@@ -42,6 +41,8 @@ export async function openAdmin() {
     root.setAttribute('aria-modal', 'true');
     root.setAttribute('aria-label', L('Kontrol odası', 'Control room'));
     document.body.append(root);
+    root.setAttribute('data-lenis-prevent', '');
+    API.fx?.stopScroll();
     document.documentElement.style.overflow = 'hidden';
     root.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAdmin(); });
   }
@@ -69,9 +70,9 @@ export async function __mount(client, fakeUser, startTab = 'music') {
 
 export function closeAdmin() {
   if (!root) return;
-  audio?.pause();
   root.remove();
   root = null;
+  API.fx?.startScroll();
   document.documentElement.style.overflow = '';
   cleanAuthUrl();
   lastFocus?.focus?.();
@@ -143,7 +144,6 @@ function renderNotAdmin() {
 }
 
 function renderShell() {
-  audio?.pause();
   root.innerHTML = `${topBar(true)}<div class="ad-body" id="adBody"></div>`;
   wireTop();
   const body = root.querySelector('#adBody');
@@ -160,26 +160,17 @@ function hydrateArt(scope) {
   });
 }
 
-function playPreview(url, btn) {
-  if (!url) return;
-  audio = audio || new Audio();
-  if (audio.src === url && !audio.paused) { audio.pause(); btn.textContent = '▶'; return; }
-  root.querySelectorAll('[data-pv]').forEach((b) => { b.textContent = '▶'; });
-  audio.src = url; audio.volume = 0.6;
-  audio.play().catch(() => {});
-  btn.textContent = '❚❚';
-  audio.onended = () => { btn.textContent = '▶'; };
-}
-
-// ---------------- MÜZİK ----------------
+// ---------------- MÜZİK (Spotify) ----------------
 async function musicTab(body) {
   body.innerHTML = `<div class="ad-grid">
     <section class="ad-card">
-      <div class="ad-card-h"><b>01 — ${L('ŞARKI ARA', 'SEARCH SONGS')}</b><span>${L('KAYNAK: ITUNES · ANAHTARSIZ', 'SOURCE: ITUNES · NO KEY')}</span></div>
+      <div class="ad-card-h"><b>01 — ${L('SPOTIFY\'DA ARA', 'SEARCH SPOTIFY')}</b><span>SPOTIFY</span></div>
       <form class="ad-search" id="mSearch"><label class="sr" for="mQ">${L('Şarkı ara', 'Search songs')}</label><input id="mQ" placeholder="megalovania, travelers..." autocomplete="off"><button class="btn btn-acc">${L('ARA', 'SEARCH')} ↵</button></form>
+      <form class="ad-search" id="mLink" style="border-bottom:4px solid var(--ink)"><label class="sr" for="mUrl">${L('Spotify şarkı linki', 'Spotify track link')}</label><input id="mUrl" placeholder="${L('ya da Spotify linkini yapıştır: open.spotify.com/track/...', 'or paste a Spotify link: open.spotify.com/track/...')}" autocomplete="off" style="font-size:20px"><button class="btn">${L('GETİR', 'FETCH')}</button></form>
       <div class="ad-meta" id="mMeta"></div>
+      <div id="mPrev"></div>
       <ul class="ad-list" id="mRes"></ul>
-      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · 30 SN ÖNİZLEME · APPLE MUSIC LİNKİ', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · 30 SEC PREVIEW · APPLE MUSIC LINK')}</div>
+      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · SPOTIFY LİNKİ. ÇALAR ŞARKININ TAMAMINI SPOTIFY ÜZERİNDEN ÇALAR.', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · SPOTIFY LINK. THE PLAYER STREAMS THE FULL SONG VIA SPOTIFY.')}</div>
     </section>
     <section class="ad-card">
       <div class="ad-card-h"><b>${L('KİTAPLIK', 'LIBRARY')}</b><span id="mCount"></span></div>
@@ -187,16 +178,31 @@ async function musicTab(body) {
     </section>
   </div>`;
   let lib = [];
-  const libIds = () => new Set(lib.map((t) => Number(t.itunes_id)));
+  let results = [];
+  let lastQ = '';
+  let offset = 0;
+  let total = 0;
+  const have = () => new Set(lib.map((x) => x.spotify_id).filter(Boolean));
+
+  async function invoke(payload) {
+    const { data, error } = await sb.functions.invoke('spotify', { body: payload });
+    if (error) {
+      let msg = error.message;
+      try { msg = (await error.context?.json())?.error || msg; } catch { /* yok */ }
+      throw new Error(msg);
+    }
+    if (data?.error && data.error !== 'no_credentials') throw new Error(data.error);
+    return data;
+  }
 
   async function loadLib() {
     const { data, error } = await sb.from('tracks').select('*').order('sort', { ascending: true }).order('created_at', { ascending: true });
     if (error) { body.querySelector('#mLib').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
     lib = data;
     body.querySelector('#mCount').textContent = `${lib.length} ${L('PARÇA', 'TRACKS')}`;
-    body.querySelector('#mLib').innerHTML = lib.length ? lib.map((t, i) => `<li class="ad-row" data-id="${t.id}">
-      ${artImg(t.artwork_url)}<div><div class="ad-t">${esc(t.title)}</div><div class="ad-s">${esc(t.artist)} · ${esc(t.album || '')}</div></div>
-      <span class="ad-d">${fmtDur(t.duration_ms)}</span>
+    body.querySelector('#mLib').innerHTML = lib.length ? lib.map((x, i) => `<li class="ad-row" data-id="${x.id}">
+      ${artImg(x.artwork_url)}<div><div class="ad-t">${esc(x.title)} ${x.spotify_id ? '<span class="px" style="font-size:8px;background:#1ED760;color:#000;padding:1px 4px">SPOTIFY</span>' : `<span class="px" style="font-size:8px;background:var(--orange);padding:1px 4px">${L('ÖNİZLEME', 'PREVIEW')}</span>`}</div><div class="ad-s">${esc(x.artist)} · ${esc(x.album || '')}</div></div>
+      <span class="ad-d">${fmtDur(x.duration_ms)}</span>
       <div class="ad-acts"><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
       : `<li class="ad-empty">${L('Kitaplık boş. Soldan şarkı ara ve ekle.', 'Library is empty. Search and add songs on the left.')}</li>`;
     hydrateArt(body.querySelector('#mLib'));
@@ -204,7 +210,7 @@ async function musicTab(body) {
 
   body.querySelector('#mLib').addEventListener('click', async (e) => {
     const row = e.target.closest('[data-id]'); if (!row) return;
-    const i = lib.findIndex((t) => String(t.id) === row.dataset.id);
+    const i = lib.findIndex((x) => String(x.id) === row.dataset.id);
     if (e.target.closest('[data-del]')) {
       if (!confirm(L(`"${lib[i].title}" silinsin mi?`, `Delete "${lib[i].title}"?`))) return;
       await sb.from('tracks').delete().eq('id', lib[i].id);
@@ -212,56 +218,94 @@ async function musicTab(body) {
     }
     const j = e.target.closest('[data-up]') ? i - 1 : e.target.closest('[data-down]') ? i + 1 : -1;
     if (j < 0 || j >= lib.length) return;
-    const order = lib.map((t) => t.id);
+    const order = lib.map((x) => x.id);
     [order[i], order[j]] = [order[j], order[i]];
     await Promise.all(order.map((id, k) => sb.from('tracks').update({ sort: k }).eq('id', id)));
     loadLib();
   });
 
-  let results = [];
-  body.querySelector('#mSearch').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const q = body.querySelector('#mQ').value.trim();
-    if (!q) return;
+  function renderResults(append) {
+    const ids = have();
+    const ul = body.querySelector('#mRes');
+    const html = results.map((r, i) => `<li class="ad-row" data-i="${i}">
+      ${artImg(r.artwork_url)}<div><div class="ad-t">${esc(r.title)}${r.explicit ? ' <span class="px" style="font-size:8px;border:1px solid;padding:0 3px">E</span>' : ''}</div><div class="ad-s">${esc(r.artist)} · ${esc(r.album || '')} · ${esc(r.year || '')}</div></div>
+      <span class="ad-d">${fmtDur(r.duration_ms)}</span>
+      <div class="ad-acts"><button type="button" data-pv aria-label="${L('Önizle', 'Preview')}">▶</button>${ids.has(r.spotify_id) ? `<button type="button" class="ok" disabled>✓ ${L('EKLİ', 'ADDED')}</button>` : `<button type="button" class="add" data-add>+ ${L('EKLE', 'ADD')}</button>`}</div></li>`).join('');
+    ul.innerHTML = (html || `<li class="ad-empty">${L('Sonuç yok.', 'No results.')}</li>`)
+      + (lastQ && results.length < total ? `<li class="ad-row" style="grid-template-columns:1fr"><button type="button" class="btn" data-more>${L('DAHA FAZLA', 'MORE')} (${results.length}/${total})</button></li>` : '');
+    hydrateArt(ul);
+    if (append) ul.scrollTop = ul.scrollHeight;
+  }
+
+  async function search(append) {
     const meta = body.querySelector('#mMeta');
     meta.textContent = L('aranıyor...', 'searching...');
-    const t0 = performance.now();
     try {
-      const r = await fetch(`https://itunes.apple.com/search?${new URLSearchParams({ term: q, entity: 'song', limit: '25', country: 'TR' })}`);
-      results = (await r.json()).results || [];
-    } catch (err) { meta.textContent = String(err); return; }
-    meta.textContent = `${results.length} ${L('SONUÇ', 'RESULTS')} · ${((performance.now() - t0) / 1000).toFixed(1)} ${L('SN', 'S')}`;
-    renderResults();
+      const d = await invoke({ q: lastQ, offset });
+      if (d.error === 'no_credentials') {
+        meta.textContent = '';
+        body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması için SPOTIFY_CLIENT_ID ve SPOTIFY_CLIENT_SECRET tanımlı değil (README → Adım 8). O zamana kadar yukarıya Spotify şarkı linkini yapıştırarak ekleyebilirsin.', 'SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET are not set (README → Step 8). Until then, paste a Spotify track link above to add songs.')}</li>`;
+        return;
+      }
+      results = append ? results.concat(d.results || []) : (d.results || []);
+      total = d.total || results.length;
+      meta.textContent = `${total} ${L('SONUÇ', 'RESULTS')}`;
+      renderResults(append);
+    } catch (err) {
+      meta.textContent = '';
+      body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması çalışmadı. "spotify" Edge Function\'ı yayında mı? (README → Adım 8)', 'Spotify search failed. Is the "spotify" Edge Function deployed? (README → Step 8)')}<br>${esc(err.message || err)}</li>`;
+    }
+  }
+
+  body.querySelector('#mSearch').addEventListener('submit', (e) => {
+    e.preventDefault();
+    lastQ = body.querySelector('#mQ').value.trim();
+    if (!lastQ) return;
+    offset = 0;
+    search(false);
   });
 
-  function renderResults() {
-    const have = libIds();
-    const ul = body.querySelector('#mRes');
-    ul.innerHTML = results.map((r, i) => `<li class="ad-row" data-i="${i}">
-      ${artImg(r.artworkUrl100)}<div><div class="ad-t">${esc(r.trackName)}</div><div class="ad-s">${esc(r.artistName)} · ${esc(r.collectionName || '')} · ${esc((r.releaseDate || '').slice(0, 4))} · ${esc(r.primaryGenreName || '')}</div></div>
-      <span class="ad-d">${fmtDur(r.trackTimeMillis)}</span>
-      <div class="ad-acts">${r.previewUrl ? `<button type="button" data-pv aria-label="${L('Önizle', 'Preview')}">▶</button>` : ''}${have.has(r.trackId) ? `<button type="button" class="ok" disabled>✓ ${L('EKLİ', 'ADDED')}</button>` : `<button type="button" class="add" data-add>+ ${L('EKLE', 'ADD')}</button>`}</div></li>`).join('') || `<li class="ad-empty">${L('Sonuç yok.', 'No results.')}</li>`;
-    hydrateArt(ul);
+  body.querySelector('#mLink').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = body.querySelector('#mUrl').value.trim();
+    if (!url) return;
+    const meta = body.querySelector('#mMeta');
+    meta.textContent = L('Spotify\'dan bilgiler çekiliyor...', 'fetching from Spotify...');
+    try {
+      const d = await invoke({ track: url });
+      results = [d]; total = 1; lastQ = '';
+      meta.textContent = L('1 ŞARKI — EKLEMEK İÇİN + EKLE', '1 SONG — PRESS + ADD');
+      renderResults(false);
+      showPreview(d);
+    } catch (err) {
+      meta.textContent = '';
+      body.querySelector('#mRes').innerHTML = `<li class="ad-err">${esc(err.message || err)}</li>`;
+    }
+  });
+
+  function showPreview(r) {
+    body.querySelector('#mPrev').innerHTML = `<div style="padding:10px 16px;border-bottom:3px dashed rgba(34,32,52,.3)"><iframe title="Spotify: ${esc(r.title)}" src="https://open.spotify.com/embed/track/${esc(r.spotify_id)}?utm_source=star" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" style="border-radius:12px;display:block"></iframe></div>`;
   }
 
   body.querySelector('#mRes').addEventListener('click', async (e) => {
+    if (e.target.closest('[data-more]')) { offset = results.length; search(true); return; }
     const row = e.target.closest('[data-i]'); if (!row) return;
     const r = results[Number(row.dataset.i)];
-    if (e.target.closest('[data-pv]')) return playPreview(r.previewUrl, e.target.closest('[data-pv]'));
+    if (e.target.closest('[data-pv]')) { showPreview(r); return; }
     const btn = e.target.closest('[data-add]'); if (!btn) return;
     btn.disabled = true;
-    const store = (r.trackViewUrl || '').split('&')[0];
+    btn.textContent = '…';
+    let full = r;
+    try { full = { ...r, ...(await invoke({ track: r.spotify_id })) }; } catch { /* arama sonucu da yeterli */ }
     const { error } = await sb.from('tracks').insert({
-      itunes_id: r.trackId, title: r.trackName, artist: r.artistName, album: r.collectionName,
-      track_number: r.trackNumber, track_count: r.trackCount, year: r.releaseDate ? Number(r.releaseDate.slice(0, 4)) : null,
-      genre: r.primaryGenreName, duration_ms: r.trackTimeMillis,
-      artwork_url: (r.artworkUrl100 || '').replace('100x100bb', '600x600bb'), preview_url: r.previewUrl || '', store_url: store,
-      sort: lib.length,
+      spotify_id: full.spotify_id, spotify_url: full.spotify_url, explicit: Boolean(full.explicit),
+      title: full.title, artist: full.artist, album: full.album, track_number: full.track_number, track_count: full.track_count,
+      year: full.year, genre: full.genre, duration_ms: full.duration_ms, artwork_url: full.artwork_url, sort: lib.length,
     });
-    if (error) { toast(error.message); btn.disabled = false; return; }
-    toast(L(`Eklendi: ${r.trackName}`, `Added: ${r.trackName}`));
+    if (error) { toast(error.message); btn.disabled = false; btn.textContent = `+ ${L('EKLE', 'ADD')}`; return; }
+    toast(L(`Eklendi: ${full.title}`, `Added: ${full.title}`));
     await loadLib();
-    renderResults();
+    renderResults(false);
   });
 
   await loadLib();

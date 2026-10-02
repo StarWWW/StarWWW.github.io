@@ -24,14 +24,18 @@ export async function initShelf() {
   let sel = Math.max(0, games.findIndex((g) => g.now_playing));
 
   const nowGame = games.find((g) => g.now_playing);
-  const st = document.getElementById('stGame');
-  if (st) st.textContent = nowGame ? nowGame.name : '—';
+  const paintStatus = () => {
+    const st = document.getElementById('stGame');
+    if (st) st.textContent = nowGame ? nowGame.name : t('gm.break');
+  };
+  paintStatus();
+  onLang(paintStatus);
 
   function cart(g, i) {
     const color = g.color || '#AC3232';
     const lift = g.now_playing ? 'translateY(-26px)' : `rotate(${TILT[i % TILT.length]}deg)`;
     const genre = (Array.isArray(g.genres) ? g.genres[0] : g.genres) || '';
-    return `<button type="button" class="cart${isDark(color) ? ' dark' : ''}" role="listitem" data-i="${i}" data-d style="--c:${esc(color)};transform:${lift}" aria-label="${esc(g.name)}">
+    return `<button type="button" class="cart rv${isDark(color) ? ' dark' : ''}" data-rv="drop" role="listitem" data-i="${i}" data-d style="--c:${esc(color)};--i:${i};transform:${lift}" aria-label="${esc(g.name)}">
       <span class="cart-body"></span>
       <span class="cart-label"><span class="cart-cover">${g.cover_url ? `<img alt="" data-cover="${esc(g.cover_url)}">` : `<span class="cart-ini" aria-hidden="true">${esc(g.name.trim().charAt(0).toLocaleUpperCase('tr'))}</span>`}</span>
       <span class="cart-txt"><span class="nm">${esc(g.name)}</span><span class="gn">${esc([genre, year(g.released)].filter(Boolean).join(' · '))}</span></span></span>

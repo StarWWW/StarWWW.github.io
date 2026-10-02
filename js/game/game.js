@@ -1145,6 +1145,7 @@ class Game {
     this.root.remove();
     document.documentElement.style.scrollBehavior = this.prevSB;
     G = null;
+    API.fx?.thaw?.();
     if (again) setTimeout(() => startGame(), 60);
   }
 }

@@ -357,7 +357,10 @@ export async function initWall() {
   API.wall = {
     setSpray,
     isSpraying: () => spraying,
-    focus: () => { document.getElementById('duvar').scrollIntoView({ behavior: 'smooth' }); setSpray(true); },
+    focus: () => {
+      if (API.fx?.scrollTo) API.fx.scrollTo('#duvar'); else document.getElementById('duvar').scrollIntoView({ behavior: 'smooth' });
+      setSpray(true);
+    },
     reload: loadStrokes,
   };
 }

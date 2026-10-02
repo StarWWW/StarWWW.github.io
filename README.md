@@ -12,7 +12,8 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Projeler** | UltraTurk + 2048 kartları; altında GitHub API'den otomatik repo listesi. |
 | **Envanter** | Yetenekler. Puanı 0 olanlar görünmez — puanları Kontrol Odası'ndan verirsin. |
 | **Oyun rafı** | Kartuşlar; kapaklar otomatik 8-bit'e çevrilir, üstüne gelince tüm bilgiler. |
-| **Müzik** | Taşınabilir MP3 çalar + kitaplık. 30 sn önizleme çalar, tamamı için Apple Music linki. |
+| **Müzik** | Taşınabilir MP3 çalar + kitaplık, **Spotify** ile. Ziyaretçi tarayıcısında Spotify'a giriş yaptıysa şarkının tamamı çalar, yapmadıysa Spotify önizleme verir. |
+| **FX** | Açılış ekranı, yumuşak kaydırma, beliren bölümler, harf harf başlıklar, 3B eğilen kartlar, mıknatıslı tuşlar, imleç köşeleri, piksel mod geçişi. Hero'daki **FX: TAM / AZ** anahtarıyla kapatılabilir. |
 | **Duvar** | Herkesin ortak sprey duvarı: canlı imleçler, damlayan boya, her pazartesi 00:00'da buff, arşiv. |
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
 | **Gizli terminal** | <kbd>`</kbd> tuşu (1'in solundaki tuş). `help` yaz. |
@@ -31,6 +32,7 @@ css/game.css        oyun katmanı (oyun açılınca yüklenir)
 css/admin.css       kontrol odası (açılınca yüklenir)
 js/config.js        ← AYARLAR (Supabase adresi/anahtarı burada)
 js/main.js          her şeyi başlatır
+js/fx.js            animasyon sistemi (GSAP + ScrollTrigger + SplitText + Lenis, CDN)
 js/sections/*.js    bölümler
 js/game/game.js     Sayfayı Yok Et
 js/admin.js         Kontrol Odası
@@ -47,7 +49,14 @@ python -m http.server 8080
 
 Sonra tarayıcıda `http://localhost:8080`. (Dosyayı çift tıklayıp açma: ES modülleri `file://` üzerinde çalışmaz.)
 
-## GitHub Pages'e yayınlama
+## Güncellemeleri yayınlama (tek tık)
+
+Klasördeki **`yayinla.bat`** dosyasına çift tıkla: değişen dosyaları gösterir, kısa bir not ister, commit edip GitHub'a gönderir; site 1-2 dakikada güncellenir.
+- GitHub'da senin bilgisayarında olmayan bir değişiklik varsa önce onu alır.
+- `js/config.js` içinde gizli `service_role` anahtarı ya da `.env` gibi gizli dosyalar varsa göndermeyi durdurur.
+- Denemek için terminalden: `.\yayinla.ps1 -Kuru` (hiçbir şey göndermeden ne yapacağını gösterir).
+
+## GitHub Pages'e yayınlama (ilk kurulum)
 
 1. GitHub'da **`StarWWW.github.io`** adında public bir repo aç (adı tam olarak bu olmalı).
 2. Bu klasörü o repoya push et:
@@ -71,6 +80,7 @@ supabase.com → **New project**. Bölge olarak Frankfurt (eu-central-1) Türkiy
 **SQL Editor → New query**:
 1. `supabase/schema.sql` dosyasının tamamını yapıştır → **Run**.
 2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve 43 yetenek; sadece bir kez).
+3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar). Daha önce kurduysan sadece bunu çalıştırman yeterli.
 
 ### 3. Siteyi bağla
 **Project Settings → API**: `Project URL` ve `anon public` anahtarını `js/config.js` içine yaz:
@@ -112,12 +122,22 @@ Onu SQL Editor'da çalıştır, sayfayı yenile, tekrar `login`. Artık Kontrol 
 
 Fonksiyon sadece yöneticiler tarafından çağrılabilir; anahtar sitede görünmez.
 
-### 7. (İsteğe bağlı) Eski duvarları temizle
+### 7. Spotify (şarkı ekleme)
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**
+   - İsim: **`spotify`**
+   - İçerik: `supabase/functions/spotify/index.ts` dosyasının tamamı → **Deploy**.
+2. Bu kadarıyla Kontrol Odası'nda **Spotify şarkı linkini yapıştırarak** ekleyebilirsin (Spotify uygulamasında şarkı → Paylaş → Şarkı bağlantısını kopyala). Albüm, parça no, yıl, tür, süre ve kapak otomatik gelir. Anahtar gerekmez.
+3. **Aramak** için (isteğe bağlı): https://developer.spotify.com/dashboard → **Create app** (Redirect URI: `https://starwww.github.io`, API: *Web API*). Client ID ve Client secret'ı Supabase → **Edge Functions → Secrets**'a `SPOTIFY_CLIENT_ID` ve `SPOTIFY_CLIENT_SECRET` olarak ekle.
+   > Spotify, Şubat 2026'dan beri geliştirici uygulamaları için **uygulama sahibinin Premium olmasını** şart koşuyor ve aramaları 10 sonuçla sınırlıyor. Premium yoksa link yapıştırma yolu her zaman çalışır.
+
+**Tam şarkı kimde çalar?** Spotify'ın kuralı: ziyaretçi aynı tarayıcıda open.spotify.com'a giriş yaptıysa embed şarkının tamamını çalar; giriş yapmadıysa (ya da tarayıcısı üçüncü taraf çerezleri engelliyorsa) Spotify kısa bir önizleme verir. Çalar bunu algılayıp "tamamı için Spotify'a giriş yap" uyarısı gösterir.
+
+### 8. (İsteğe bağlı) Eski duvarları temizle
 Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür). Veritabanı şişmesin diye 12 haftadan eskileri silmek için `schema.sql`'in en altındaki `pg_cron` satırını kullan.
 
 ## İçerik güncelleme
 
-- **Şarkı ekle:** `login` → *Müzik Ekle* → ara → **+ EKLE**. Süre, albüm, parça no, yıl, tür, kapak ve önizleme otomatik gelir.
+- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür ve kapak otomatik gelir.
 - **Oyun ekle:** *Oyun Ekle* → ara → **SEÇ** → durumu, notu, kartuş rengini seç → **RAFA KOY**. Geliştirici, yayıncı, çıkış tarihi, tür, platform ve kapak otomatik gelir.
 - **Yetenek puanla:** *Yetenekler* → kaydırıcılar → **KAYDET**.
 - **Moderasyon:** *Duvar + Defter* → duvarda bir çizgiye tıkla → **SEÇİLİYİ SİL**; not ve skor silme; **ŞİMDİ BUFF'LA**.
@@ -135,9 +155,15 @@ Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür
 - **Stil metresi** (aynı hareketi tekrarlamak daha az puan verir): D DOODLE → C CRASH → B BRUTAL → A ANARŞİ → S SPREY → SS SSEGFAULT → SSS SSSUDO → ???
 - 12 başarım, online skor tablosu (3 harfli arcade adı), çıkınca VHS geri sarma.
 
+## Animasyonlar (FX)
+
+- İşletim sisteminde "hareketi azalt" açıksa (Windows: *Ayarlar → Erişilebilirlik → Görsel efektler → Animasyon efektleri* kapalı) site **FX: AZ** modunda açılır: süs döngüleri ve büyük hareketler durur, tuş geri bildirimleri kalır. İlk açılışta "TAM HAREKET" düğmeli bir bildirim çıkar.
+- Hero'daki **FX** anahtarı, footer'daki **FX** düğmesi ya da terminalde `fx tam` / `fx az` ile değiştirilir; seçim tarayıcıda hatırlanır.
+- Açılış ekranı oturum başına bir kez görünür; tıklayınca ya da bir tuşa basınca atlanır.
+- Kütüphaneler (GSAP, ScrollTrigger, SplitText, Lenis) jsDelivr'dan gelir; yüklenemezlerse site animasyonsuz ama eksiksiz çalışır.
+
 ## Notlar
 
-- "Hareketi azalt" ayarı açık ziyaretçilerde tüm animasyonlar kapanır.
 - Fontlar Google Fonts'tan: Archivo, Silkscreen, VT323, Rubik Wet Paint, Rubik Glitch, Caveat.
 - Palet: DawnBringer 32.
 - UltraTurk logosu Horyu (@horyu_dub) tasarımıdır.

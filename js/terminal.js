@@ -56,13 +56,16 @@ export function initTerminal() {
   }
   const toggle = () => (term.hidden ? open() : close());
 
-  const goto = (id) => { close(); document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); };
+  const goto = (id) => {
+    close();
+    if (API.fx?.scrollTo) API.fx.scrollTo(`#${id}`); else document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const COMMANDS = {
     help() {
       say(L('komutlar:', 'commands:'), 'y');
       say('  whoami · ls · cat <dosya> · cd <bölüm> · games · music · play [n] · pause · next · prev');
-      say('  spray · drug · real · lang tr|en · destroy · cowsay <yazı> · github · discord');
+      say('  spray · drug · real · lang tr|en · fx tam|az · destroy · cowsay <yazı> · github · discord');
       say('  date · echo · history · clear · exit · login · admin', 'd');
     },
     whoami() {
@@ -109,8 +112,15 @@ export function initTerminal() {
     next() { API.music?.next(); setTimeout(() => COMMANDS.np(), 300); },
     prev() { API.music?.prev(); setTimeout(() => COMMANDS.np(), 300); },
     spray() { close(); API.wall?.focus(); },
-    drug() { API.setMode?.('drug'); say(L('hapı yuttun.', 'you took the pill.'), 'ok'); },
-    real() { API.setMode?.('real'); say(L('gerçekliğe dönüldü.', 'back to reality.'), 'ok'); },
+    drug() { if (document.documentElement.dataset.mode !== 'drug') API.flipMode?.(); say(L('hapı yuttun.', 'you took the pill.'), 'ok'); },
+    real() { if (document.documentElement.dataset.mode === 'drug') API.flipMode?.(); say(L('gerçekliğe dönüldü.', 'back to reality.'), 'ok'); },
+    fx(args) {
+      const want = (args[0] || '').toLowerCase();
+      const map = { tam: 'full', full: 'full', on: 'full', az: 'reduce', low: 'reduce', off: 'reduce' };
+      if (!map[want]) return say(`fx ${document.documentElement.dataset.motion === 'reduce' ? 'az' : 'tam'} — ${L('kullanım: fx tam | fx az', 'usage: fx full | fx low')}`, 'd');
+      say(L('animasyonlar ayarlanıyor, sayfa yenileniyor...', 'adjusting animations, reloading...'), 'ok');
+      setTimeout(() => { try { localStorage.setItem('star.motion', map[want]); sessionStorage.setItem('star.booted', '1'); } catch { /* yok */ } location.reload(); }, 400);
+    },
     lang(args) { const l = (args[0] || '').toLowerCase(); if (l !== 'tr' && l !== 'en') return say('lang tr | lang en', 'err'); setLang(l); say(`lang = ${l}`, 'ok'); },
     destroy() { close(); API.startGame?.(); },
     konami() { COMMANDS.destroy(); },

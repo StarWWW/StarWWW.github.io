@@ -47,7 +47,8 @@ export const fmtDur = (ms) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Ziyaretçinin FX seçimi (html[data-motion]) — işletim sistemi tercihini de içerir
+export const reducedMotion = () => document.documentElement.dataset.motion === 'reduce';
 
 // Deterministik rastgele (duvar çizimleri her tarayıcıda aynı görünsün diye)
 export function mulberry32(seed) {

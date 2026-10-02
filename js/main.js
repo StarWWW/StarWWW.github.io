@@ -1,4 +1,4 @@
-import { $, $$, API, copyText, toast, store, reducedMotion } from './util.js';
+import { $, $$, API, copyText, toast, store } from './util.js';
 import { applyI18n, setLang, t, onLang } from './i18n.js';
 import { hydrateSprites, spriteURI, spriteSVG } from './sprites.js';
 import { init2048, initRepos } from './sections/projects.js';
@@ -8,16 +8,13 @@ import { initMusic } from './sections/music.js';
 import { initWall } from './sections/wall.js';
 import { initGuestbook } from './sections/guestbook.js';
 import { initTerminal } from './terminal.js';
+import { initFx } from './fx.js';
 
 // ---------- mod: REAL / DRUG ----------
 function setMode(mode, announce = true) {
   const html = document.documentElement;
   const next = mode === 'drug' ? 'drug' : 'real';
   if (html.dataset.mode === next && announce) return;
-  if (announce && !reducedMotion()) {
-    html.classList.add('mode-flash');
-    setTimeout(() => html.classList.remove('mode-flash'), 180);
-  }
   html.dataset.mode = next;
   try { localStorage.setItem('star.mode', next); } catch { /* yok */ }
   $$('.mode-name').forEach((el) => { el.textContent = next.toUpperCase(); });
@@ -73,6 +70,7 @@ async function startGame() {
   try {
     gameMod = gameMod || await import('./game/game.js');
     API.terminal?.close();
+    API.fx?.freeze();
     gameMod.startGame();
   } catch (err) {
     console.error('[oyun]', err);
@@ -126,7 +124,12 @@ function boot() {
   initCursors();
   initNav();
 
-  $('#modeToggle').addEventListener('click', () => setMode(document.documentElement.dataset.mode === 'drug' ? 'real' : 'drug'));
+  const flipMode = () => {
+    const next = document.documentElement.dataset.mode === 'drug' ? 'real' : 'drug';
+    if (API.fx?.pixelSwap) API.fx.pixelSwap(() => setMode(next)); else setMode(next);
+  };
+  API.flipMode = flipMode;
+  $('#modeToggle').addEventListener('click', flipMode);
   $$('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
   $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => toast(t('ft.copied'))));
   $('#ctaTerm').addEventListener('click', () => API.terminal?.open());
@@ -148,6 +151,7 @@ function boot() {
   window.addEventListener('hashchange', () => { if (location.hash === '#admin') openAdmin(); });
 
   store.set('star.visits', (store.get('star.visits', 0) || 0) + 1);
+  initFx();
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);

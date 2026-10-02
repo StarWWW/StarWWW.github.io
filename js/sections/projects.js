@@ -45,7 +45,7 @@ export async function initRepos() {
     if (failed) { box.innerHTML = `${head}<div class="dim">${esc(t('repo.err'))}</div>`; return; }
     if (!rows) return;
     const list = rows.length
-      ? rows.map((r) => `<div class="repo-row" data-d><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name)}/</a><span>${esc(r.lang || '—')}</span><span>★ ${r.stars}</span><span>${esc(r.desc || '')}</span></div>`).join('')
+      ? rows.map((r, k) => `<div class="repo-row rv" style="--i:${k}" data-d><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name)}/</a><span>${esc(r.lang || '—')}</span><span>★ ${r.stars}</span><span>${esc(r.desc || '')}</span></div>`).join('')
       : `<div class="dim">${esc(t('repo.none'))}</div>`;
     box.innerHTML = head + list + tail;
   };

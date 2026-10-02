@@ -30,20 +30,20 @@ export async function initGuestbook() {
   let notes = [];
   let total = 0;
 
-  function noteHTML(n) {
+  function noteHTML(n, k = 0) {
     const hsh = hashStr(String(n.id));
     const bg = COLORS[hsh % COLORS.length];
     const rot = ((hsh >> 4) % 9) - 4;
     const isTerm = n.message.startsWith('>');
-    return `<div class="note" data-d data-id="${esc(n.id)}" style="background:${bg};transform:rotate(${rot}deg)">
+    return `<div class="note rv" data-rv="slap" data-d data-id="${esc(n.id)}" style="--i:${k};background:${bg};transform:rotate(${rot}deg)">
       <p class="${isTerm ? 'term' : 'hand'}" style="${isTerm ? 'font-size:24px;line-height:1.1' : ''}">${esc(n.message)}</p>
-      <p class="px">— ${esc(n.name.toUpperCase())} · ${esc(ago(n.created_at))}</p></div>`;
+      <p class="px">— ${esc(n.name.toUpperCase())} · <span data-ts="${esc(n.created_at)}">${esc(ago(n.created_at))}</span></p></div>`;
   }
 
   function render() {
     if (!notes.length) { box.innerHTML = `<p class="empty-note" style="grid-column:1/-1">${esc(t('gb.empty'))}</p>`; return; }
     const more = total - notes.length;
-    box.innerHTML = notes.map(noteHTML).join('') + (more > 0 ? `<button type="button" class="note-more" id="gbMore">${t('gb.more', { n: more })}</button>` : '');
+    box.innerHTML = notes.map((n, k) => noteHTML(n, k)).join('') + (more > 0 ? `<button type="button" class="note-more" id="gbMore">${t('gb.more', { n: more })}</button>` : '');
   }
 
   async function load(append = false) {
@@ -116,5 +116,6 @@ export async function initGuestbook() {
       .subscribe();
   }
   onLang(render);
-  setInterval(render, 60000);
+  // zaman etiketlerini yenile (notları yeniden çizmeden, animasyonlar baştan oynamasın)
+  setInterval(() => box.querySelectorAll('[data-ts]').forEach((el) => { el.textContent = ago(el.dataset.ts); }), 60000);
 }
