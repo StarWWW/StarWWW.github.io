@@ -4,6 +4,7 @@
 // Fare, klavye, dokunma ya da kaydırma → boya geri akar ve sayfa kaldığı gibi döner.
 import { snapshotViewport } from './snap.js';
 
+const M_END = 2.1; // ~19 sn: her şey alttaki gölcüğe akmış olur
 const VERT = `attribute vec2 p;
 varying vec2 uv;
 void main() { uv = vec2(p.x * .5 + .5, .5 - p.y * .5); gl_Position = vec4(p, 0., 1.); }`;
@@ -35,17 +36,18 @@ void main() {
   float drip = pow(n1(x * 22. + 11.), 6.);        // ince, hızlı damlalar (yuvarlak uçlu)
   float lag = .2 * n1(x * 1.9 + 4.);             // bazı yerler geç başlar
   float mm = max(0., m - lag);
-  float d = pow(mm, 1.6) * (.05 + 1.1 * pow(broad, 1.4)) + pow(mm, 1.4) * 1.3 * drip;   // kayma (ekran yüksekliği cinsinden)
+  float drain = pow(max(0., m - .85), 1.5) * 1.9;  // sonda her şey akıp gider (ekran tamamen erir)
+  float d = pow(mm, 1.6) * (.05 + 1.1 * pow(broad, 1.4)) + pow(mm, 1.4) * 1.3 * drip + drain * (.75 + .5 * broad);   // kayma (ekran yüksekliği cinsinden)
   float stretch = .42 + .58 * uv.y;               // balmumu gibi uzama: aşağısı daha çok kayar
   float sy = uv.y - d * stretch;
   float wob = sin(uv.y * 18. + time * 2.2) * .0016 * min(1., m * 2.);
   // ekrandan taşacak boya altta bir gölcükte toplanır
-  float pz = min(.24, d * .3);
-  float yTop = 1. - pz;
+  float pz = min(.24, d * .3) * mix(1., .78, smoothstep(1.2, 2.4, d));   // her şey toplanınca gölcük oturur
+  float yTop = 1. - pz + sin(x * 26. + time * 1.8) * .005 * step(.01, pz);   // dalgalı yüzey
   float f = 0.;
   if (pz > .002 && uv.y > yTop) {
-    f = (uv.y - yTop) / pz;
-    float syTop = yTop - d * (.42 + .58 * yTop);
+    f = clamp((uv.y - yTop) / pz, 0., 1.);
+    float syTop = max(0., yTop - d * (.42 + .58 * yTop));
     sy = mix(syTop, 1., pow(f, .55));
     wob += sin(f * 14. - time * 3. + x * 40.) * .004;
   }
@@ -62,7 +64,7 @@ void main() {
     float tail = clamp(-sy / max(edgeY, .015), 0., 1.);
     vec3 smear = samp(vec2(uv.x, .015 + uv.y * .25));
     float keep = .22 + .78 * drip + .35 * broad;
-    float k = 1. - smoothstep(0., keep, tail);
+    float k = (1. - smoothstep(0., keep, tail)) * (1. - smoothstep(.9, 1.8, m) * (1. - drip * .8));   // izler zamanla kurur
     vec3 streak = mix(smear, hue(smear, time * .9 + uv.y * 4.), .5) * (.55 + .45 * k);
     c = mix(bg, streak, k * k * .9);
     c += vec3(1.) * .2 * step(tail, .01 + .02 * drip) * step(.01, d);   // ince ıslak çizgi
@@ -137,9 +139,9 @@ export function createMelt() {
   function loop(now) {
     raf = 0;
     if (state === 'melting') {
-      // yavaş başlar, hızlanır; ~12 sn sonra durur
+      // yavaş başlar, hızlanır; sonunda bütün ekran akıp gölcükte toplanır
       const t = (now - t0) / 1000;
-      m = Math.min(1.2, t / 10);
+      m = Math.min(M_END, t / 9);
     } else if (state === 'reform') {
       // süreye bağlı (kare hızı düşse de ~0.45 sn'de biter)
       const k = Math.min(1, (now - r0t) / 450);
@@ -147,7 +149,7 @@ export function createMelt() {
       if (k >= 1) { hide(); return; }
     }
     render(now);
-    if (state === 'melting' && m >= 1.2) return; // tamamen eridi, sabit kal
+    if (state === 'melting' && m >= M_END) return; // tamamen eridi, gölcük olarak kal
     raf = requestAnimationFrame(loop);
   }
 

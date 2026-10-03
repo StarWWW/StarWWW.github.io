@@ -98,47 +98,70 @@ export async function initMusic() {
     }
   }
 
-  // ---------- mini çalar: müzik bölümü ekranda değilken sol altta ----------
+  // ---------- mini çalar: müzik bölümü ekranda değilken sol kenarda ----------
   // Bir şarkı çalınmaya başladıktan sonra, MP3 çalar ekrandan çıkınca belirir; bölüme dönünce kaybolur.
+  // Dikey, cep MP3'ü gibi. Sayfanın önüne geçmesin diye ekranın sol kenarına saklanır, sadece "MP3" tutamağı
+  // görünür; üstüne gelince / dokununca açılır. Sayfanın yanında yeterli boşluk varsa (geniş ekran) hep açık durur.
   const mini = document.createElement('div');
   mini.className = 'mini-mp3';
   mini.setAttribute('role', 'region');
   mini.inert = true;
   mini.innerHTML = `
-    <div class="mm-screen">
-      <button type="button" class="mm-art" data-a="go"><img class="pixelated" alt="" width="44" height="44"><span class="mm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
-      <div class="mm-meta">
+    <div class="mm-body">
+      <div class="mm-head"><span class="px mm-brand">S★MP3</span><button type="button" class="px mm-x" data-a="x">✕</button></div>
+      <div class="mm-screen">
         <span class="px mm-state"></span>
+        <button type="button" class="mm-art" data-a="go"><img class="pixelated" alt="" width="96" height="96"></button>
         <button type="button" class="brut mm-title" data-a="go"><span class="mm-t"></span></button>
         <span class="term mm-artist"></span>
+        <div class="mm-bar" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><i></i></div>
       </div>
-      <button type="button" class="px mm-x" data-a="x">✕</button>
-      <div class="mm-bar" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><i></i></div>
-    </div>
-    <div class="mm-ctrl">
-      <button type="button" class="px" data-a="prev">◀◀</button>
-      <button type="button" class="px mm-play" data-a="play">▶</button>
-      <button type="button" class="px" data-a="next">▶▶</button>
-      <span class="mm-vol">
+      <div class="mm-ctrl">
+        <button type="button" class="px" data-a="prev">◀◀</button>
+        <button type="button" class="px mm-play" data-a="play">▶</button>
+        <button type="button" class="px" data-a="next">▶▶</button>
+      </div>
+      <div class="mm-vol">
         <button type="button" class="px mm-mute" data-a="mute" aria-pressed="false">VOL</button>
         <button type="button" class="px mm-step" data-a="down">−</button>
-        <span class="mm-segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--j:${i}"></i>`).join('')}</span>
         <button type="button" class="px mm-step" data-a="up">+</button>
-      </span>
-    </div>`;
+      </div>
+      <div class="mm-segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--j:${i}"></i>`).join('')}</div>
+    </div>
+    <button type="button" class="mm-grip" data-a="grip" aria-expanded="false"><span class="mm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="px mm-grip-t">MP3</span><span class="mm-arrow" aria-hidden="true">▶</span></button>`;
   document.body.append(mini);
+  const mmBody = mini.querySelector('.mm-body');
+  const grip = mini.querySelector('.mm-grip');
   let miniArmed = false; let miniClosed = false; let mp3Seen = true;
+  let miniOpen = false; let roomy = false; let closeTm = 0;
   function labelMini() {
     mini.setAttribute('aria-label', t('mu.mini'));
-    const lab = { go: 'mu.miniGo', x: 'mu.miniX', prev: 'mu.miniPrev', next: 'mu.miniNext', mute: 'mu.miniMute', down: 'mu.miniDown', up: 'mu.miniUp' };
+    const lab = { go: 'mu.miniGo', x: 'mu.miniX', prev: 'mu.miniPrev', next: 'mu.miniNext', mute: 'mu.miniMute', down: 'mu.miniDown', up: 'mu.miniUp', grip: 'mu.miniGrip' };
     mini.querySelectorAll('[data-a]').forEach((b) => { if (lab[b.dataset.a]) b.setAttribute('aria-label', t(lab[b.dataset.a])); });
     mini.querySelector('.mm-bar').setAttribute('aria-label', t('mu.miniSeek'));
+  }
+  function setOpen(on) {
+    miniOpen = on;
+    clearTimeout(closeTm);
+    mini.classList.toggle('open', on);
+    grip.setAttribute('aria-expanded', String(on));
+    mmBody.inert = !on;
+  }
+  // sayfanın yanındaki boşluk çalara yetiyor mu? (yetiyorsa sayfanın önüne geçmeden hep açık durabilir)
+  const frameEl = document.querySelector('.frame');
+  function measureRoom() {
+    const free = frameEl ? (window.innerWidth - frameEl.offsetWidth) / 2 : 0;
+    const was = roomy;
+    roomy = free >= 196;
+    mini.classList.toggle('roomy', roomy);
+    if (roomy !== was && mini.classList.contains('in')) setOpen(roomy);
   }
   function syncMini() {
     const show = miniArmed && !miniClosed && !mp3Seen && Boolean(cur());
     if (show === mini.classList.contains('in')) return;
     mini.classList.toggle('in', show);
     mini.inert = !show;
+    setOpen(show && roomy);
   }
   function showMiniTitle(tr) {
     const box = mini.querySelector('.mm-title');
@@ -149,6 +172,8 @@ export async function initMusic() {
     requestAnimationFrame(() => {
       if (el.scrollWidth > box.clientWidth + 2) { box.classList.add('long'); el.innerHTML = `<span>${esc(tr.title)}</span><span aria-hidden="true">${esc(tr.title)}</span>`; }
     });
+    // saklıyken şarkı değişince tutamak hafifçe zıplasın
+    if (!miniOpen && mini.classList.contains('in')) { grip.classList.remove('bump'); void grip.offsetWidth; grip.classList.add('bump'); }
   }
   function renderMini(on, p, pos, dur) {
     mini.classList.toggle('is-playing', on);
@@ -164,7 +189,8 @@ export async function initMusic() {
   }
   mini.addEventListener('click', (e) => {
     const a = e.target.closest('[data-a]')?.dataset.a;
-    if (a === 'play') toggle();
+    if (a === 'grip') setOpen(!miniOpen);
+    else if (a === 'play') toggle();
     else if (a === 'prev') load(idx - 1, playing());
     else if (a === 'next') load(idx + 1, playing());
     else if (a === 'mute') toggleMute();
@@ -173,6 +199,24 @@ export async function initMusic() {
     else if (a === 'x') { miniClosed = true; syncMini(); }
     else if (a === 'go') { if (API.fx?.scrollTo) API.fx.scrollTo('#muzik'); else document.getElementById('muzik')?.scrollIntoView(); }
   });
+  // ses çubuğuna tıklayınca o seviyeye
+  mini.querySelector('.mm-segs').addEventListener('click', (e) => {
+    const seg = e.target.closest('i');
+    if (seg) setVol([...seg.parentElement.children].indexOf(seg) + 1);
+  });
+  // fareyle: üstüne gelince açılır, çıkınca kapanır (geniş ekranda hep açık)
+  if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    mini.addEventListener('pointerenter', () => { if (!roomy && mini.classList.contains('in')) setOpen(true); });
+    mini.addEventListener('pointerleave', () => {
+      if (roomy) return;
+      clearTimeout(closeTm);
+      closeTm = setTimeout(() => { if (!mini.querySelector(':focus-visible')) setOpen(false); }, 450); // klavyeyle gezilmiyorsa kapan
+    });
+  }
+  mini.addEventListener('focusin', () => { if (mini.classList.contains('in')) setOpen(true); });
+  mini.addEventListener('focusout', (e) => { if (!roomy && !mini.contains(e.relatedTarget) && !mini.matches(':hover')) setOpen(false); });
+  // dokunmatikte dışarı dokununca saklanır
+  document.addEventListener('pointerdown', (e) => { if (miniOpen && !roomy && !mini.contains(e.target)) setOpen(false); }, { passive: true });
   const miniBar = mini.querySelector('.mm-bar');
   miniBar.addEventListener('click', (e) => { const r = miniBar.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width); });
   miniBar.addEventListener('keydown', (e) => {
@@ -183,6 +227,9 @@ export async function initMusic() {
     new IntersectionObserver(([e]) => { mp3Seen = e.intersectionRatio >= 0.2; syncMini(); }, { threshold: [0, 0.2, 0.5] }).observe(mp3);
   }
   audio.addEventListener('play', () => { miniArmed = true; miniClosed = false; syncMini(); });
+  window.addEventListener('resize', measureRoom);
+  measureRoom();
+  setOpen(false);
   labelMini();
 
   // ---------- görselleştirici ----------

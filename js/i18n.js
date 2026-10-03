@@ -149,7 +149,7 @@ const DYN = {
   'mu.full': ['TAMAMI {d}', 'FULL {d}'],
   'mu.mini': ['Mini MP3 çalar', 'Mini MP3 player'], 'mu.miniGo': ['Müzik bölümüne git', 'Go to the music section'], 'mu.miniX': ['Mini çaları gizle', 'Hide the mini player'],
   'mu.miniPrev': ['Önceki şarkı', 'Previous track'], 'mu.miniNext': ['Sonraki şarkı', 'Next track'], 'mu.miniMute': ['Sesi kapat / aç', 'Mute / unmute'],
-  'mu.miniDown': ['Sesi kıs', 'Volume down'], 'mu.miniUp': ['Sesi aç', 'Volume up'], 'mu.miniSeek': ['Konum', 'Position'],
+  'mu.miniDown': ['Sesi kıs', 'Volume down'], 'mu.miniUp': ['Sesi aç', 'Volume up'], 'mu.miniSeek': ['Konum', 'Position'], 'mu.miniGrip': ['Mini çaları aç / sakla', 'Show / hide the mini player'],
   'mu.noPv': ['Bu şarkının Spotify önizlemesi yok — tamamını Spotify\'da dinle.', 'No Spotify preview for this song — listen to it on Spotify.'],
   'mu.openFull': ['TAMAMINI SPOTIFY\'DA DİNLE ↗', 'LISTEN ON SPOTIFY ↗'],
   'mu.vizHint': ['▶ PLAĞA TIKLA, ÇALSIN', '▶ CLICK THE RECORD TO PLAY'],
