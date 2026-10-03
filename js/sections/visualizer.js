@@ -178,12 +178,11 @@ export function createVisualizer(canvas, opts) {
     // --- osiloskop dalgası (sol + sağ, aynalı) ---
     const amp = H * 0.32;
     const gapL = cx - R - 26; const gapR = cx + R + 26; const endR = W - 44;
-    g.lineWidth = 2; g.lineJoin = 'round';
-    g.shadowColor = rgba(c2, 0.9); g.shadowBlur = rm ? 0 : 12;
-    g.strokeStyle = rgba(c2, 0.95);
+    // parlama: shadowBlur yerine kalın-yarı saydam + ince-parlak iki çizgi (shadowBlur her karede çok pahalı)
+    g.lineJoin = 'round';
+    g.beginPath();
     [[16, gapL, 1], [gapR, endR, -1]].forEach(([x0, x1, dir]) => {
       if (x1 - x0 < 20) return;
-      g.beginPath();
       const steps = Math.max(24, (x1 - x0) / 3 | 0);
       for (let i = 0; i <= steps; i++) {
         const f = i / steps;
@@ -197,9 +196,9 @@ export function createVisualizer(canvas, opts) {
         const y = cy + v * amp * (0.35 + taper * 0.65);
         if (i) g.lineTo(x, y); else g.moveTo(x, y);
       }
-      g.stroke();
     });
-    g.shadowBlur = 0;
+    if (!rm) { g.lineWidth = 7; g.strokeStyle = rgba(c2, 0.14); g.stroke(); }
+    g.lineWidth = 2; g.strokeStyle = rgba(c2, 0.95); g.stroke();
 
     // --- frekans halkası ---
     const N = smooth.length;
@@ -320,15 +319,19 @@ export function createVisualizer(canvas, opts) {
     if (live && opts.onFrame) opts.onFrame(freq);
   }
 
+  // sadece ekrandayken çiz (müzik bölümü görünmüyorsa iş yok)
+  let onScreen = true;
+  new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; if (onScreen && opts.playing()) start(); }).observe(canvas);
+
   function loop(now) {
     raf = 0;
-    if (document.hidden) return;
+    if (document.hidden || !onScreen) return;
     const busy = opts.playing() || rings.length || parts.length;
     const fpsCap = reducedMotion() ? 33 : 0;
     if (!fpsCap || now - lastDraw > fpsCap) { draw(now); lastDraw = now; }
     if (busy) raf = requestAnimationFrame(loop);
   }
-  const start = () => { if (!raf) raf = requestAnimationFrame(loop); };
+  function start() { if (!raf && onScreen) raf = requestAnimationFrame(loop); }
 
   canvas.addEventListener('click', () => opts.toggle());
   window.addEventListener('resize', resize);

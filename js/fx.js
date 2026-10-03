@@ -555,6 +555,21 @@ const api = {
     if (lenis) lenis.scrollTo(target, { offset: -72, duration: 1.2 });
     else (typeof target === 'string' ? $(target) : target)?.scrollIntoView({ behavior: motionFull() ? 'smooth' : 'auto' });
   },
+  // verilen y'ye, verilen eğriyle kay (kaydırma sırasında kullanıcı girdisi kilitli)
+  glide(y, { duration = 1, easing = (p) => p, onComplete } = {}) {
+    if (lenis) { lenis.scrollTo(y, { duration, easing, lock: true, force: true, onComplete }); return; }
+    const from = window.scrollY; const t0 = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / (duration * 1000));
+      window.scrollTo({ top: from + (y - from) * easing(p), behavior: 'instant' });
+      if (p < 1) requestAnimationFrame(step); else onComplete?.();
+    };
+    requestAnimationFrame(step);
+  },
+  jump(y) {
+    if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+    else window.scrollTo({ top: y, behavior: 'instant' });
+  },
 };
 
 // ---------------------------------------------------------------- başlat

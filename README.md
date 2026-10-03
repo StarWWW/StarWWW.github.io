@@ -12,7 +12,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Projeler** | UltraTurk + 2048 AI LAB kartları; altında GitHub API'den otomatik repo listesi. |
 | **Envanter** | RPG envanteri: karakter kartı + XP, yetenek haritası (radar), "kuşanılanlar" (her sınıfın en iyisi), kategori sekmeleri, LV/A–Z sıralama, nadirlik renkleri (SIRADAN → EFSANEVİ), detay paneli. Puanları Kontrol Odası'ndan verirsin; puanlanmamışlar gri görünür. |
 | **Oyun rafı** | Gerçek DVD kutuları: Steam'in dikey kutu kapağı (yoksa tasarlanmış kapak), sırt, parlama, durum etiketi. Üstüne gelince kalkar; tıklayınca kutu dönerek öne gelir, disk dışarı kayar; **ÇEVİR** ile arka kapakta tüm bilgiler ve notun. Sürükleyerek döndürülür; <kbd>Esc</kbd> kapat, <kbd>Boşluk</kbd> çevir, <kbd>←</kbd> <kbd>→</kbd> gez. |
-| **Müzik** | Taşınabilir MP3 çalar + kitaplık + spektrum. Her şarkının **Spotify 30 sn önizlemesini** kendi çalarımızla çalar: ses ayarı her cihazda çalışır (VOL / − / + / ses çubuğu, klavyeyle de, iPhone dahil), spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki. | Görselleştirici: albüm kapağıyla dönen plak, frekans halkası, osiloskop dalgası, vuruşta şok dalgası + parçacık, VU metre ve tahmini BPM; renkler kapaktan gelir, plağa tıklayınca çalar.
+| **Müzik** | Taşınabilir MP3 çalar + kitaplık + spektrum. Her şarkının **Spotify 30 sn önizlemesini** kendi çalarımızla çalar: ses ayarı her cihazda çalışır (VOL / − / + / ses çubuğu, klavyeyle de, iPhone dahil), spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki. Çalarken müzik bölümünden çıkınca sol altta **mini MP3 çalar** belirir (çal/duraklat, önceki/sonraki, konum, ses; kapağa tıklayınca bölüme döner). | Görselleştirici: albüm kapağıyla dönen plak, frekans halkası, osiloskop dalgası, vuruşta şok dalgası + parçacık, VU metre ve tahmini BPM; renkler kapaktan gelir, plağa tıklayınca çalar.
 | **FX** | Açılış ekranı, yumuşak kaydırma, beliren bölümler, harf harf başlıklar, 3B eğilen kartlar, mıknatıslı tuşlar, imleç köşeleri, piksel mod geçişi. Hero'daki **FX: TAM / AZ** anahtarıyla kapatılabilir. |
 | **Duvar** | Herkesin ortak sprey duvarı: canlı imleçler, damlayan boya, her pazartesi 00:00'da buff, arşiv. |
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
@@ -186,6 +186,7 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 
 - `robots.txt` her şeyi açar, `?admin` / `?debug` parametrelerini kapatır; `sitemap.xml`'deki `lastmod` tarihlerini büyük güncellemelerde değiştir.
 - Yazı tipleri `assets/fonts/`'tan yüklenir (Latin + Türkçe alt kümeler), ana fontlar önceden yüklenir (preload). DRUG avatarı 384 KB GIF yerine 39 KB animasyonlu WebP ve sadece DRUG moduna geçince indirilir. Kapak görselleri tembel yüklenir (lazy).
+- Akıcılık: animasyonlar sadece ekrandayken çalışır (görselleştirici, oda, sayaçlar). Kaydırma ya da müzik sırasında sayfanın köküne CSS değişkeni yazılmaz (4-5 bin öğenin stilini her karede yeniden hesaplatıyordu); efektler sadece ekrandaki birkaç öğeye doğrudan yazılır. Görselleştiricide `shadowBlur` yok.
 - Veri çekmede zaman aşımı var: Supabase ya da GitHub yanıt vermezse bölümler `data/*.json` yedeğine düşer, "yükleniyor"da takılı kalmaz.
 
 ## Gizli şeyler
@@ -202,8 +203,9 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 - 12 başarım, online skor tablosu (3 harfli arcade adı), çıkınca VHS geri sarma.
 
 **DRUG modunun sırları** (`js/drug.js`; sadece hap yutulunca çalışır, terminalde `trip` bulunanları ve ipuçlarını listeler):
-- Her zaman: gökkuşağı imleç izi, hızlı kaydırınca eriyen sayfa, kayan şeritte gizli mesajlar, müzik çalarken sayfanın basla nefes alması.
-- 14 sır: ekranda gezen halüsinasyon böceklerini yakala (1 ve 5 böcek), klavyede `uyan` (kod yağmuru), `dans`, `ters` (ters dünya), `asit` (bunlar terminalde de çalışır), avatara 3 tık (üçüncü göz), Shift'i 2 sn basılı tut (negatif), logoya 7 tık, 25 sn hiçbir şey yapma (erime), bir bölüm başlığına çift tık (patlama), footer odasında pencereye (UFO) ve kediye (uçan kedi) tıkla, müzik çalarken DRUG'da kal (senkron). Hepsi bulununca başlık kalıcı olarak gökkuşağı olur.
+- Her zaman: gökkuşağı imleç izi, hızlı kaydırınca jöle gibi esneyen bölüm başlıkları, kayan şeritte gizli mesajlar, müzik çalarken başlıkların basla nefes alması.
+- 13 sır: ekranda gezen halüsinasyon böceklerini yakala (1 ve 5 böcek), klavyede `uyan` (kod yağmuru), `ters` (ters dünya: ekran baş aşağı döner, yerçekimi tersine işler, sayfa "yukarı" doğru hızlanarak kayıp sona çarpar), `asit` (bunlar terminalde de çalışır), avatara 3 tık (avatar gözlerini açar, imleci izler, göz kırpar), Shift'i 2 sn basılı tut (negatif), logoya 7 tık, 25 sn hiçbir şey yapma (ekran gerçekten erir: görünen ekranın resmi bir WebGL shader'ında akar, boya izi bırakır, altta gölcük olur; fareyi oynatınca geri akar), bir bölüm başlığına çift tık (patlama), footer odasında pencereye (UFO) ve kediye (gökkuşağı iziyle odada bir tur atan uçan kedi) tıkla, müzik çalarken DRUG'da kal (senkron). Hepsi bulununca final (kod yağmuru + büyük bildirim).
+- Erime için ekran görüntüsü kütüphanesiz alınır (`js/snap.js`): görünen kısım klonlanıp sitenin kendi CSS'iyle bir SVG `foreignObject` içinde tarayıcıya çizdirilir; WebGL yoksa renkli damla efektine düşer.
 
 ## Animasyonlar (FX)
 

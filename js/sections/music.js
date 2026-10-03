@@ -98,6 +98,93 @@ export async function initMusic() {
     }
   }
 
+  // ---------- mini çalar: müzik bölümü ekranda değilken sol altta ----------
+  // Bir şarkı çalınmaya başladıktan sonra, MP3 çalar ekrandan çıkınca belirir; bölüme dönünce kaybolur.
+  const mini = document.createElement('div');
+  mini.className = 'mini-mp3';
+  mini.setAttribute('role', 'region');
+  mini.inert = true;
+  mini.innerHTML = `
+    <div class="mm-screen">
+      <button type="button" class="mm-art" data-a="go"><img class="pixelated" alt="" width="44" height="44"><span class="mm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
+      <div class="mm-meta">
+        <span class="px mm-state"></span>
+        <button type="button" class="brut mm-title" data-a="go"><span class="mm-t"></span></button>
+        <span class="term mm-artist"></span>
+      </div>
+      <button type="button" class="px mm-x" data-a="x">✕</button>
+      <div class="mm-bar" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0"><i></i></div>
+    </div>
+    <div class="mm-ctrl">
+      <button type="button" class="px" data-a="prev">◀◀</button>
+      <button type="button" class="px mm-play" data-a="play">▶</button>
+      <button type="button" class="px" data-a="next">▶▶</button>
+      <span class="mm-vol">
+        <button type="button" class="px mm-mute" data-a="mute" aria-pressed="false">VOL</button>
+        <button type="button" class="px mm-step" data-a="down">−</button>
+        <span class="mm-segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--j:${i}"></i>`).join('')}</span>
+        <button type="button" class="px mm-step" data-a="up">+</button>
+      </span>
+    </div>`;
+  document.body.append(mini);
+  let miniArmed = false; let miniClosed = false; let mp3Seen = true;
+  function labelMini() {
+    mini.setAttribute('aria-label', t('mu.mini'));
+    const lab = { go: 'mu.miniGo', x: 'mu.miniX', prev: 'mu.miniPrev', next: 'mu.miniNext', mute: 'mu.miniMute', down: 'mu.miniDown', up: 'mu.miniUp' };
+    mini.querySelectorAll('[data-a]').forEach((b) => { if (lab[b.dataset.a]) b.setAttribute('aria-label', t(lab[b.dataset.a])); });
+    mini.querySelector('.mm-bar').setAttribute('aria-label', t('mu.miniSeek'));
+  }
+  function syncMini() {
+    const show = miniArmed && !miniClosed && !mp3Seen && Boolean(cur());
+    if (show === mini.classList.contains('in')) return;
+    mini.classList.toggle('in', show);
+    mini.inert = !show;
+  }
+  function showMiniTitle(tr) {
+    const box = mini.querySelector('.mm-title');
+    const el = mini.querySelector('.mm-t');
+    box.classList.remove('long');
+    el.innerHTML = `<span>${esc(tr.title)}</span>`;
+    mini.querySelector('.mm-artist').textContent = tr.artist || '';
+    requestAnimationFrame(() => {
+      if (el.scrollWidth > box.clientWidth + 2) { box.classList.add('long'); el.innerHTML = `<span>${esc(tr.title)}</span><span aria-hidden="true">${esc(tr.title)}</span>`; }
+    });
+  }
+  function renderMini(on, p, pos, dur) {
+    mini.classList.toggle('is-playing', on);
+    const pb = mini.querySelector('.mm-play');
+    pb.textContent = on ? '❚❚' : '▶';
+    pb.setAttribute('aria-label', on ? t('mu.pause') : t('mu.playT'));
+    if (Date.now() > flashUntil) mini.querySelector('.mm-state').textContent = $('mpState').textContent;
+    mini.querySelector('.mm-bar i').style.transform = `scaleX(${(p / 100).toFixed(4)})`;
+    const bar = mini.querySelector('.mm-bar');
+    bar.setAttribute('aria-valuemax', String(Math.round(dur / 1000)));
+    bar.setAttribute('aria-valuenow', String(Math.round(pos / 1000)));
+    bar.setAttribute('aria-valuetext', `${fmtDur(pos)} / ${fmtDur(dur)}`);
+  }
+  mini.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-a]')?.dataset.a;
+    if (a === 'play') toggle();
+    else if (a === 'prev') load(idx - 1, playing());
+    else if (a === 'next') load(idx + 1, playing());
+    else if (a === 'mute') toggleMute();
+    else if (a === 'down') setVol(vol - 1);
+    else if (a === 'up') setVol(vol + 1);
+    else if (a === 'x') { miniClosed = true; syncMini(); }
+    else if (a === 'go') { if (API.fx?.scrollTo) API.fx.scrollTo('#muzik'); else document.getElementById('muzik')?.scrollIntoView(); }
+  });
+  const miniBar = mini.querySelector('.mm-bar');
+  miniBar.addEventListener('click', (e) => { const r = miniBar.getBoundingClientRect(); seekTo((e.clientX - r.left) / r.width); });
+  miniBar.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); seekBy(5); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); seekBy(-5); }
+  });
+  if (mp3) {
+    new IntersectionObserver(([e]) => { mp3Seen = e.intersectionRatio >= 0.2; syncMini(); }, { threshold: [0, 0.2, 0.5] }).observe(mp3);
+  }
+  audio.addEventListener('play', () => { miniArmed = true; miniClosed = false; syncMini(); });
+  labelMini();
+
   // ---------- görselleştirici ----------
   const eqBars = [...document.querySelectorAll('.mp3-eq i')];
   const viz = createVisualizer($('mpViz'), {
@@ -110,7 +197,7 @@ export async function initMusic() {
       if (!bins) return;
       eqBars.forEach((el, k) => {
         const a = Math.floor((k / eqBars.length) ** 1.6 * bins.length * 0.7);
-        el.style.height = `${Math.max(15, (bins[a] / 255) * 100)}%`;
+        el.style.transform = `scaleY(${Math.max(0.15, bins[a] / 255).toFixed(2)})`;
       });
     },
   });
@@ -154,6 +241,7 @@ export async function initMusic() {
     });
     const stEl = $('stTrack');
     if (stEl) stEl.textContent = `${tr.title} — ${tr.artist}`;
+    renderMini(on, p, pos, dur);
   }
 
   function renderDock() {
@@ -193,7 +281,10 @@ export async function initMusic() {
     const art = $('mpArt');
     art.removeAttribute('src');
     art.parentElement.classList.remove('lit');
-    if (tr.artwork_url) pixelate(tr.artwork_url, 32).then((src) => { if (src && idx === i) { art.src = src; art.parentElement.classList.add('lit'); } });
+    const miniArt = mini.querySelector('.mm-art img');
+    miniArt.removeAttribute('src');
+    if (tr.artwork_url) pixelate(tr.artwork_url, 32).then((src) => { if (src && idx === i) { art.src = src; miniArt.src = src; art.parentElement.classList.add('lit'); } });
+    showMiniTitle(tr);
     viz?.setArt(tr.artwork_url);
     renderDock();
     render();
@@ -258,10 +349,14 @@ export async function initMusic() {
     volEl.setAttribute('aria-valuetext', muted ? t('mu.muted') : `${vol * 10}%`);
     volWrap?.classList.toggle('is-muted', muted || vol === 0);
     $('mpMute')?.setAttribute('aria-pressed', String(muted));
+    mini.querySelectorAll('.mm-segs i').forEach((sg, i) => sg.classList.toggle('on', i < vol));
+    mini.classList.toggle('is-muted', muted || vol === 0);
+    mini.querySelector('.mm-mute').setAttribute('aria-pressed', String(muted));
   }
   function flash() {
     $('mpState').textContent = muted || vol === 0 ? `× ${t('mu.muted')}` : t('mu.vol', { v: `${'▮'.repeat(vol)}${'▯'.repeat(10 - vol)}` });
     flashUntil = Date.now() + 1300;
+    mini.querySelector('.mm-state').textContent = $('mpState').textContent;
     clearTimeout(flash.tm);
     flash.tm = setTimeout(render, 1350);
   }
@@ -364,7 +459,7 @@ export async function initMusic() {
   renderLib();
   if (tracks.length) show(0);
   viz?.resize();
-  onLang(() => { renderLib(); show(idx); renderVol(); });
+  onLang(() => { renderLib(); show(idx); renderVol(); labelMini(); });
 
   // Bölüm yaklaşınca önizleme adreslerini sırayla hazırla (ilk tıklamada beklemesin)
   const muzik = document.getElementById('muzik');

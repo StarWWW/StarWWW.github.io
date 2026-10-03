@@ -105,8 +105,10 @@ export function initFooter() {
     const frame = () => {
       raf = 0;
       if (reducedMotion()) { letters.forEach((l) => l.style.removeProperty('--k')); return; }
+      // önce hepsini ölç, sonra yaz (okuma-yazma karışınca her harfte yerleşim yeniden hesaplanıyordu)
+      const rects = letters.map((l) => l.getBoundingClientRect());
       letters.forEach((l, i) => {
-        const r = l.getBoundingClientRect();
+        const r = rects[i];
         const d = Math.hypot(px - (r.left + r.width / 2), py - (r.top + r.height / 2));
         const k = Math.max(0, 1 - d / 420);
         l.style.setProperty('--k', k.toFixed(3));
