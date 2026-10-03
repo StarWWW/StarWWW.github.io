@@ -54,6 +54,7 @@ const EN = {
   'gm.hint': 'click a case — it spins, read the back',
   'gb.legal': 'your note is public and stored on a server · <a href="gizlilik.html">privacy</a>',
   'ld.inv': 'OPENING THE INVENTORY…', 'ld.shelf': 'STACKING THE SHELF…', 'ld.lib': 'LOADING THE LIBRARY…',
+  'ft.roomHint': 'night mode: click things in the room',
   'ft.cont': 'CONTINUE?', 'ft.contBtn': 'YES ↑ BACK TO TOP', 'ft.map': 'MAP', 'ft.status': 'ROOM STATUS', 'ft.privacy': 'PRIVACY POLICY', 'ft.cookies': 'COOKIE SETTINGS',
   'mu.volG': 'Volume', 'mu.pvBadge': 'SPOTIFY · 30-SEC PREVIEW', 'mu.mute': 'Mute', 'mu.volLevel': 'Volume level',
 };
