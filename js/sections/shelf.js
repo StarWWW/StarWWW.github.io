@@ -37,7 +37,7 @@ function coverGen(g) {
     <span class="cg-ed px">STAR EDITION</span>
   </span>`;
 }
-const art = (g) => `${coverGen(g)}${boxOf(g) ? `<img class="case-img" src="${esc(boxOf(g))}" alt="" decoding="async" draggable="false">` : ''}`;
+const art = (g) => `${coverGen(g)}${boxOf(g) ? `<img class="case-img" src="${esc(boxOf(g))}" alt="" loading="lazy" decoding="async" draggable="false">` : ''}`;
 const frontHTML = (g) => `<span class="case-band px"><b>PC</b><span>DVD-ROM</span><i>${spriteSVG('star', 2)}</i></span><span class="case-art">${art(g)}</span><span class="case-gloss" aria-hidden="true"></span>`;
 const spineHTML = (g) => `<span class="sp-band px">PC</span><span class="sp-title brut" lang="${nameLang(g.name)}">${esc(g.name)}</span><span class="sp-logo">${spriteSVG('star', 2)}</span>`;
 

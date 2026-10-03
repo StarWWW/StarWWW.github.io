@@ -1,5 +1,5 @@
 import { getSupabase } from '../supabase.js';
-import { $, esc, store, cleanText, hashStr, uuid, toast } from '../util.js';
+import { $, esc, store, cleanText, hashStr, uuid, toast, API } from '../util.js';
 import { t, onLang } from '../i18n.js';
 
 const COLORS = ['#FBF236', '#5FCDE4', '#FFFFFF', '#D77BBA', '#99E550', '#DF7126'];
@@ -118,4 +118,5 @@ export async function initGuestbook() {
   onLang(render);
   // zaman etiketlerini yenile (notları yeniden çizmeden, animasyonlar baştan oynamasın)
   setInterval(() => box.querySelectorAll('[data-ts]').forEach((el) => { el.textContent = ago(el.dataset.ts); }), 60000);
+  API.guestbook = { count: () => total };
 }

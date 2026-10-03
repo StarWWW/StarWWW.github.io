@@ -1,3 +1,5 @@
+import { store } from './util.js';
+
 // TR varsayılan dil: statik metinlerin Türkçesi HTML'in kendisinde durur, ilk açılışta hafızaya alınır.
 // EN çevirileri ve JS'in ürettiği metinlerin her iki dili burada.
 const EN = {
@@ -50,6 +52,9 @@ const EN = {
   'sk.cls': 'ENGINEER · APPRENTICE', 'sk.radar': 'SKILL MAP', 'sk.radarLabel': 'Average level per category',
   'sk.equip': 'EQUIPPED', 'sk.equipNote': 'best of each class', 'sk.sort': 'Sort',
   'gm.hint': 'click a case — it spins, read the back',
+  'gb.legal': 'your note is public and stored on a server · <a href="gizlilik.html">privacy</a>',
+  'ld.inv': 'OPENING THE INVENTORY…', 'ld.shelf': 'STACKING THE SHELF…', 'ld.lib': 'LOADING THE LIBRARY…',
+  'ft.cont': 'CONTINUE?', 'ft.contBtn': 'YES ↑ BACK TO TOP', 'ft.map': 'MAP', 'ft.status': 'ROOM STATUS', 'ft.privacy': 'PRIVACY POLICY', 'ft.cookies': 'COOKIE SETTINGS',
   'mu.volG': 'Volume', 'mu.pvBadge': 'SPOTIFY · 30-SEC PREVIEW', 'mu.mute': 'Mute', 'mu.volLevel': 'Volume level',
 };
 
@@ -93,6 +98,8 @@ const DYN = {
   'wl.slow': ['Yavaş! Sprey kutun soğusun.', 'Slow down! Let the can cool off.'],
   'wl.noArchive': ['Henüz arşivlenmiş duvar yok.', 'No archived walls yet.'],
   'wl.archWeek': ['HAFTA {w} · {n} ÇİZGİ', 'WEEK {w} · {n} STROKES'],
+  'wl.archBuff': ['BUFF · {d} · {n} ÇİZGİ', 'BUFFED · {d} · {n} STROKES'],
+  'wl.archErr': ['Arşiv şu an açılamadı, birazdan tekrar dene.', 'Could not open the archive right now, try again soon.'],
   'wl.visitor': ['ziyaretçi_{n}', 'visitor_{n}'],
   'gb.sent': ['YAPIŞTIRILDI ✓', 'STUCK ✓'],
   'gb.err': ['Gönderilemedi, birazdan tekrar dene.', 'Could not send, try again soon.'],
@@ -131,6 +138,10 @@ const DYN = {
   // --- müzik ---
   'mu.muted': ['SES KAPALI', 'MUTED'],
   'pr.loadingD': ['yükleniyor...', 'loading...'],
+  'ft.over': ['OYUN BİTTİ', 'GAME OVER'], 'ft.coin': ['JETON AT ↻', 'INSERT COIN ↻'], 'ft.credit': ['KREDİ 01 · DEVAM?', 'CREDIT 01 · CONTINUE?'],
+  'ft.clock': ['İSTANBUL', 'ISTANBUL'], 'ft.playing': ['ÇALIYOR', 'PLAYING'], 'ft.gaming': ['OYUNDA', 'IN GAME'], 'ft.wall': ['DUVAR', 'WALL'], 'ft.notes': ['DEFTER', 'GUESTBOOK'],
+  'ft.wallN': ['bu hafta {n} çizgi', '{n} strokes this week'], 'ft.notesN': ['{n} not', '{n} notes'], 'ft.silence': ['sessizlik', 'silence'], 'ft.paused': ['(duraklatıldı)', '(paused)'],
+  'ft.mq': ['GÖRÜŞÜRÜZ|HOŞÇA KAL|BYE|OYUN BİTTİ?|BİR DAHAKİ SEFERE|ODANIN IŞIKLARI AÇIK KALSIN|SEE YA', 'SEE YA|GOODBYE|BYE|GAME OVER?|UNTIL NEXT TIME|LEAVE THE LIGHTS ON|LATER'],
   'mu.dockD': ['ŞİMDİ ÇALIYOR', 'NOW PLAYING'], 'mu.dockReady': ['ÇALMAYA HAZIR', 'READY TO PLAY'],
   'mu.src30': ['SPOTIFY · 30SN', 'SPOTIFY · 30S'], 'mu.srcNone': ['ÖNİZLEME YOK', 'NO PREVIEW'],
   'mu.full': ['TAMAMI {d}', 'FULL {d}'],
@@ -183,7 +194,7 @@ export function applyI18n(root = document) {
 
 export function setLang(next) {
   lang = next === 'en' ? 'en' : 'tr';
-  try { localStorage.setItem('star.lang', lang); } catch { /* yok */ }
+  store.set('star.lang', lang);
   applyI18n();
   listeners.forEach((fn) => fn(lang));
 }

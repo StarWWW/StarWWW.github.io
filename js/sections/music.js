@@ -213,7 +213,7 @@ export async function initMusic() {
     if (!info) return;
     if (!tr) { info.innerHTML = `<p class="px dock-wait">${esc(t('mu.empty'))}</p>`; return; }
     const link = spLink(tr);
-    info.innerHTML = `<div class="di-art">${tr.artwork_url ? `<img src="${esc(tr.artwork_url)}" alt="" decoding="async">` : ''}</div>
+    info.innerHTML = `<div class="di-art">${tr.artwork_url ? `<img src="${esc(tr.artwork_url)}" alt="" loading="lazy" decoding="async">` : ''}</div>
       <div class="di-main">
         <span class="px di-idx">${String(idx + 1).padStart(2, '0')} / ${String(tracks.length).padStart(2, '0')}${tr.duration_ms ? ` · ${esc(t('mu.full', { d: fmtDur(tr.duration_ms) }))}` : ''}</span>
         <b class="brut di-t" lang="${nameLang(tr.title)}">${esc(tr.title)}</b>

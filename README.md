@@ -19,6 +19,8 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Gizli terminal** | <kbd>`</kbd> tuşu (1'in solundaki tuş). `help` yaz. |
 | **Sayfayı Yok Et** | Gizli. Nasıl açıldığı en alttaki "Gizli şeyler" bölümünde — sitede hiçbir yerde yazmıyor. |
 | **Kontrol Odası** | Terminalde `login`. Şarkı/oyun ara-ekle, yetenek puanla, duvar/defter/skor moderasyonu. |
+| **Footer** | Veda ekranı: kayan şerit, imlece tepki veren dev BYE, arcade "DEVAM?" geri sayımı (0'da OYUN BİTTİ → JETON AT), piksel gün batımı sahnesi, site haritası, canlı oda durumu (İstanbul saati, çalan şarkı, oyun, duvar, defter). |
+| **Gizlilik + çerezler** | `gizlilik.html` (KVKK aydınlatma metni + gizlilik politikası, TR/EN) ve KVKK/GDPR'a uygun çerez onayı: Tümünü kabul et / Sadece zorunlu / Tercihleri yönet; kategoriler Zorunlu · Fonksiyonel · Analitik · Pazarlama. Footer'daki **Çerez Tercihleri** ile her an değiştirilir. |
 
 Supabase ayarlanmadan da site çalışır: içerik `data/*.json`'dan gelir; duvar, defter ve skor tablosu sadece ziyaretçinin kendi tarayıcısında tutulur.
 
@@ -26,12 +28,17 @@ Supabase ayarlanmadan da site çalışır: içerik `data/*.json`'dan gelir; duva
 
 ```
 index.html          ana sayfa
-404.html            bulunamayan sayfalar (boss'lu)
+gizlilik.html       gizlilik politikası + KVKK aydınlatma metni (TR/EN)
+404.html            bulunamayan sayfalar (GitHub Pages gerçek HTTP 404 ile sunar)
+robots.txt          arama motorları (her şey açık, yönetim parametreleri kapalı)
+sitemap.xml         site haritası
 css/style.css       tema + tüm bölümler
 css/game.css        oyun katmanı (oyun açılınca yüklenir)
 css/admin.css       kontrol odası (açılınca yüklenir)
 js/config.js        ← AYARLAR (Supabase adresi/anahtarı burada)
+js/head.js          sayfa çizilmeden önce dil/mod/hareket ayarı (CSP yüzünden ayrı dosya)
 js/main.js          her şeyi başlatır
+js/consent.js       çerez / depolama izni (banner + tercih penceresi)
 js/fx.js            animasyon sistemi (GSAP + ScrollTrigger + SplitText + Lenis, CDN)
 js/sections/*.js    bölümler
 js/game/game.js     Sayfayı Yok Et
@@ -39,6 +46,7 @@ js/admin.js         Kontrol Odası
 data/*.json         Supabase yokken kullanılan içerik
 supabase/           veritabanı şeması, başlangıç verisi, migration'lar, Edge Function'lar
 assets/             avatarlar, UltraTurk logosu, favicon
+assets/fonts/       yazı tipleri (siteden yüklenir, Google'a istek gitmez; OFL lisanslı)
 ```
 
 ## Yerelde çalıştırma
@@ -137,8 +145,13 @@ Fonksiyon sadece yöneticiler tarafından çağrılabilir; anahtar sitede görü
 
 **Önizlemeler nereden gelir?** Kontrol Odası'ndan eklerken otomatik kaydedilir. Önizlemesi kayıtlı olmayan eski şarkılar için `spotify` fonksiyonu, şarkı ilk çalındığında (ya da müzik bölümü ilk açıldığında) önizleme adresini bulup veritabanına yazar — her şarkı için bir kez. Bunun için fonksiyonun **son halini** yüklemiş olman yeterli (yukarıdaki adım 1'i güncel dosyayla tekrarla). Kontrol Odası'nda her şarkının yanında **▶ 30SN / 30SN ? / 30SN ✕** görünür; **ÖNİZLEMELERİ GETİR** hepsini birden alır. Spotify'ın önizleme vermediği nadir şarkılarda çalar "önizleme yok" der ve Spotify linkini gösterir.
 
-### 8. (İsteğe bağlı) Eski duvarları temizle
-Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür). Veritabanı şişmesin diye 12 haftadan eskileri silmek için `schema.sql`'in en altındaki `pg_cron` satırını kullan.
+### 8. Eski duvarları temizle (gizlilik politikası bunu vaat ediyor)
+Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dediğinde boşalır; her buff ayrı bir duvar olarak **arşive** düşer (son 8 hafta). Gizlilik politikası "12 haftadan eski çizimler silinir" diyor, bunu otomatikleştirmek için bir kez:
+1. Supabase → **Database → Extensions** → `pg_cron`'u aç.
+2. SQL Editor'da çalıştır:
+   ```sql
+   select cron.schedule('duvar-temizlik', '0 4 * * 1', $$ delete from public.wall_strokes where created_at < now() - interval '12 weeks' $$);
+   ```
 
 ## İçerik güncelleme
 
@@ -148,6 +161,32 @@ Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür
 - **Yetenek puanla:** *Yetenekler* → kaydırıcılar → **KAYDET**.
 - **Moderasyon:** *Duvar + Defter* → duvarda bir çizgiye tıkla → **SEÇİLİYİ SİL**; not ve skor silme; **ŞİMDİ BUFF'LA**.
 - **Projeler:** kartlar `index.html` içinde (`<!-- 02 PROJELER -->`). 2048 AI LAB kartında "kaynak kodu ve canlı demo yakında" yazıyor — linkler hazır olunca o satırı (`g2048-soon`) gerçek bağlantılarla değiştir. Repo listesinde gizlemek istediklerini `data/projects.json` → `hideRepos`'a yaz.
+
+## Gizlilik, çerezler ve KVKK
+
+- **Çerez onayı** (`js/consent.js`): ilk ziyarette banner çıkar. İzin verilmeden sadece zorunlu kayıtlar (izin kaydı, animasyon tercihi, spam önleme kimliği) tarayıcıya yazılır; dil, ses seviyesi, sprey rengi, oyun skorları gibi fonksiyonel kayıtlar izin yoksa sadece o sekmede tutulur. İzin geri çekilince bu kayıtlar silinir. Seçim 12 ayda bir yeniden sorulur.
+- **Analitik / pazarlama:** şu an yok. İleride eklersen izinsiz çalışmaması için betiği şöyle koy:
+  ```html
+  <script type="text/plain" data-consent="analytics" data-src="https://analitik-araci.com/script.js"></script>
+  ```
+  İzin verildiği anda yüklenir. Ekledikten sonra `gizlilik.html` ve CSP'deki adresleri güncellemeyi unutma.
+- **Gizlilik politikası** (`gizlilik.html`): sitedeki gerçek veri akışına göre yazıldı (defter, duvar, skor, Kontrol Odası, Supabase/GitHub/jsDelivr/Spotify/Steam). Yeni bir hizmet ya da veri eklersen burayı da güncelle. Çerez tabloları `consent.js`'ten otomatik üretilir.
+- Not: metin özenle hazırlandı ama hukuki danışmanlık yerine geçmez. Veri sorumlusu olarak takma adın kullanılıyor; KVKK açısından daha sağlam olsun istersen gerçek adını ve bir iletişim e-postasını `gizlilik.html` → 01. bölüme ekleyebilirsin.
+
+## Güvenlik
+
+- **Content-Security-Policy** her sayfada `<meta>` olarak var: betikler sadece siteden ve jsDelivr'dan, bağlantılar sadece Supabase ve GitHub API'ye, ses sadece Spotify'ın önizleme sunucusundan. Yeni bir dış hizmet eklersen `index.html`'deki CSP satırına adresini ekle, yoksa tarayıcı engeller (konsolda "Refused to..." görürsün).
+- CDN betiklerinde **SRI** (integrity) var: GSAP/Lenis sürümünü değiştirirsen hash'leri de güncellemen gerekir.
+- `Referrer-Policy: strict-origin-when-cross-origin` (meta). HSTS'yi GitHub Pages kendisi gönderiyor.
+- GitHub Pages özel HTTP başlığına izin vermez: `X-Content-Type-Options`, `Permissions-Policy` ve tıklama tuzağı koruması (`frame-ancestors`) meta ile verilemez. Bunları da istersen siteyi Cloudflare gibi bir proxy arkasına alıp başlıkları orada ekleyebilirsin.
+- Kullanıcıdan gelen her metin (defter, skor adı) ekrana `esc()` ile basılır; veritabanında uzunluk/biçim kuralları ve hız sınırları var; yazma izinleri RLS ile korunur. Sitede gizli anahtar yok (`yayinla.ps1` `service_role` anahtarını yakalarsa göndermeyi durdurur).
+- Test kancaları (`?debug`, `__mount`) sadece `localhost`/`127.0.0.1`'de çalışır.
+
+## SEO ve performans
+
+- `robots.txt` her şeyi açar, `?admin` / `?debug` parametrelerini kapatır; `sitemap.xml`'deki `lastmod` tarihlerini büyük güncellemelerde değiştir.
+- Yazı tipleri `assets/fonts/`'tan yüklenir (Latin + Türkçe alt kümeler), ana fontlar önceden yüklenir (preload). DRUG avatarı 384 KB GIF yerine 39 KB animasyonlu WebP ve sadece DRUG moduna geçince indirilir. Kapak görselleri tembel yüklenir (lazy).
+- Veri çekmede zaman aşımı var: Supabase ya da GitHub yanıt vermezse bölümler `data/*.json` yedeğine düşer, "yükleniyor"da takılı kalmaz.
 
 ## Gizli şeyler
 

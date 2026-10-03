@@ -9,14 +9,23 @@ import { initWall } from './sections/wall.js';
 import { initGuestbook } from './sections/guestbook.js';
 import { initTerminal } from './terminal.js';
 import { initFx } from './fx.js';
+import { initConsent } from './consent.js';
+import { initFooter } from './sections/footer.js';
 
 // ---------- mod: REAL / DRUG ----------
+// DRUG avatarı (animasyonlu WebP) sadece gerekince yüklenir; REAL modda hiç indirilmez
+function loadDrugAvatar() {
+  const im = $('.av-drug');
+  if (im && !im.getAttribute('src') && im.dataset.src) im.src = im.dataset.src;
+}
+
 function setMode(mode, announce = true) {
   const html = document.documentElement;
   const next = mode === 'drug' ? 'drug' : 'real';
   if (html.dataset.mode === next && announce) return;
   html.dataset.mode = next;
-  try { localStorage.setItem('star.mode', next); } catch { /* yok */ }
+  if (next === 'drug') loadDrugAvatar();
+  store.set('star.mode', next);
   $$('.mode-name').forEach((el) => { el.textContent = next.toUpperCase(); });
   const btn = $('#modeToggle');
   btn.setAttribute('aria-pressed', String(next === 'drug'));
@@ -120,6 +129,7 @@ function initCursors() {
 
 // ---------- başlat ----------
 function boot() {
+  initConsent();
   applyI18n();
   hydrateSprites();
   buildTicker();
@@ -134,6 +144,7 @@ function boot() {
   };
   API.flipMode = flipMode;
   $('#modeToggle').addEventListener('click', flipMode);
+  ['pointerenter', 'focus'].forEach((ev) => $('#modeToggle').addEventListener(ev, loadDrugAvatar, { once: true }));
   $$('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
   $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => toast(t('ft.copied'))));
   $('#ctaTerm').addEventListener('click', () => API.terminal?.open());
@@ -148,6 +159,7 @@ function boot() {
   initMusic();
   initWall();
   initGuestbook();
+  initFooter();
 
   // GitHub girişinden dönüş: ?admin&code=... (ya da hata: ?error_description=... / #error_description=...)
   const qs = new URLSearchParams(location.search);

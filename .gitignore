@@ -3,3 +3,8 @@
 Thumbs.db
 supabase/.temp/
 .env
+.env.*
+*.pem
+*.key
+secrets*.txt
+service_role*

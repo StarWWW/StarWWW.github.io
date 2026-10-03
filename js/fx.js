@@ -298,8 +298,9 @@ function initParallax() {
 function initFooter() {
   const bye = $('.bye');
   if (!bye) return;
-  let chars = [bye];
-  if (Split) chars = new Split(bye, { type: 'chars', mask: 'chars' }).chars;
+  // harfler HTML'de hazır (.bye-l > i); maske .bye-l'nin overflow'u
+  let chars = $$('.bye-l > i', bye);
+  if (!chars.length) chars = Split ? new Split(bye, { type: 'chars', mask: 'chars' }).chars : [bye];
   gsap.set(chars, { yPercent: 105 });
   gsap.set('.bye-tag', { clipPath: 'inset(0 100% 0 0)' });
   whenSeen(bye, () => gsap.timeline()

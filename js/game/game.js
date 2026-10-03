@@ -68,7 +68,8 @@ export async function startGame() {
   await loadCSS();
   G = new Game();
   G.start();
-  if (new URLSearchParams(location.search).has('debug')) window.__game = G;
+  // test kancası: sadece yerel geliştirmede (yayındaki sitede çalışmaz)
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && new URLSearchParams(location.search).has('debug')) window.__game = G;
 }
 
 class Game {

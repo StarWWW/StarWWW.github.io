@@ -248,38 +248,65 @@ export async function initWall() {
   setInterval(tick, 20000);
 
   // ---------- arşiv ----------
+  // Bir "duvar" = iki sıfırlama arasındaki çizgiler. Sıfırlamalar: her pazartesi 00:00 + Kontrol Odası'ndan elle yapılan buff'lar.
+  const WEEK = 7 * 86400000;
   const modal = $('#archive');
+  const fmtWhen = (ts) => new Intl.DateTimeFormat(lang() === 1 ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(ts);
+  const fmtDay = (ts) => new Intl.DateTimeFormat(lang() === 1 ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' }).format(ts);
   async function openArchive() {
     modal.hidden = false;
+    modal.querySelector('[data-close]')?.focus();
     const grid = $('#archiveGrid');
     grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('pr.loadingD'))}</p>`;
-    const end2 = weekStart();
-    const start = end2 - 8 * 7 * 86400000;
+    const start = weekStart() - 8 * WEEK;
     let rows = [];
-    if (sb) {
-      const { data } = await sb.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', new Date(start).toISOString()).lt('created_at', new Date(end2).toISOString()).order('created_at', { ascending: true }).limit(4000);
-      rows = data || [];
-    } else {
-      rows = store.get(LOCAL_KEY, []).filter((s) => { const ts = Date.parse(s.created_at); return ts >= start && ts < end2; });
+    let buffs = [];
+    let curStart = weekStart();
+    try {
+      const db = sb || await getSupabase(); // duvar bölümü henüz bağlanmadıysa da çalışsın
+      if (db) {
+        const iso = new Date(start).toISOString();
+        const [list, bf] = await Promise.all([
+          selectAll(() => db.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', iso).order('created_at', { ascending: true })),
+          db.from('wall_buffs').select('at').gte('at', iso).order('at', { ascending: true }),
+        ]);
+        rows = list;
+        buffs = (bf.data || []).map((b) => Date.parse(b.at)).filter(Number.isFinite);
+        if (buffs.length) curStart = Math.max(curStart, buffs[buffs.length - 1]);
+      } else {
+        rows = store.get(LOCAL_KEY, []).filter((x) => Date.parse(x.created_at) >= start);
+      }
+    } catch (err) {
+      console.warn('[wall] arşiv okunamadı', err);
+      grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('wl.archErr'))}</p>`;
+      return;
     }
-    const weeks = new Map();
-    rows.forEach((s) => {
-      const ws = weekStart(Date.parse(s.created_at));
-      if (!weeks.has(ws)) weeks.set(ws, []);
-      weeks.get(ws).push(s);
+    const cuts = new Set([curStart]);
+    for (let w = start; w < curStart; w += WEEK) cuts.add(w);
+    buffs.forEach((b) => { if (b < curStart) cuts.add(b); });
+    const edges = [...cuts].sort((a, b) => a - b);
+    const manual = new Set(buffs);
+    const periods = edges.slice(0, -1).map((from, k) => ({ from, to: edges[k + 1], buffed: manual.has(edges[k + 1]), list: [] }));
+    rows.forEach((x) => {
+      const ts = Date.parse(x.created_at);
+      if (!(ts < curStart)) return;
+      for (let k = periods.length - 1; k >= 0; k--) {
+        if (ts >= periods[k].from) { periods[k].list.push(x); break; }
+      }
     });
-    if (!weeks.size) { grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('wl.noArchive'))}</p>`; return; }
+    const filled = periods.filter((p) => p.list.length).reverse();
+    if (!filled.length) { grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('wl.noArchive'))}</p>`; return; }
     grid.innerHTML = '';
-    [...weeks.entries()].sort((a, b) => b[0] - a[0]).forEach(([ws, list]) => {
+    filled.forEach((p) => {
       const item = document.createElement('figure');
-      item.className = 'archive-item';
+      item.className = `archive-item${p.buffed ? ' is-buff' : ''}`;
       item.style.margin = '0';
       const c = document.createElement('canvas');
       c.width = WALL_W / 2; c.height = WALL_H / 2;
       const cx = c.getContext('2d');
-      list.forEach((s) => drawFull(cx, s, 0.5));
-      const cap = document.createElement('p');
-      cap.textContent = t('wl.archWeek', { w: isoWeek(ws + 3600000).week, n: list.length });
+      p.list.forEach((x) => drawFull(cx, x, 0.5));
+      const cap = document.createElement('figcaption');
+      cap.innerHTML = `<b>${esc(p.buffed ? t('wl.archBuff', { d: fmtWhen(p.to), n: p.list.length }) : t('wl.archWeek', { w: isoWeek(p.from + 3600000).week, n: p.list.length }))}</b><span>${esc(`${fmtDay(p.from)} → ${p.buffed ? fmtWhen(p.to) : fmtDay(p.to - 1)}`)}</span>`;
       item.append(c, cap);
       grid.append(item);
     });
@@ -362,5 +389,6 @@ export async function initWall() {
       setSpray(true);
     },
     reload: loadStrokes,
+    count: () => strokes.length,
   };
 }

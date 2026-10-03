@@ -1,0 +1,15 @@
+# starwww.github.io — tüm site taranabilir
+User-agent: *
+Allow: /
+
+# Yönetim paneli ve geliştirme kancaları (aynı sayfanın parametreleri)
+Disallow: /*?admin
+Disallow: /*?debug
+Disallow: /*?code=
+
+# Kaynak / yayın dosyaları (repo zaten herkese açık; arama sonuçlarında çıkmasın)
+Disallow: /supabase/
+Disallow: /yayinla.ps1
+Disallow: /yayinla.bat
+
+Sitemap: https://starwww.github.io/sitemap.xml

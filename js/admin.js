@@ -9,6 +9,12 @@ import { CATS } from './sections/skills.js';
 import { drawFull, weekStart, WALL_W, WALL_H } from './spray.js';
 
 const L = (tr, en) => (getLang() === 'en' ? en : tr);
+// kırık görseller (CSP satır içi onerror'a izin vermez)
+document.addEventListener('error', (e) => {
+  const im = e.target;
+  if (im?.tagName !== 'IMG' || !im.dataset.fb) return;
+  if (im.dataset.fb === 'remove') im.remove(); else im.removeAttribute('src');
+}, true);
 const STATUSES = ['oynuyorum', 'oynadım', 'bitirdim', 'bıraktım', 'favori'];
 const STATUS_EN = { oynuyorum: 'PLAYING', oynadım: 'PLAYED', bitirdim: 'FINISHED', bıraktım: 'DROPPED', favori: 'FAVORITE' };
 const isSpPreview = (u) => /^https:\/\/p\.scdn\.co\//.test(String(u || ''));
@@ -65,6 +71,8 @@ export async function openAdmin() {
 
 // Yerel test için: sahte bir istemciyle paneli açar (?debug adresinde kullanılır)
 export async function __mount(client, fakeUser, startTab = 'music') {
+  // test kancası: sadece yerel geliştirmede
+  if (!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) throw new Error('__mount sadece yerelde');
   sb = client; user = fakeUser; tab = startTab;
   await loadCSS();
   if (!root) {
@@ -387,7 +395,7 @@ async function gamesTab(body) {
     shelf = data;
     body.querySelector('#gCount').textContent = `${shelf.length} ${L('OYUN', 'GAMES')}`;
     body.querySelector('#gLib').innerHTML = shelf.length ? shelf.map((g, i) => `<li class="ad-row" data-id="${g.id}" style="grid-template-columns:44px minmax(0,1fr) auto">
-      <img alt="" src="${esc(g.box_url || steamBox(g) || '')}" style="width:44px;height:62px;object-fit:cover;border:3px solid var(--ink);background:${esc(g.color || '#AC3232')}" onerror="this.removeAttribute('src')">
+      <img alt="" src="${esc(g.box_url || steamBox(g) || '')}" style="width:44px;height:62px;object-fit:cover;border:3px solid var(--ink);background:${esc(g.color || '#AC3232')}" data-fb="hide">
       <div><div class="ad-t">${esc(g.name)} ${g.now_playing ? `<span class="px" style="font-size:9px;background:var(--acid);padding:2px 5px">${L('ŞU AN', 'NOW')}</span>` : ''}</div>
       <div class="ad-s"><select data-status style="font-family:var(--f-px);font-size:10px;border:2px solid var(--ink);padding:2px">${STATUSES.map((s) => `<option value="${s}" ${s === g.status ? 'selected' : ''}>${getLang() === 'en' ? STATUS_EN[s] : s.toUpperCase()}</option>`).join('')}</select>
       <label style="font-family:var(--f-px);font-size:9px;margin-left:8px"><input type="checkbox" data-now ${g.now_playing ? 'checked' : ''}> ${L('ŞU AN', 'NOW')}</label></div></div>
@@ -486,7 +494,7 @@ async function gamesTab(body) {
     prev.innerHTML = `<div class="ad-prev">
       <div class="px" style="font-size:11px;color:var(--grey)">${L('RAFA BÖYLE GİRECEK — ALANLARI DÜZELTEBİLİRSİN', 'THIS GOES ON THE SHELF — YOU CAN EDIT THE FIELDS')}</div>
       <div class="ad-prev-top">
-        <div class="ad-prev-cover"><img alt="" id="gpCover"><img alt="" id="gpBox" style="display:block;width:100%;margin-top:8px;border:3px solid var(--ink)" onerror="this.remove()"></div>
+        <div class="ad-prev-cover"><img alt="" id="gpCover"><img alt="" id="gpBox" style="display:block;width:100%;margin-top:8px;border:3px solid var(--ink)" data-fb="remove"></div>
         <div class="ad-fields">
           ${field('name', L('AD', 'NAME'), d.name)}
           ${field('developers', L('GELİŞTİRİCİ', 'DEVELOPER'), (d.developers || []).join(', '))}

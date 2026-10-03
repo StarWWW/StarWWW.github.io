@@ -30,6 +30,7 @@ export const SPRITES = {
   db: ['.kkkkkkkk.', 'kooooooook', 'kkkkkkkkkk', 'kooooooook', 'kowooooook', 'kkkkkkkkkk', 'kooooooook', 'kowooooook', 'kkkkkkkkkk', '.kkkkkkkk.'],
   wrench: ['......kkk.', '.....kzzk.', '.....kzk..', '....kzzk.k', '...kzzzkzk', '..kzzzzzk.', '.kzzzkkk..', 'kzzzk.....', 'kzzk......', '.kk.......'],
   brush: ['.......kk.', '......kmk.', '.....kmk..', '....kmk...', '...kzk....', '..kzk.....', '.kook.....', 'kooook....', 'koook.....', '.kkk......'],
+  cookie: ['..kkkkk...', '.ksssssk..', 'kssusssskk', 'ksssssuk..', 'kssssssk..', 'ksuss.sskk', 'ksssssussk', '.ksusssssk', '..kkkkkkk.'],
   grass: ['kkkkkkkkkk', 'kggggdgggk', 'kgdggggdgk', 'kdgdguudgk', 'kuuvuuuuuk', 'kuuuuuvuuk', 'kuvuuuuuuk', 'kuuuuvuuuk', 'kuuuuuuuvk', 'kkkkkkkkkk'],
 };
 

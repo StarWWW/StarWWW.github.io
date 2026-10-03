@@ -2,20 +2,35 @@
 import { CONFIG } from './config.js';
 import { getSupabase } from './supabase.js';
 
+// Uzun süre cevap gelmezse beklemeyi bırak (bölümler "yükleniyor"da takılı kalmasın)
+export function withTimeout(promise, ms, label = 'istek') {
+  let t;
+  return Promise.race([promise, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`${label}: ${ms / 1000} sn içinde cevap yok`)), ms); })]).finally(() => clearTimeout(t));
+}
+const fetchT = (url, opts = {}, ms = 10000) => {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  return fetch(url, { ...opts, signal: ctl.signal }).finally(() => clearTimeout(t));
+};
+
 async function json(path) {
-  const r = await fetch(path, { cache: 'no-cache' });
+  const r = await fetchT(path, { cache: 'no-cache' });
   if (!r.ok) throw new Error(`${path}: ${r.status}`);
   return r.json();
 }
 
 async function fromDb(table, order, fallbackPath) {
-  const sb = await getSupabase();
-  if (sb) {
-    let q = sb.from(table).select('*');
-    for (const [col, asc] of order) q = q.order(col, { ascending: asc, nullsFirst: false });
-    const { data, error } = await q;
-    if (!error && data) return data;
-    console.warn(`[data] ${table} okunamadı, yedek dosyaya düşülüyor`, error);
+  try {
+    const sb = await withTimeout(getSupabase(), 10000, 'supabase-js');
+    if (sb) {
+      let q = sb.from(table).select('*');
+      for (const [col, asc] of order) q = q.order(col, { ascending: asc, nullsFirst: false });
+      const { data, error } = await withTimeout(q, 9000, table);
+      if (!error && data) return data;
+      console.warn(`[data] ${table} okunamadı, yedek dosyaya düşülüyor`, error);
+    }
+  } catch (err) {
+    console.warn(`[data] ${table}: ${err.message} — yedek dosyaya düşülüyor`);
   }
   return json(fallbackPath);
 }
@@ -31,7 +46,7 @@ export async function getRepos() {
     const c = JSON.parse(sessionStorage.getItem(key) || 'null');
     if (c && Date.now() - c.at < 10 * 60 * 1000) return c.data;
   } catch { /* yok */ }
-  const r = await fetch(`https://api.github.com/users/${CONFIG.githubUser}/repos?per_page=100&sort=updated`);
+  const r = await fetchT(`https://api.github.com/users/${CONFIG.githubUser}/repos?per_page=100&sort=updated`, {}, 8000);
   if (!r.ok) throw new Error(`GitHub ${r.status}`);
   const data = (await r.json()).map((x) => ({
     name: x.name, url: x.html_url, lang: x.language, stars: x.stargazers_count, fork: x.fork, desc: x.description, homepage: x.homepage, pushed: x.pushed_at,

@@ -4,17 +4,58 @@ export const API = {};
 export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+// ---------- çerez / depolama izni (KVKK + GDPR) ----------
+// Zorunlu anahtarlar her zaman yazılır. Diğerleri (fonksiyonel) ancak ziyaretçi izin verdiyse tarayıcıya yazılır;
+// izin yoksa sadece bu sekmenin hafızasında tutulur ve sayfa kapanınca kaybolur.
+export const CONSENT_KEY = 'star.consent';
+export const CONSENT_VERSION = 1;
+export const CONSENT_MAX_AGE = 365 * 86400000; // 12 ayda bir yeniden sorulur
+const NECESSARY_KEYS = new Set([CONSENT_KEY, 'star.motion', 'star.motion.asked', 'star.cid', 'star.gb.last', 'star.booted']);
+const RAW_KEYS = new Set(['star.lang', 'star.mode', 'star.motion']); // <head>'deki betik bunları ham metin olarak okur
+export const keyCategory = (key) => (NECESSARY_KEYS.has(key) ? 'necessary' : 'functional');
+export function consentState() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CONSENT_KEY) || 'null');
+    if (!c || c.v !== CONSENT_VERSION || !(Date.now() - Date.parse(c.ts) < CONSENT_MAX_AGE)) return null;
+    return c;
+  } catch { return null; }
+}
+export const allowed = (cat) => cat === 'necessary' || Boolean(consentState()?.[cat]);
+const memory = new Map();
+const encode = (key, value) => (RAW_KEYS.has(key) ? String(value) : JSON.stringify(value));
+const decode = (key, raw) => (RAW_KEYS.has(key) ? raw : JSON.parse(raw));
+
 export const store = {
   get(key, fallback = null) {
+    if (!allowed(keyCategory(key))) return memory.has(key) ? memory.get(key) : fallback;
     try {
       const v = localStorage.getItem(key);
-      return v === null ? fallback : JSON.parse(v);
+      return v === null ? fallback : decode(key, v);
     } catch { return fallback; }
   },
   set(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* gizli sekme vb. */ }
+    if (!allowed(keyCategory(key))) { memory.set(key, value); return; }
+    try { localStorage.setItem(key, encode(key, value)); } catch { /* gizli sekme vb. */ }
   },
 };
+
+// izin verilince bu sekmede biriken tercihleri kalıcı hale getir
+export function flushStore() {
+  memory.forEach((value, key) => {
+    if (!allowed(keyCategory(key))) return;
+    try { localStorage.setItem(key, encode(key, value)); } catch { /* yok */ }
+    memory.delete(key);
+  });
+}
+// izin geri çekilince izinsiz kalan anahtarları sil (değerleri bu sekmede kalmaya devam eder)
+export function purgeStore() {
+  try {
+    Object.keys(localStorage).filter((k) => k.startsWith('star.') && !allowed(keyCategory(k))).forEach((k) => {
+      try { memory.set(k, decode(k, localStorage.getItem(k))); } catch { /* bozuk değer */ }
+      localStorage.removeItem(k);
+    });
+  } catch { /* yok */ }
+}
 
 export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

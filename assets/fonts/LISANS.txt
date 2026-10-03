@@ -1,0 +1,8 @@
+Bu klasördeki yazı tipleri SIL Open Font License 1.1 (OFL) ile lisanslıdır ve Google Fonts'tan alınmıştır:
+- Archivo — Omnibus-Type
+- Caveat — Impallari Type
+- Rubik Glitch, Rubik Wet Paint — Hubert & Fischer, NaN, Luke Prowse
+- Silkscreen — Jason Kottke
+- VT323 — Peter Hull
+Lisans metni: https://openfontlicense.org
+Sadece Latin + Latin Extended (Türkçe karakterler) alt kümeleri tutulur.

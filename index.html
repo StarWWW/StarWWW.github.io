@@ -3,39 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https://rchpyllhmjhcojbyhqxs.supabase.co wss://rchpyllhmjhcojbyhqxs.supabase.co https://api.github.com https://cdn.jsdelivr.net; media-src 'self' blob: https://p.scdn.co; frame-src https://open.spotify.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>STAR — dijital oda</title>
 <meta name="description" content="star'ın dijital odası: 21 yaşında bilgisayar mühendisliği öğrencisi, UltraTurk'ün baş geliştiricisi. Duvara sprey sık, terminali kurcala, oyun rafını karıştır, müzik dinle.">
 <meta name="theme-color" content="#222034">
+<link rel="canonical" href="https://starwww.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://starwww.github.io/">
 <meta property="og:title" content="STAR — dijital oda">
 <meta property="og:description" content="Oyna. Çevir. Kodla. Tekrarla.">
-<meta property="og:image" content="assets/avatar-real.png">
+<meta property="og:image" content="https://starwww.github.io/assets/avatar-real.png">
+<meta name="twitter:card" content="summary">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Caveat:wght@500;700&family=Rubik+Glitch&family=Rubik+Wet+Paint&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<link rel="preload" href="assets/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/silkscreen-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://rchpyllhmjhcojbyhqxs.supabase.co" crossorigin>
 <link rel="stylesheet" href="css/style.css">
-<script>
-  (function () {
-    var d = document.documentElement;
-    var get = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
-    if (get('star.mode') === 'drug') d.dataset.mode = 'drug';
-    if (get('star.lang') === 'en') d.lang = 'en';
-    // Hareket: ziyaretçinin seçimi > işletim sistemi tercihi
-    var m = get('star.motion') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches ? 'reduce' : 'full');
-    d.dataset.motion = m;
-    if (m === 'full') {
-      d.classList.add('fx-pending');
-      var booted = null;
-      try { booted = sessionStorage.getItem('star.booted'); } catch (e) {}
-      if (!booted) d.classList.add('booting');
-      setTimeout(function () { d.classList.remove('fx-pending', 'booting'); }, 6000);
-    }
-  })();
-</script>
-<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+<script src="js/head.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js" integrity="sha384-XmJ9SoHtVOHoQUcKvFAzVXwdkKo1Ie3bhmSoIAkcdsHGaIrVJIkmozyq0FJeb/Ly" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/ScrollTrigger.min.js" integrity="sha384-wl5TeDVvOWt30Pbf8aSo2ZrzsOjddu3avOBvHe+p+OhJt9gP6w9YXmDkN5DK2/dF" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/SplitText.min.js" integrity="sha384-SWJ0lLVRoipvHh59xj0pL7uC7Ih51F+5smaFtrG+2nr+TlDZU5SYJHmxfolbeNTr" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js" integrity="sha384-jqpi9VmOdhyLoLURgjCn7EpnG9BbnHW57ibIZoeaIU+erWDH3k8fQQg0xH2ySjnw" crossorigin="anonymous"></script>
 <script type="module" src="js/main.js"></script>
 </head>
 <body>
@@ -118,8 +108,8 @@
     </div>
     <figure class="avatar-win" data-d>
       <div class="win-bar"><span class="win-name"></span><span class="win-dots" aria-hidden="true"><i></i><i></i><i></i></span></div>
-      <img class="av av-real pixelated" src="assets/avatar-real.png" width="480" height="480" alt="star'ın pixel avatarı: yeşil şapkalı, gözleri kapalı bir karakter" data-i18n-attr="alt:hero.avReal">
-      <img class="av av-drug pixelated" src="assets/avatar-drug.gif" width="480" height="480" alt="star'ın avatarının renk döngülü, psikedelik versiyonu" data-i18n-attr="alt:hero.avDrug">
+      <img class="av av-real pixelated" src="assets/avatar-real.png" width="480" height="480" fetchpriority="high" alt="star'ın pixel avatarı: yeşil şapkalı, gözleri kapalı bir karakter" data-i18n-attr="alt:hero.avReal">
+      <img class="av av-drug pixelated" data-src="assets/avatar-drug.webp" width="480" height="480" decoding="async" alt="star'ın avatarının renk döngülü, psikedelik versiyonu" data-i18n-attr="alt:hero.avDrug">
       <figcaption><span data-i18n="hero.avCap">480×480 · EL YAPIMI PİKSEL</span><span>MOD: <b class="mode-name">REAL</b></span></figcaption>
       <div class="lvl-sticker" aria-hidden="true">LVL<br>21</div>
     </figure>
@@ -186,12 +176,12 @@
       <div class="proj-top px"><span data-i18n="pr.ut.kind">PROJE_01 // ÇEVİRİ + DUBLAJ</span><span data-i18n="pr.main">ANA GÖREV ★</span></div>
       <div class="ut-cover" data-d>
         <p class="px ut-lines">İNSANLIK ÖLDÜ.<br>YAKITIN KAN.<br>CEHENNEM DOLU.</p>
-        <img src="assets/ultraturk-logo.png" width="256" height="256" alt="UltraTurk logosu: Türk bayrağı motifli kırmızı ULTRAKILL tabancası" data-i18n-attr="alt:pr.ut.logoAlt">
+        <img src="assets/ultraturk-logo.png" width="256" height="256" loading="lazy" decoding="async" alt="UltraTurk logosu: Türk bayrağı motifli kırmızı ULTRAKILL tabancası" data-i18n-attr="alt:pr.ut.logoAlt">
         <span class="px ut-cap" data-i18n="pr.ut.cap">// ULTRAKILL AÇILIŞ EKRANI, TÜRKÇE</span>
       </div>
       <div class="proj-body">
         <div class="ut-head" data-d>
-          <img src="assets/ultraturk-logo.png" width="58" height="58" alt="">
+          <img src="assets/ultraturk-logo.png" width="58" height="58" alt="" loading="lazy" decoding="async">
           <div><h3 class="brut proj-name">ULTRATURK</h3><p class="px proj-kicker" data-i18n="pr.ut.kicker">ULTRAKILL İÇİN DUBLAJLI TÜRKÇE YAMA</p></div>
         </div>
         <p data-d data-i18n="pr.ut.desc">Oyunun tamamı Türkçeye çevrildi ve seslendirilen tüm karakterler Türkçe dublajlı. Metinler ve dokular orijinaline olabildiğince sadık kalınarak çevrildi; UltrakULL kütüphanesiyle yapıldı.</p>
@@ -308,7 +298,7 @@
         </div>
       </div>
       <div class="inv2-body">
-        <div class="inv2-grid" id="skGrid" role="tabpanel"></div>
+        <div class="inv2-grid" id="skGrid" role="tabpanel"><p class="px load-note" data-i18n="ld.inv">ENVANTER AÇILIYOR…</p></div>
         <aside class="inspect" id="skInspect" aria-live="polite"></aside>
       </div>
       <div class="rarity px" id="skRarity"></div>
@@ -325,7 +315,7 @@
   </div>
   <div class="shelf-wrap">
     <div class="shelf-head px"><span id="gmCount"></span><span class="shelf-hint" data-i18n="gm.hint">bir kutuya tıkla — dönsün, arkasını oku</span></div>
-    <div class="shelf" id="shelf" data-lenis-prevent-wheel role="list" aria-label="Oyunlar" data-i18n-attr="aria-label:gm.list"></div>
+    <div class="shelf" id="shelf" data-lenis-prevent-wheel role="list" aria-label="Oyunlar" data-i18n-attr="aria-label:gm.list"><p class="px load-note" data-i18n="ld.shelf">RAF DİZİLİYOR…</p></div>
     <div class="shelf-plank" aria-hidden="true"></div>
     <div class="shelf-foot">
       <div class="shelf-msg rv" data-rv="left"><span class="spr" data-sprite="pad" data-scale="4"></span><p class="hand" data-i18n-html="gm.msg">gerçekten çok fazla oyun oynadım.<br>bu raf sadece buzdağının görünen kısmı.</p></div>
@@ -401,7 +391,7 @@
           <thead><tr class="px">
             <th>#</th><th><span class="sr" data-i18n="mu.th.art">Kapak</span></th><th data-i18n="mu.th.song">ŞARKI</th><th class="hide-s" data-i18n="mu.th.album">ALBÜM</th><th class="hide-s" data-i18n="mu.th.year">YIL</th><th class="hide-m" data-i18n="mu.th.genre">TÜR</th><th data-i18n="mu.th.dur">SÜRE</th><th><span class="sr" data-i18n="mu.th.act">Eylemler</span></th>
           </tr></thead>
-          <tbody id="libBody"></tbody>
+          <tbody id="libBody"><tr><td colspan="8" class="px load-note" data-i18n="ld.lib">KİTAPLIK YÜKLENİYOR…</td></tr></tbody>
         </table>
       </div>
       <div class="px lib-foot"><span data-i18n="mu.legend">▶ = 30 SN ÖNİZLEME · ↗ = TAMAMI SPOTIFY'DA</span><span data-i18n="mu.legend2">KAPAKLAR OTOMATİK 8-BIT</span></div>
@@ -454,6 +444,7 @@
         <textarea id="gbMsg" class="term" rows="3" maxlength="140" placeholder="duvara bir şey yapıştır..." data-i18n-attr="placeholder:gb.ph" required></textarea>
         <button type="submit" class="btn btn-or" data-i18n="gb.send">DUVARA YAPIŞTIR ↘</button>
         <p class="px gb-status" id="gbStatus" role="status"></p>
+        <p class="px gb-legal" data-i18n-html="gb.legal">notun herkese açık görünür ve sunucuda saklanır · <a href="gizlilik.html">gizlilik</a></p>
       </form>
       <div class="gb-notes" id="gbNotes" aria-live="polite"></div>
     </div>
@@ -463,27 +454,60 @@
 </main>
 
 <footer id="iletisim" class="foot">
+  <div class="foot-mq" aria-hidden="true"><div class="foot-mq-track" id="footMq"></div></div>
   <div class="foot-grid">
     <div class="foot-bye">
-      <div class="px acc" data-i18n="ft.label">[07] İLETİŞİM // ÇIKIŞ</div>
-      <div class="brut bye" data-d>BYE<span class="acc">.</span></div>
+      <div class="px acc foot-label" data-i18n="ft.label">[07] İLETİŞİM // ÇIKIŞ</div>
+      <div class="brut bye" data-d role="img" aria-label="BYE."><span class="bye-l" aria-hidden="true"><i>B</i></span><span class="bye-l" aria-hidden="true"><i>Y</i></span><span class="bye-l" aria-hidden="true"><i>E</i></span><span class="bye-l acc" aria-hidden="true"><i>.</i></span></div>
       <p class="tag bye-tag" data-d>every hello comes with a goodbye</p>
-    </div>
-    <div class="foot-links">
-      <div class="contact contact-dc rv" style="--i:1" data-d>
-        <span class="spr" data-sprite="chat" data-scale="4"></span>
-        <div class="contact-txt"><div class="px">DISCORD</div><div class="brut">stariscrazy</div></div>
-        <button type="button" class="btn btn-ink" id="copyDiscord" data-i18n="ft.copy">KOPYALA</button>
+      <div class="cont" id="footCont">
+        <div class="cont-l"><span class="px cont-q" id="contQ" data-i18n="ft.cont">DEVAM?</span><span class="px cont-n" id="contN" aria-hidden="true">9</span></div>
+        <button type="button" class="btn btn-acc cont-btn" id="contBtn" data-magnetic><span id="contBtnT" data-i18n="ft.contBtn">EVET ↑ BAŞA DÖN</span></button>
       </div>
-      <a class="contact contact-gh rv" style="--i:2" data-d data-magnetic data-cursor="GITHUB ↗" href="https://github.com/StarWWW" target="_blank" rel="noopener">
-        <span class="px gh-ico" aria-hidden="true">&lt;/&gt;</span>
-        <span class="contact-txt"><span class="px">GITHUB</span><span class="brut">StarWWW</span></span>
-        <span class="px" aria-hidden="true">↗</span>
-      </a>
     </div>
+    <div class="foot-side">
+      <div class="foot-links">
+        <div class="contact contact-dc rv" style="--i:1" data-d>
+          <span class="spr" data-sprite="chat" data-scale="4"></span>
+          <div class="contact-txt"><div class="px">DISCORD</div><div class="brut">stariscrazy</div></div>
+          <button type="button" class="btn btn-ink" id="copyDiscord" data-i18n="ft.copy">KOPYALA</button>
+        </div>
+        <a class="contact contact-gh rv" style="--i:2" data-d data-magnetic data-cursor="GITHUB ↗" href="https://github.com/StarWWW" target="_blank" rel="noopener">
+          <span class="px gh-ico" aria-hidden="true">&lt;/&gt;</span>
+          <span class="contact-txt"><span class="px">GITHUB</span><span class="brut">StarWWW</span></span>
+          <span class="px" aria-hidden="true">↗</span>
+        </a>
+      </div>
+      <div class="foot-cols">
+        <nav class="foot-col rv" style="--i:3" aria-labelledby="footMapH">
+          <span class="px foot-h" id="footMapH" data-i18n="ft.map">HARİTA</span>
+          <ul class="foot-nav">
+            <li><a href="#oda" data-i18n="nav.oda" data-scramble>01 ODA</a></li>
+            <li><a href="#projeler" data-i18n="nav.projeler" data-scramble>02 PROJELER</a></li>
+            <li><a href="#envanter" data-i18n="nav.envanter" data-scramble>03 ENVANTER</a></li>
+            <li><a href="#raf" data-i18n="nav.raf" data-scramble>04 OYUN RAFI</a></li>
+            <li><a href="#muzik" data-i18n="nav.muzik" data-scramble>05 MÜZİK</a></li>
+            <li><a href="#duvar" data-i18n="nav.duvar" data-scramble>06 DUVAR</a></li>
+          </ul>
+        </nav>
+        <div class="foot-col rv" style="--i:4">
+          <span class="px foot-h" data-i18n="ft.status">ODA DURUMU</span>
+          <dl class="foot-stat term" id="footStat" aria-live="off"></dl>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot-scene" id="footScene" aria-hidden="true">
+    <div class="fs-sky"></div>
+    <div class="fs-stars"></div>
+    <div class="fs-sun"></div>
+    <div class="fs-city" id="fsCity"></div>
+    <div class="fs-floor"><div class="fs-grid"></div></div>
+    <div class="fs-walker"><span class="fs-bubble px">bye!</span><span class="spr bob" data-sprite="jet" data-scale="3"></span></div>
   </div>
   <div class="px foot-bar">
     <span data-i18n="ft.copy2">© 2026 STAR · GITHUB PAGES'TE BARINIR · EL YAPIMI, KALIPSIZ</span>
+    <span class="foot-legal"><a href="gizlilik.html" data-i18n="ft.privacy">GİZLİLİK POLİTİKASI</a><button type="button" data-consent-open data-i18n="ft.cookies">ÇEREZ TERCİHLERİ</button></span>
     <span><span data-i18n="ft.hint">` = TERMİNAL</span> · <span data-i18n="ft.now">ŞU AN</span>: <b class="mode-name">REAL</b> · <button type="button" class="foot-fx px" id="motionToggle2">FX</button></span>
   </div>
 </footer>

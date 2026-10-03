@@ -1,43 +1,49 @@
 <!doctype html>
-<html lang="tr">
+<html lang="tr" data-mode="real">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>404 — STAR</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex">
+<title>404 — Sayfa bulunamadı · STAR</title>
+<meta name="theme-color" content="#222034">
+<!-- GitHub Pages bu sayfayı her alt yolda gösterir: yollar köke göre mutlak -->
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Caveat:wght@500;700&family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<link rel="preload" href="/assets/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/style.css">
-<style>
-  body { display: flex; min-height: 100vh; align-items: center; justify-content: center; padding: 24px; }
-  .nf { width: min(560px, 100%); }
-  .nf-win { border: 6px solid var(--ink); background: var(--red); box-shadow: 14px 14px 0 var(--ink); animation: shake 2.2s steps(1) infinite; }
-  .nf-bar { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--ink); color: var(--paper); font-family: var(--f-px); font-size: 14px; }
-  .nf-bar i { display: inline-block; width: 16px; height: 16px; margin-left: 6px; background: var(--orange); }
-  .nf-bar i:nth-child(2) { background: var(--yellow); } .nf-bar i:nth-child(3) { background: var(--red); }
-  .nf-face { position: relative; height: 300px; }
-  .nf-404 { position: absolute; left: 0; right: 0; top: 18px; text-align: center; font-family: var(--f-px); font-size: 72px; font-weight: 700; color: #fff; text-shadow: 6px 6px 0 var(--ink); }
-  .eye { position: absolute; top: 130px; width: 72px; height: 64px; background: #fff; border: 6px solid var(--ink); }
-  .eye::after { content: ''; position: absolute; left: 8px; top: 18px; width: 26px; height: 26px; background: var(--ink); }
-  .eye.l { left: 22%; } .eye.r { right: 22%; }
-  .brow { position: absolute; top: 106px; width: 92px; height: 14px; background: var(--ink); }
-  .brow.l { left: 20%; transform: rotate(18deg); } .brow.r { right: 20%; transform: rotate(-18deg); }
-  .mouth { position: absolute; left: 24%; right: 24%; top: 226px; height: 50px; border: 6px solid var(--ink); background: var(--ink) linear-gradient(135deg, #fff 25%, transparent 25%) 0 0 / 28px 28px repeat-x; }
-  .nf h1 { margin: 34px 0 8px; font-family: var(--f-brut); font-stretch: 125%; font-weight: 900; font-size: clamp(34px, 7vw, 56px); line-height: .9; }
-  .nf p { margin: 0 0 22px; font-family: var(--f-hand); font-size: 28px; line-height: 1.1; }
-  .nf .term { display: block; margin-bottom: 22px; padding: 12px 14px; background: var(--ink); color: var(--paper); font-size: 22px; }
-</style>
+<script src="/js/head.js"></script>
+<script defer src="/js/notfound.js"></script>
 </head>
-<body>
-<main class="nf">
+<body class="nf-page">
+<main class="nf" id="icerik">
   <div class="nf-win" role="img" aria-label="404 canavarı: kızgın gözlü kırmızı bir pencere">
-    <div class="nf-bar"><span>404.html</span><span aria-hidden="true"><i></i><i></i><i></i></span></div>
-    <div class="nf-face" aria-hidden="true"><div class="nf-404">404</div><span class="brow l"></span><span class="brow r"></span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></div>
+    <div class="nf-bar px"><span>404.html</span><span aria-hidden="true"><i></i><i></i><i></i></span></div>
+    <div class="nf-face" aria-hidden="true"><div class="nf-404 px">404</div><span class="brow l"></span><span class="brow r"></span><span class="eye l"></span><span class="eye r"></span><span class="mouth"></span></div>
   </div>
-  <h1>SAYFA BULUNAMADI.</h1>
-  <p>ama boss seni buldu. kaç.</p>
-  <code class="term">star@oda:~$ cd <span id="path"></span><br>cd: böyle bir oda yok</code>
-  <a class="btn btn-acc" href="/">← ODAYA DÖN</a>
+  <div class="nf-copy">
+    <p class="px nf-code">HATA 404 · SAYFA BULUNAMADI <span lang="en">/ PAGE NOT FOUND</span></p>
+    <h1 class="brut">BU ODA YOK.</h1>
+    <p class="nf-lead">Aradığın sayfa taşınmış, silinmiş ya da hiç var olmamış olabilir. Adresi yanlış yazmış olabilirsin; ya da boss onu yedi.</p>
+    <p class="nf-lead nf-en" lang="en">The page you are looking for may have moved, been deleted or never existed.</p>
+    <code class="term nf-term">star@oda:~$ cd <span id="nfPath">/</span><br>cd: böyle bir oda yok<br>star@oda:~$ <span class="blink">▌</span></code>
+    <div class="nf-acts">
+      <a class="btn btn-acc" href="/">← ANA SAYFAYA DÖN</a>
+      <a class="btn btn-dash" href="/#duvar">DUVARA SPREY SIK</a>
+    </div>
+    <nav class="nf-links" aria-label="Önemli sayfalar">
+      <b class="px">BELKİ ŞUNLARDAN BİRİNİ ARIYORDUN:</b>
+      <ul>
+        <li><a href="/#oda">01 ODA <span>kimim ben</span></a></li>
+        <li><a href="/#projeler">02 PROJELER <span>UltraTurk · 2048 AI</span></a></li>
+        <li><a href="/#envanter">03 ENVANTER <span>yetenekler</span></a></li>
+        <li><a href="/#raf">04 OYUN RAFI <span>oyunlarım</span></a></li>
+        <li><a href="/#muzik">05 MÜZİK <span>mp3 çalar</span></a></li>
+        <li><a href="/#duvar">06 DUVAR <span>sprey + defter</span></a></li>
+        <li><a href="/gizlilik.html">GİZLİLİK POLİTİKASI <span>KVKK · çerezler</span></a></li>
+      </ul>
+    </nav>
+  </div>
 </main>
-<script>document.getElementById('path').textContent = location.pathname;</script>
 </body>
 </html>
