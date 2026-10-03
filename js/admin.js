@@ -11,17 +11,12 @@ import { drawFull, weekStart, WALL_W, WALL_H } from './spray.js';
 const L = (tr, en) => (getLang() === 'en' ? en : tr);
 const STATUSES = ['oynuyorum', 'oynadım', 'bitirdim', 'bıraktım', 'favori'];
 const STATUS_EN = { oynuyorum: 'PLAYING', oynadım: 'PLAYED', bitirdim: 'FINISHED', bıraktım: 'DROPPED', favori: 'FAVORITE' };
-// YouTube linki / kimliği → 11 karakterlik video kimliği
-const ytIdOf = (v) => {
-  const x = String(v || '').trim();
-  const m = x.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(x) ? x : null);
-};
+const isSpPreview = (u) => /^https:\/\/p\.scdn\.co\//.test(String(u || ''));
 const steamBox = (g) => {
   const id = g.steam_appid || String(g.store_url || '').match(/\/app\/(\d+)/)?.[1] || String(g.cover_url || '').match(/\/apps\/(\d+)\//)?.[1];
   return id ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/library_600x900.jpg` : '';
 };
-const migNote = (msg) => (/youtube_id|box_url/.test(String(msg)) ? L(' — önce supabase/migrations/003_youtube_kapak.sql dosyasını SQL Editor\'de çalıştır.', ' — run supabase/migrations/003_youtube_kapak.sql in the SQL Editor first.') : '');
+const migNote = (msg) => (/box_url/.test(String(msg)) ? L(' — önce supabase/migrations/003_kutu_kapak.sql dosyasını SQL Editor\'de çalıştır.', ' — run supabase/migrations/003_kutu_kapak.sql in the SQL Editor first.') : '');
 
 const CART_COLORS = ['#AC3232', '#DF7126', '#FBF236', '#99E550', '#6ABE30', '#5FCDE4', '#639BFF', '#3F3F74', '#D77BBA', '#76428A', '#222034', '#9BADB7'];
 
@@ -182,11 +177,12 @@ async function musicTab(body) {
       <div class="ad-meta" id="mMeta"></div>
       <div id="mPrev"></div>
       <ul class="ad-list" id="mRes"></ul>
-      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · SPOTIFY LİNKİ. YOUTUBE KARŞILIĞI OTOMATİK BULUNUR: ÇALAR ŞARKININ TAMAMINI HERKESE ÇALAR VE SES AYARLANIR. BULUNAMAZSA SPOTIFY ÇALAR.', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · SPOTIFY LINK. THE YOUTUBE MATCH IS FOUND AUTOMATICALLY: THE FULL SONG PLAYS FOR EVERYONE WITH VOLUME CONTROL. IF NONE, SPOTIFY PLAYS.')}</div>
+      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · SPOTIFY LİNKİ · SPOTIFY\'IN 30 SN ÖNİZLEMESİ. SİTEDEKİ ÇALAR ÖNİZLEMEYİ ÇALAR (SES AYARLI), TAMAMI İÇİN SPOTIFY LİNKİ VERİR.', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · SPOTIFY LINK · SPOTIFY\'S 30-SEC PREVIEW. THE SITE PLAYER PLAYS THE PREVIEW (WITH VOLUME) AND LINKS TO SPOTIFY FOR THE FULL SONG.')}</div>
     </section>
     <section class="ad-card">
       <div class="ad-card-h"><b>${L('KİTAPLIK', 'LIBRARY')}</b><span id="mCount"></span></div>
-      <div class="ad-meta" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span id="mYtInfo"></span><button type="button" class="btn" id="mYtAll" style="min-height:40px;font-size:11px">${L('YOUTUBE\'U EŞLEŞTİR', 'MATCH YOUTUBE')} ▶</button></div>
+      <div class="ad-meta" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span id="mPvInfo"></span><button type="button" class="btn" id="mPvAll" style="min-height:40px;font-size:11px">${L('ÖNİZLEMELERİ GETİR', 'FETCH PREVIEWS')} ▶</button></div>
+      <audio id="mPvAudio" preload="none"></audio>
       <ul class="ad-list" id="mLib"></ul>
     </section>
   </div>`;
@@ -213,13 +209,13 @@ async function musicTab(body) {
     if (error) { body.querySelector('#mLib').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
     lib = data;
     body.querySelector('#mCount').textContent = `${lib.length} ${L('PARÇA', 'TRACKS')}`;
-    const yes = lib.filter((x) => x.youtube_id).length;
-    const todo = lib.filter((x) => x.youtube_id == null).length;
-    body.querySelector('#mYtInfo').textContent = `YOUTUBE: ${yes}/${lib.length}${todo ? ` · ${todo} ${L('BEKLİYOR', 'PENDING')}` : ''}`;
+    const yes = lib.filter((x) => isSpPreview(x.preview_url)).length;
+    const todo = lib.filter((x) => x.spotify_id && !isSpPreview(x.preview_url) && x.preview_url !== '').length;
+    body.querySelector('#mPvInfo').textContent = `${L('ÖNİZLEME', 'PREVIEW')}: ${yes}/${lib.length}${todo ? ` · ${todo} ${L('BEKLİYOR', 'PENDING')}` : ''}`;
     body.querySelector('#mLib').innerHTML = lib.length ? lib.map((x, i) => `<li class="ad-row" data-id="${x.id}">
       ${artImg(x.artwork_url)}<div><div class="ad-t">${esc(x.title)} ${x.spotify_id ? '<span class="px" style="font-size:8px;background:#1ED760;color:#000;padding:1px 4px">SPOTIFY</span>' : `<span class="px" style="font-size:8px;background:var(--orange);padding:1px 4px">${L('ÖNİZLEME', 'PREVIEW')}</span>`}</div><div class="ad-s">${esc(x.artist)} · ${esc(x.album || '')}</div></div>
       <span class="ad-d">${fmtDur(x.duration_ms)}</span>
-      <div class="ad-acts"><button type="button" data-yt title="${x.youtube_id ? `youtube.com/watch?v=${esc(x.youtube_id)}` : L('YouTube karşılığı yok — tıkla, link yapıştır', 'No YouTube match — click to paste a link')}" style="${x.youtube_id ? 'background:#FF0033;color:#fff;border-color:#FF0033' : x.youtube_id === '' ? 'opacity:.55' : 'border-style:dashed'}">YT${x.youtube_id ? ' ✓' : x.youtube_id === '' ? ' ✕' : ' ?'}</button><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
+      <div class="ad-acts"><button type="button" data-pvb title="${isSpPreview(x.preview_url) ? L('30 sn önizlemeyi dinle', 'Listen to the 30-sec preview') : x.preview_url === '' ? L('Spotify\'da önizlemesi yok — tıkla, tekrar dene', 'No preview on Spotify — click to retry') : L('Önizleme henüz alınmadı — tıkla, getir', 'Preview not fetched yet — click to fetch')}" style="${isSpPreview(x.preview_url) ? 'background:#1ED760;border-color:#1ED760' : x.preview_url === '' ? 'opacity:.55' : 'border-style:dashed'}">${isSpPreview(x.preview_url) ? '▶ 30SN' : x.preview_url === '' ? '30SN ✕' : '30SN ?'}</button><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
       : `<li class="ad-empty">${L('Kitaplık boş. Soldan şarkı ara ve ekle.', 'Library is empty. Search and add songs on the left.')}</li>`;
     hydrateArt(body.querySelector('#mLib'));
   }
@@ -232,16 +228,20 @@ async function musicTab(body) {
       await sb.from('tracks').delete().eq('id', lib[i].id);
       return loadLib();
     }
-    if (e.target.closest('[data-yt]')) {
+    if (e.target.closest('[data-pvb]')) {
       const x = lib[i];
-      const v = prompt(L(`"${x.title}" için YouTube linki ya da video kimliği.\nBoş bırakırsan otomatik yeniden aranır. "-" yazarsan YouTube kullanılmaz (Spotify çalar).`, `YouTube link or video id for "${x.title}".\nLeave empty to search again automatically. Type "-" to never use YouTube (Spotify plays).`), x.youtube_id ? `https://www.youtube.com/watch?v=${x.youtube_id}` : '');
-      if (v === null) return;
-      const val = v.trim() === '-' ? '' : v.trim() ? ytIdOf(v) : null;
-      if (v.trim() && v.trim() !== '-' && !val) { toast(L('Geçerli bir YouTube linki değil.', 'Not a valid YouTube link.')); return; }
-      const { error } = await sb.from('tracks').update({ youtube_id: val }).eq('id', x.id);
-      if (error) { toast(error.message + migNote(error.message), 6000); return; }
-      if (val === null) await matchYt(x.id);
-      toast(L('Kaydedildi', 'Saved'));
+      const au = body.querySelector('#mPvAudio');
+      if (isSpPreview(x.preview_url)) {
+        if (au.dataset.id === String(x.id) && !au.paused) { au.pause(); return; }
+        au.src = x.preview_url; au.dataset.id = String(x.id); au.volume = 0.6;
+        au.play().catch(() => toast(L('Önizleme çalınamadı.', 'Could not play the preview.')));
+        return;
+      }
+      if (x.preview_url === '') await sb.from('tracks').update({ preview_url: null }).eq('id', x.id);
+      try {
+        const d = await fetchPreview(x.id);
+        toast(d?.preview_url ? L('Önizleme bulundu ✓', 'Preview found ✓') : L('Spotify\'da bu şarkının önizlemesi yok.', 'Spotify has no preview for this song.'));
+      } catch (err) { toast(L('Önizleme alınamadı: ', 'Could not fetch preview: ') + (err.message || err), 6000); }
       return loadLib();
     }
     const j = e.target.closest('[data-up]') ? i - 1 : e.target.closest('[data-down]') ? i + 1 : -1;
@@ -252,32 +252,23 @@ async function musicTab(body) {
     loadLib();
   });
 
-  // youtube-match fonksiyonu: şarkının YouTube karşılığını bulur ve tracks tablosuna yazar
-  async function matchYt(id) {
-    const { data, error } = await sb.functions.invoke('youtube-match', { body: { id } });
-    if (error) {
-      let msg = error.message;
-      try { msg = (await error.context?.json())?.error || msg; } catch { /* yok */ }
-      throw new Error(msg);
-    }
-    if (data?.error) throw new Error(data.error);
-    return data;
-  }
-  body.querySelector('#mYtAll').addEventListener('click', async (e) => {
+  // "spotify" fonksiyonunun herkese açık yolu: önizleme adresini bulur ve tracks tablosuna yazar
+  const fetchPreview = (id) => invoke({ preview: id });
+  body.querySelector('#mPvAll').addEventListener('click', async (e) => {
     const btn = e.currentTarget;
-    const todo = lib.filter((x) => x.youtube_id == null);
-    if (!todo.length) { toast(L('Hepsi eşleşmiş ✓', 'All matched ✓')); return; }
+    const todo = lib.filter((x) => x.spotify_id && !isSpPreview(x.preview_url) && x.preview_url !== '');
+    if (!todo.length) { toast(L('Hepsinin önizlemesi var ✓', 'All previews ready ✓')); return; }
     btn.disabled = true;
     let ok = 0;
     for (const [k, x] of todo.entries()) {
-      body.querySelector('#mYtInfo').textContent = `YOUTUBE: ${k + 1}/${todo.length} · ${x.title}`;
-      try { if ((await matchYt(x.id))?.youtube_id) ok++; } catch (err) { // eslint-disable-line no-await-in-loop
-        toast(L('Eşleştirme çalışmadı: ', 'Matching failed: ') + (err.message || err) + migNote(err.message) + L(' — "youtube-match" fonksiyonu yayında mı? (README → Adım 8)', ' — is the "youtube-match" function deployed? (README → Step 8)'), 8000);
+      body.querySelector('#mPvInfo').textContent = `${L('ÖNİZLEME', 'PREVIEW')}: ${k + 1}/${todo.length} · ${x.title}`;
+      try { if ((await fetchPreview(x.id))?.preview_url) ok++; } catch (err) { // eslint-disable-line no-await-in-loop
+        toast(L('Önizleme alınamadı: ', 'Could not fetch previews: ') + (err.message || err) + L(' — "spotify" fonksiyonunun son halini yükledin mi? (README → Adım 7)', ' — did you deploy the latest "spotify" function? (README → Step 7)'), 8000);
         break;
       }
     }
     btn.disabled = false;
-    toast(L(`${ok} şarkı YouTube ile eşleşti`, `${ok} songs matched on YouTube`));
+    toast(L(`${ok} şarkının önizlemesi hazır`, `${ok} previews ready`));
     loadLib();
   });
 
@@ -301,7 +292,7 @@ async function musicTab(body) {
       const d = await invoke({ q: lastQ, offset });
       if (d.error === 'no_credentials') {
         meta.textContent = '';
-        body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması için SPOTIFY_CLIENT_ID ve SPOTIFY_CLIENT_SECRET tanımlı değil (README → Adım 8). O zamana kadar yukarıya Spotify şarkı linkini yapıştırarak ekleyebilirsin.', 'SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET are not set (README → Step 8). Until then, paste a Spotify track link above to add songs.')}</li>`;
+        body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması için SPOTIFY_CLIENT_ID ve SPOTIFY_CLIENT_SECRET tanımlı değil (README → Adım 7). O zamana kadar yukarıya Spotify şarkı linkini yapıştırarak ekleyebilirsin.', 'SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET are not set (README → Step 7). Until then, paste a Spotify track link above to add songs.')}</li>`;
         return;
       }
       results = append ? results.concat(d.results || []) : (d.results || []);
@@ -310,7 +301,7 @@ async function musicTab(body) {
       renderResults(append);
     } catch (err) {
       meta.textContent = '';
-      body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması çalışmadı. "spotify" Edge Function\'ı yayında mı? (README → Adım 8)', 'Spotify search failed. Is the "spotify" Edge Function deployed? (README → Step 8)')}<br>${esc(err.message || err)}</li>`;
+      body.querySelector('#mRes').innerHTML = `<li class="ad-err">${L('Spotify araması çalışmadı. "spotify" Edge Function\'ı yayında mı? (README → Adım 7)', 'Spotify search failed. Is the "spotify" Edge Function deployed? (README → Step 7)')}<br>${esc(err.message || err)}</li>`;
     }
   }
 
@@ -358,13 +349,14 @@ async function musicTab(body) {
       spotify_id: full.spotify_id, spotify_url: full.spotify_url, explicit: Boolean(full.explicit),
       title: full.title, artist: full.artist, album: full.album, track_number: full.track_number, track_count: full.track_count,
       year: full.year, genre: full.genre, duration_ms: full.duration_ms, artwork_url: full.artwork_url, sort: lib.length,
+      preview_url: isSpPreview(full.preview_url) ? full.preview_url : null,
     }).select('id').single();
     if (error) { toast(error.message); btn.disabled = false; btn.textContent = `+ ${L('EKLE', 'ADD')}`; return; }
     toast(L(`Eklendi: ${full.title}`, `Added: ${full.title}`));
     await loadLib();
     renderResults(false);
-    // YouTube karşılığını arka planda bul
-    if (added?.id != null) matchYt(added.id).then((d) => { if (d?.youtube_id) toast(L(`YouTube bulundu: ${full.title} ✓`, `YouTube found: ${full.title} ✓`)); loadLib(); }).catch(() => {});
+    // önizleme gelmediyse arka planda getir
+    if (added?.id != null && !isSpPreview(full.preview_url)) fetchPreview(added.id).then(loadLib).catch(() => {});
   });
 
   await loadLib();

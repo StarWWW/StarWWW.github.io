@@ -1,11 +1,11 @@
-// Spotify şarkı arama + şarkı detayı. Sadece admins tablosundaki kullanıcılar kullanabilir.
+// Spotify şarkı arama + şarkı detayı + 30 sn önizleme.
 //
-// İki yol:
-//  1) Arama: Spotify Web API (gizli değişkenler SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET gerekir;
-//     Şubat 2026'dan beri Spotify geliştirici uygulamaları için uygulama sahibinin Premium olması şart).
-//  2) Link: open.spotify.com/track/... linkinden bilgileri herkese açık embed sayfasından çeker,
-//     albüm adı / parça no / türü iTunes'tan tamamlar. Anahtar gerektirmez.
-// YouTube karşılığı ayrı fonksiyonda: youtube-match
+//  1) { q }        Arama: Spotify Web API (gizli değişkenler SPOTIFY_CLIENT_ID + SPOTIFY_CLIENT_SECRET gerekir;
+//                  Şubat 2026'dan beri Spotify geliştirici uygulamaları için uygulama sahibinin Premium olması şart). Sadece adminler.
+//  2) { track }    Link/kimlik: bilgileri herkese açık embed sayfasından çeker, albüm adı / parça no / türü iTunes'tan
+//                  tamamlar. Anahtar gerektirmez. Sadece adminler.
+//  3) { preview }  Herkese açık: tracks tablosundaki şarkının Spotify önizleme (30 sn MP3) adresini embed sayfasından
+//                  bulup preview_url'ye kaydeder. Her şarkı için bir kez çalışır; sitedeki çalar bunu çalar.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const cors = {
@@ -19,8 +19,9 @@ const json = (data: unknown, status = 200) =>
 type Track = {
   spotify_id: string; spotify_url: string; title: string; artist: string; album: string | null;
   track_number: number | null; track_count: number | null; year: number | null; genre: string | null;
-  duration_ms: number | null; artwork_url: string | null; explicit: boolean;
+  duration_ms: number | null; artwork_url: string | null; explicit: boolean; preview_url: string | null;
 };
+const isSpPreview = (u: unknown) => /^https:\/\/p\.scdn\.co\//.test(String(u ?? ''));
 
 let token: { value: string; until: number } | null = null;
 async function spotifyToken(): Promise<string | null> {
@@ -60,6 +61,7 @@ function fromApi(t: any): Track {
     duration_ms: t.duration_ms ?? null,
     artwork_url: t.album?.images?.[0]?.url ?? null,
     explicit: Boolean(t.explicit),
+    preview_url: isSpPreview(t.preview_url) ? t.preview_url : null,
   };
 }
 
@@ -92,13 +94,21 @@ async function itunesFill(t: Track): Promise<Track> {
   return t;
 }
 
-// Anahtarsız yol: herkese açık embed sayfasındaki veriden
-async function fromEmbed(id: string): Promise<Track> {
-  const html = await (await fetch(`https://open.spotify.com/embed/track/${id}`, { headers: { 'User-Agent': 'Mozilla/5.0' } })).text();
-  const m = html.match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
+// herkese açık embed sayfasındaki şarkı verisi (önizleme adresi dahil)
+async function embedEntity(id: string) {
+  const r = await fetch(`https://open.spotify.com/embed/track/${id}`, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+  if (!r.ok) throw new Error(`Spotify embed ${r.status}`);
+  const m = (await r.text()).match(/<script id="__NEXT_DATA__" type="application\/json">([\s\S]*?)<\/script>/);
   if (!m) throw new Error('Spotify sayfası okunamadı');
   const e = JSON.parse(m[1])?.props?.pageProps?.state?.data?.entity;
   if (!e || e.type !== 'track') throw new Error('Bu bir Spotify şarkı linki değil');
+  return e;
+}
+const previewOf = (e: { audioPreview?: { url?: string } }) => (isSpPreview(e?.audioPreview?.url) ? e.audioPreview!.url! : null);
+
+// Anahtarsız yol: embed sayfasındaki veriden
+async function fromEmbed(id: string): Promise<Track> {
+  const e = await embedEntity(id);
   const imgs = e.visualIdentity?.image ?? [];
   const big = imgs.slice().sort((a: { maxWidth: number }, b: { maxWidth: number }) => (b.maxWidth ?? 0) - (a.maxWidth ?? 0))[0];
   return itunesFill({
@@ -112,6 +122,7 @@ async function fromEmbed(id: string): Promise<Track> {
     duration_ms: e.duration ?? null,
     artwork_url: big?.url ?? null,
     explicit: Boolean(e.isExplicit),
+    preview_url: previewOf(e),
   });
 }
 
@@ -125,6 +136,26 @@ function parseId(input: string): string | null {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
 
+  let body: { q?: string; offset?: number; track?: string; preview?: number | string } = {};
+  try { body = await req.json(); } catch { /* boş */ }
+
+  // herkese açık: şarkının Spotify önizlemesini bul ve kaydet ('' = Spotify'da önizlemesi yok)
+  if (body.preview != null) {
+    try {
+      const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+      const { data: tr, error } = await db.from('tracks').select('id,spotify_id,preview_url').eq('id', body.preview).maybeSingle();
+      if (error) throw error;
+      if (!tr) return json({ error: 'şarkı yok' }, 404);
+      if (isSpPreview(tr.preview_url) || tr.preview_url === '') return json({ preview_url: tr.preview_url || null, cached: true });
+      if (!tr.spotify_id) return json({ preview_url: null });
+      const pv = previewOf(await embedEntity(tr.spotify_id));
+      await db.from('tracks').update({ preview_url: pv ?? '' }).eq('id', tr.id);
+      return json({ preview_url: pv });
+    } catch (e) {
+      return json({ error: String(e) }, 500);
+    }
+  }
+
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   });
@@ -132,9 +163,6 @@ Deno.serve(async (req) => {
   if (!user) return json({ error: 'giriş gerekli' }, 401);
   const { data: admin } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
   if (!admin) return json({ error: 'yetki yok' }, 403);
-
-  let body: { q?: string; offset?: number; track?: string } = {};
-  try { body = await req.json(); } catch { /* boş */ }
 
   try {
     if (body.q) {
@@ -152,6 +180,7 @@ Deno.serve(async (req) => {
       if (tk) {
         const raw = await api(`/tracks/${id}?market=TR`, tk);
         const t = fromApi(raw);
+        if (!t.preview_url) t.preview_url = await embedEntity(id).then(previewOf).catch(() => null);
         const artistId = raw.artists?.[0]?.id;
         if (artistId) {
           const a = await api(`/artists/${artistId}`, tk).catch(() => null);

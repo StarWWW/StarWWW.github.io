@@ -12,10 +12,9 @@
     "genre": "Soundtrack",
     "duration_ms": 156000,
     "artwork_url": "https://i.scdn.co/image/ab67616d0000b27344ae29b7d531186cfc7c5113",
-    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ff/9d/27/ff9d270c-81b2-df99-80f5-5b87048ae88f/mzaf_16037815512034579723.plus.aac.p.m4a",
+    "preview_url": "https://p.scdn.co/mp3-preview/929f178f45d3e58a7c9811a5752e939455e74914",
     "store_url": "https://music.apple.com/tr/album/megalovania/6813342945?i=6813343186",
-    "explicit": false,
-    "youtube_id": "0FCvzsVlXpQ"
+    "explicit": false
   },
   {
     "spotify_id": "607Rub0edH75AmHEIsuw8N",
@@ -30,10 +29,9 @@
     "genre": "Soundtrack",
     "duration_ms": 210190,
     "artwork_url": "https://i.scdn.co/image/ab67616d0000b273db6b8ae97f69fee1d432334d",
-    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/4d/28/48/4d2848df-10c9-b11b-57ec-2ad2a20441b1/mzaf_3803094667132234958.plus.aac.p.m4a",
+    "preview_url": "https://p.scdn.co/mp3-preview/b4e3af0d2eae4147c80c79580e4dce952864f3de",
     "store_url": "https://music.apple.com/tr/album/travelers/1467259296?i=1467259940",
-    "explicit": false,
-    "youtube_id": "z34enKCqRGk"
+    "explicit": false
   },
   {
     "spotify_id": "28m7pzLSESOtre5vyI5cEk",
@@ -48,10 +46,9 @@
     "genre": "Soundtrack",
     "duration_ms": 160056,
     "artwork_url": "https://i.scdn.co/image/ab67616d0000b27357aacd72d8f523ddab7b5e48",
-    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/47/bc/f1/47bcf191-f833-247e-eacb-77fc399b861d/mzaf_6744313195644889590.plus.aac.p.m4a",
+    "preview_url": "https://p.scdn.co/mp3-preview/dd7399156fa87b820bcc16d8ad6caa01c625dab3",
     "store_url": "https://music.apple.com/tr/album/the-fire-is-gone-for-piano-saxophone-and-trumpet/1691909937?i=1691909949",
-    "explicit": false,
-    "youtube_id": "917xijnpJVw"
+    "explicit": false
   },
   {
     "spotify_id": "7CMVo848b9LsUtVavIoiXC",
@@ -66,9 +63,8 @@
     "genre": "Soundtrack",
     "duration_ms": 181286,
     "artwork_url": "https://i.scdn.co/image/ab67616d0000b27344ae29b7d531186cfc7c5113",
-    "preview_url": "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/c8/0c/ef/c80cef70-2fdc-c316-9a46-828e3df18b5c/mzaf_8946137353949873377.plus.aac.p.m4a",
+    "preview_url": "https://p.scdn.co/mp3-preview/4fd3e5d77116893a29fbca398633cd8528584a40",
     "store_url": "https://music.apple.com/tr/album/hopes-and-dreams/1528217465?i=1528217884",
-    "explicit": false,
-    "youtube_id": "HA3Ks8NLS-Y"
+    "explicit": false
   }
 ]

@@ -12,7 +12,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Projeler** | UltraTurk + 2048 AI LAB kartları; altında GitHub API'den otomatik repo listesi. |
 | **Envanter** | RPG envanteri: karakter kartı + XP, yetenek haritası (radar), "kuşanılanlar" (her sınıfın en iyisi), kategori sekmeleri, LV/A–Z sıralama, nadirlik renkleri (SIRADAN → EFSANEVİ), detay paneli. Puanları Kontrol Odası'ndan verirsin; puanlanmamışlar gri görünür. |
 | **Oyun rafı** | Gerçek DVD kutuları: Steam'in dikey kutu kapağı (yoksa tasarlanmış kapak), sırt, parlama, durum etiketi. Üstüne gelince kalkar; tıklayınca kutu dönerek öne gelir, disk dışarı kayar; **ÇEVİR** ile arka kapakta tüm bilgiler ve notun. Sürükleyerek döndürülür; <kbd>Esc</kbd> kapat, <kbd>Boşluk</kbd> çevir, <kbd>←</kbd> <kbd>→</kbd> gez. |
-| **Müzik** | Taşınabilir MP3 çalar + kitaplık + TV. Şarkının YouTube karşılığı varsa **tamamı herkese çalar ve ses ayarlanır** (VOL / − / + / ses çubuğu, klavyeyle de); yoksa Spotify çalar (Spotify'a giriş yapan ziyaretçiye tam şarkı, yapmayana önizleme). |
+| **Müzik** | Taşınabilir MP3 çalar + kitaplık + spektrum. Her şarkının **Spotify 30 sn önizlemesini** kendi çalarımızla çalar: ses ayarı her cihazda çalışır (VOL / − / + / ses çubuğu, klavyeyle de, iPhone dahil), spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki. |
 | **FX** | Açılış ekranı, yumuşak kaydırma, beliren bölümler, harf harf başlıklar, 3B eğilen kartlar, mıknatıslı tuşlar, imleç köşeleri, piksel mod geçişi. Hero'daki **FX: TAM / AZ** anahtarıyla kapatılabilir. |
 | **Duvar** | Herkesin ortak sprey duvarı: canlı imleçler, damlayan boya, her pazartesi 00:00'da buff, arşiv. |
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
@@ -81,7 +81,7 @@ supabase.com → **New project**. Bölge olarak Frankfurt (eu-central-1) Türkiy
 1. `supabase/schema.sql` dosyasının tamamını yapıştır → **Run**.
 2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve 43 yetenek; sadece bir kez).
 3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar).
-4. Yeni bir sorguda `supabase/migrations/003_youtube_kapak.sql` → **Run** (şarkılara `youtube_id`, oyunlara `box_url` = DVD kutu kapağı).
+4. Yeni bir sorguda `supabase/migrations/003_kutu_kapak.sql` → **Run** (oyunlara `box_url` = DVD kutu kapağı; eski iTunes önizlemelerini temizler, çalar sadece Spotify önizlemesi çalar).
 
 Daha önce kurduysan sadece henüz çalıştırmadığın migration'ları çalıştır (002, 003). İkisi de tekrar çalıştırılabilir, bir şey bozmaz.
 
@@ -133,24 +133,16 @@ Fonksiyon sadece yöneticiler tarafından çağrılabilir; anahtar sitede görü
 3. **Aramak** için (isteğe bağlı): https://developer.spotify.com/dashboard → **Create app** (Redirect URI: `https://starwww.github.io`, API: *Web API*). Client ID ve Client secret'ı Supabase → **Edge Functions → Secrets**'a `SPOTIFY_CLIENT_ID` ve `SPOTIFY_CLIENT_SECRET` olarak ekle.
    > Spotify, Şubat 2026'dan beri geliştirici uygulamaları için **uygulama sahibinin Premium olmasını** şart koşuyor ve aramaları 10 sonuçla sınırlıyor. Premium yoksa link yapıştırma yolu her zaman çalışır.
 
-**Tam şarkı kimde çalar?** Spotify'ın kuralı: ziyaretçi aynı tarayıcıda open.spotify.com'a giriş yaptıysa embed şarkının tamamını çalar; giriş yapmadıysa (ya da tarayıcısı üçüncü taraf çerezleri engelliyorsa) Spotify kısa bir önizleme verir. Spotify'ın gömülü çalarında ses ayarı da yoktur. Bu yüzden çalar önce YouTube'u dener (adım 8).
+**Sitedeki çalar ne çalar?** Spotify'ın gömülü çalarında ses ayarı yoktur ve bir web sayfası başka bir sitenin çalarının sesini değiştiremez. Bu yüzden çalar her şarkının Spotify'daki **30 saniyelik önizlemesini** kendi çalarıyla çalar; ses düğmeleri bu sayede çalışır. Şarkının tamamı için her yerde "Spotify'da dinle" linki var.
 
-### 8. YouTube eşleştirme (tam şarkı + ses ayarı herkese)
-1. Supabase → **Edge Functions → Deploy a new function → Via Editor**
-   - İsim: **`youtube-match`**
-   - İçerik: `supabase/functions/youtube-match/index.ts` dosyasının tamamı → **Deploy**.
-2. Bu kadar. Anahtar gerekmez. Bir şarkının YouTube karşılığı yoksa, ilk çalındığında (ya da müzik bölümü ilk açıldığında) fonksiyon resmi yüklemeyi bulur ("Sanatçı - Topic" kanalı, süre uyumu; canlı/cover/remix/slowed elenir) ve veritabanına kaydeder — her şarkı en fazla bir kez aranır.
-3. Kontrol Odası → *Müzik Ekle* → kitaplıkta her şarkının yanında **YT ✓ / YT ? / YT ✕** görünür. **YOUTUBE'U EŞLEŞTİR** hepsini birden arar. **YT** düğmesiyle yanlış eşleşmeyi düzeltebilir (link yapıştır), boş bırakıp yeniden aratabilir ya da `-` yazıp o şarkıda YouTube'u kapatabilirsin.
-4. (İsteğe bağlı) Resmi YouTube Data API'yi kullanmak istersen Secrets'a `YOUTUBE_API_KEY` ekle; yoksa fonksiyon YouTube'un arama sayfasını okur.
+**Önizlemeler nereden gelir?** Kontrol Odası'ndan eklerken otomatik kaydedilir. Önizlemesi kayıtlı olmayan eski şarkılar için `spotify` fonksiyonu, şarkı ilk çalındığında (ya da müzik bölümü ilk açıldığında) önizleme adresini bulup veritabanına yazar — her şarkı için bir kez. Bunun için fonksiyonun **son halini** yüklemiş olman yeterli (yukarıdaki adım 1'i güncel dosyayla tekrarla). Kontrol Odası'nda her şarkının yanında **▶ 30SN / 30SN ? / 30SN ✕** görünür; **ÖNİZLEMELERİ GETİR** hepsini birden alır. Spotify'ın önizleme vermediği nadir şarkılarda çalar "önizleme yok" der ve Spotify linkini gösterir.
 
-YouTube videoyu o sitede oynatmayı reddederse çalar sessizce Spotify'a geçer. Not: YouTube müzik videolarını `localhost`/`127.0.0.1` üzerinde çoğu zaman oynatmaz (hata 150) — bunu yayındaki sitede dene.
-
-### 9. (İsteğe bağlı) Eski duvarları temizle
+### 8. (İsteğe bağlı) Eski duvarları temizle
 Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür). Veritabanı şişmesin diye 12 haftadan eskileri silmek için `schema.sql`'in en altındaki `pg_cron` satırını kullan.
 
 ## İçerik güncelleme
 
-- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür ve kapak otomatik gelir; YouTube karşılığı arka planda bulunur.
+- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür, kapak ve 30 sn önizleme otomatik gelir.
 - **Oyun ekle:** *Oyun Ekle* → ara → **SEÇ** → durumu, notu, kutu rengini seç → **RAFA KOY**. Geliştirici, yayıncı, çıkış tarihi, tür, platform, kapak ve DVD kutu kapağı otomatik gelir.
 - **Oyun düzenle:** raf listesinde **NOT** (kutunun arkasındaki not), **KAPAK** (kutu kapağı resmi; boş = Steam kapağı ya da tasarlanmış kapak), durum ve "ŞU AN".
 - **Yetenek puanla:** *Yetenekler* → kaydırıcılar → **KAYDET**.

@@ -360,7 +360,7 @@
           </div>
           <div class="mp3-prog">
             <div class="mp3-bar" id="mpBar" role="slider" tabindex="0" aria-label="Konum" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" data-i18n-attr="aria-label:mu.seek"><div class="mp3-fill" id="mpFill"></div><span class="mp3-knob" id="mpKnob"></span></div>
-            <div class="term mp3-times"><span id="mpCur">0:00</span><span class="pv" id="mpSrc">SPOTIFY</span><span id="mpDur">0:00</span></div>
+            <div class="term mp3-times"><span id="mpCur">0:00</span><span class="pv" id="mpSrc">SPOTIFY · 30SN</span><span id="mpDur">0:00</span></div>
           </div>
         </div>
         <div class="mp3-pad">
@@ -381,7 +381,7 @@
         <span class="mp3-jack" aria-hidden="true"></span>
       </div>
       <svg class="earbuds" width="300" height="120" viewBox="0 0 300 120" aria-hidden="true"><path d="M156 0 C 156 46, 96 40, 84 80 M156 0 C 166 56, 236 48, 226 90"/><circle cx="84" cy="92" r="13"/><circle cx="226" cy="102" r="13"/></svg>
-      <p class="hand mp3-note rv" data-rv="wipe" style="--i:6" data-i18n-html="mu.hint">şarkının tamamı çalar,<br>ses de ayarlanır ♪</p>
+      <p class="hand mp3-note rv" data-rv="wipe" style="--i:6" data-i18n-html="mu.hint">spotify'ın 30 sn önizlemesi,<br>tamamı ↗ spotify'da ♪</p>
       <audio id="mpAudio" preload="none" crossorigin="anonymous"></audio>
     </div>
     <div class="library rv" style="--i:2">
@@ -390,13 +390,10 @@
         <label class="lib-filter"><span class="px" data-i18n="mu.filter">FİLTRE</span><input class="term" id="libFilter" placeholder="şarkı, sanatçı, albüm..." data-i18n-attr="placeholder:mu.filterPh"></label>
       </div>
       <div class="dock">
-        <div class="dock-l px"><span class="sp-dot" aria-hidden="true"></span><span id="dockSrc" data-i18n="mu.dock">ŞİMDİ ÇALIYOR</span><span class="sp-hint" id="spHint" hidden data-i18n="mu.loginHint">30 SN ÖNİZLEME — TAMAMI İÇİN SPOTIFY'A GİRİŞ YAP</span></div>
+        <div class="dock-l px"><span class="sp-dot" aria-hidden="true"></span><span id="dockSrc">ÇALMAYA HAZIR</span><span class="dock-pv" data-i18n="mu.pvBadge">SPOTIFY · 30 SN ÖNİZLEME</span></div>
         <div class="dock-body">
-          <div class="tv" id="ytWrap" hidden><div class="tv-screen"><div id="ytEmbed"></div></div><span class="tv-led" aria-hidden="true"></span></div>
-          <div class="sp-frame" id="spWrap" hidden><div id="spEmbed"></div></div>
-          <div class="dock-info" id="dockInfo">
-            <p class="px dock-wait" id="dockWait" data-i18n="mu.dockWait">BİR ŞARKI SEÇ — BURADA ÇALAR</p>
-          </div>
+          <div class="dock-info" id="dockInfo"></div>
+          <canvas class="viz" id="mpViz" aria-hidden="true"></canvas>
         </div>
       </div>
       <div class="lib-scroll" data-lenis-prevent>
@@ -407,7 +404,7 @@
           <tbody id="libBody"></tbody>
         </table>
       </div>
-      <div class="px lib-foot"><span data-i18n="mu.legend">▶ = ÇAL · ↗ = SPOTIFY'DA AÇ</span><span data-i18n="mu.legend2">KAPAKLAR OTOMATİK 8-BIT</span></div>
+      <div class="px lib-foot"><span data-i18n="mu.legend">▶ = 30 SN ÖNİZLEME · ↗ = TAMAMI SPOTIFY'DA</span><span data-i18n="mu.legend2">KAPAKLAR OTOMATİK 8-BIT</span></div>
     </div>
   </div>
 </section>

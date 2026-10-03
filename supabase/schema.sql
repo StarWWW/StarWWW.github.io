@@ -27,7 +27,6 @@ create table if not exists public.tracks (
   itunes_id bigint unique,
   spotify_id text unique,
   spotify_url text,
-  youtube_id text,
   explicit boolean not null default false,
   title text not null,
   artist text not null,
