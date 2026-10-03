@@ -1,7 +1,7 @@
 import { $, $$, API, copyText, toast, store } from './util.js';
 import { applyI18n, setLang, t, onLang } from './i18n.js';
 import { hydrateSprites, spriteURI, spriteSVG } from './sprites.js';
-import { init2048, initRepos } from './sections/projects.js';
+import { init2048, initRepos, initUltraturkIntro } from './sections/projects.js';
 import { initSkills } from './sections/skills.js';
 import { initShelf } from './sections/shelf.js';
 import { initMusic } from './sections/music.js';
@@ -11,6 +11,7 @@ import { initTerminal } from './terminal.js';
 import { initFx } from './fx.js';
 import { initConsent } from './consent.js';
 import { initFooter } from './sections/footer.js';
+import { initDrug } from './drug.js';
 
 // ---------- mod: REAL / DRUG ----------
 // DRUG avatarı (animasyonlu WebP) sadece gerekince yüklenir; REAL modda hiç indirilmez
@@ -39,10 +40,14 @@ function buildTicker() {
   const words = document.documentElement.lang === 'en'
     ? ['STAR', '21 Y/O', 'COMPUTER ENGINEERING', 'ULTRATURK', 'ULTRAKILL TURKISH DUB', 'PIXEL ART', 'GAMER', 'MUSIC ADDICT', 'EVERY HELLO COMES WITH A GOODBYE']
     : ['STAR', '21 YAŞ', 'BİLGİSAYAR MÜHENDİSLİĞİ', 'ULTRATURK', 'ULTRAKILL TÜRKÇE DUBLAJ', 'PIXEL ART', 'OYUNCU', 'MÜZİK BAĞIMLISI', 'EVERY HELLO COMES WITH A GOODBYE'];
+  // DRUG modunda araya gizli mesajlar karışır
+  const secret = document.documentElement.dataset.mode === 'drug' ? (API.drug?.tickerWords?.() || []) : [];
+  const all = secret.length ? words.flatMap((w, i) => (secret[i] ? [w, secret[i]] : [w])) : words;
   const spark = spriteSVG('sparkle', 2);
-  const one = words.map((w) => `<span>${w}</span><span class="spr">${spark}</span>`).join('');
+  const one = all.map((w) => `<span${secret.includes(w) ? ' class="tk-secret"' : ''}>${w}</span><span class="spr">${spark}</span>`).join('');
   $('#ticker').innerHTML = one + one;
 }
+API.buildTicker = buildTicker;
 
 // ---------- gezinme ----------
 function initNav() {
@@ -153,6 +158,7 @@ function boot() {
   initTerminal();
   initKonami();
   init2048();
+  initUltraturkIntro();
   initRepos();
   initSkills();
   initShelf();
@@ -160,6 +166,7 @@ function boot() {
   initWall();
   initGuestbook();
   initFooter();
+  initDrug();
 
   // GitHub girişinden dönüş: ?admin&code=... (ya da hata: ?error_description=... / #error_description=...)
   const qs = new URLSearchParams(location.search);

@@ -6,10 +6,10 @@ import { esc, fmtDur, toast, store, API, nameLang, reducedMotion } from '../util
 import { t, onLang } from '../i18n.js';
 import { pixelate } from '../pixelate.js';
 import { getSupabase } from '../supabase.js';
+import { createVisualizer } from './visualizer.js';
 
 const isSpPreview = (u) => /^https:\/\/p\.scdn\.co\//.test(String(u || ''));
 const spLink = (tr) => tr?.spotify_url || (tr?.spotify_id ? `https://open.spotify.com/track/${tr.spotify_id}` : '');
-const VIZ_COLORS = ['#4B692F', '#6ABE30', '#99E550', '#99E550', '#FBF236', '#FBF236', '#DF7126', '#AC3232'];
 
 export async function initMusic() {
   const $ = (id) => document.getElementById(id);
@@ -66,7 +66,7 @@ export async function initMusic() {
   // ---------- ses motoru (Web Audio) ----------
   let vol = Math.max(0, Math.min(10, Number(store.get('star.vol', 8)) || 0));
   let muted = Boolean(store.get('star.muted', false));
-  let ctx = null; let gain = null; let analyser = null; let bins = null;
+  let ctx = null; let gain = null; let analyser = null; let bins = null; let levelBuf = null;
   function ensureGraph() {
     if (ctx) return;
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -75,8 +75,8 @@ export async function initMusic() {
       ctx = new AC();
       const src = ctx.createMediaElementSource(audio);
       analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.75;
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.72;
       gain = ctx.createGain();
       src.connect(analyser);
       analyser.connect(gain);
@@ -98,77 +98,26 @@ export async function initMusic() {
     }
   }
 
-  // ---------- spektrum ----------
-  const canvas = $('mpViz');
-  const g2 = canvas?.getContext('2d');
+  // ---------- görselleştirici ----------
   const eqBars = [...document.querySelectorAll('.mp3-eq i')];
-  const peaks = new Float32Array(64);
-  let raf = 0; let lastDraw = 0;
-  function sizeViz() {
-    if (!canvas) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    canvas.width = Math.max(1, Math.round(canvas.clientWidth * dpr));
-    canvas.height = Math.max(1, Math.round(canvas.clientHeight * dpr));
-    drawViz(true);
-  }
-  function drawViz(idle) {
-    if (!g2) return;
-    const W = canvas.width; const H = canvas.height;
-    const dpr = W / Math.max(1, canvas.clientWidth);
-    const block = Math.max(3, Math.round(5 * dpr)); const gap = Math.max(1, Math.round(dpr));
-    const cols = Math.max(8, Math.min(64, Math.floor(W / (block * 2 + gap))));
-    const bw = Math.floor((W - gap * (cols - 1)) / cols);
-    const rows = Math.floor(H / (block + gap));
-    g2.clearRect(0, 0, W, H);
-    const live = !idle && analyser && playing();
-    if (live) analyser.getByteFrequencyData(bins);
-    for (let c = 0; c < cols; c++) {
-      let v = 0;
-      if (live) {
-        // düşük frekanslara daha çok sütun (logaritmik dağılım)
-        const a = Math.floor((c / cols) ** 1.7 * (bins.length * 0.8));
-        const b = Math.max(a + 1, Math.floor(((c + 1) / cols) ** 1.7 * (bins.length * 0.8)));
-        for (let k = a; k < b; k++) v = Math.max(v, bins[k]);
-        v /= 255;
-      }
-      const lit = Math.round(v * rows);
-      peaks[c] = live ? Math.max(lit, (peaks[c] || 0) - 0.35) : 0;
-      const x = c * (bw + gap);
-      for (let r = 0; r < rows; r++) {
-        const y = H - (r + 1) * (block + gap) + gap;
-        if (r < lit) {
-          g2.fillStyle = VIZ_COLORS[Math.min(VIZ_COLORS.length - 1, Math.floor((r / rows) * VIZ_COLORS.length))];
-          g2.fillRect(x, y, bw, block);
-        } else if (r === 0) {
-          g2.fillStyle = 'rgba(155,173,183,.25)';
-          g2.fillRect(x, y, bw, block);
-        }
-      }
-      if (live && peaks[c] >= 1) {
-        const py = H - (Math.ceil(peaks[c]) + 1) * (block + gap) + gap;
-        if (py > 0) { g2.fillStyle = '#F2EEE3'; g2.fillRect(x, py, bw, Math.max(2, Math.round(block / 2))); }
-      }
-    }
+  const viz = createVisualizer($('mpViz'), {
+    analyser: () => analyser,
+    playing,
+    toggle: () => toggle(),
+    hint: () => t('mu.vizHint'),
     // LCD'deki küçük ekolayzer de gerçek sesle oynasın
-    if (live && eqBars.length) {
-      eqBars.forEach((el, i) => {
-        const a = Math.floor((i / eqBars.length) ** 1.6 * bins.length * 0.7);
+    onFrame: (bins) => {
+      if (!bins) return;
+      eqBars.forEach((el, k) => {
+        const a = Math.floor((k / eqBars.length) ** 1.6 * bins.length * 0.7);
         el.style.height = `${Math.max(15, (bins[a] / 255) * 100)}%`;
       });
-    }
-  }
-  function loop(now) {
-    raf = 0;
-    if (!playing() || document.hidden) { drawViz(true); return; }
-    if (!reducedMotion() || now - lastDraw > 66) { drawViz(false); lastDraw = now; }
-    raf = requestAnimationFrame(loop);
-  }
+    },
+  });
   const startViz = () => {
     document.querySelector('.mp3-eq')?.classList.toggle('live', Boolean(analyser));
-    if (!raf) raf = requestAnimationFrame(loop);
+    viz?.start();
   };
-  window.addEventListener('resize', sizeViz);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden && playing()) startViz(); });
 
   // ---------- ekran ----------
   function render() {
@@ -245,6 +194,7 @@ export async function initMusic() {
     art.removeAttribute('src');
     art.parentElement.classList.remove('lit');
     if (tr.artwork_url) pixelate(tr.artwork_url, 32).then((src) => { if (src && idx === i) { art.src = src; art.parentElement.classList.add('lit'); } });
+    viz?.setArt(tr.artwork_url);
     renderDock();
     render();
   }
@@ -369,7 +319,7 @@ export async function initMusic() {
       <td><div class="lib-t">${esc(tr.title)}${tr.explicit ? ' <span class="lib-e" title="explicit">E</span>' : ''}</div><div class="lib-a">${esc(tr.artist)}</div></td>
       <td class="lib-al hide-s">${esc(tr.album || '')}${tr.track_number ? `<small>${esc(t('mu.track', { a: tr.track_number, b: tr.track_count || '?' }))}</small>` : ''}</td>
       <td class="lib-y hide-s">${esc(tr.year || '')}</td>
-      <td class="hide-m">${tr.genre ? `<span class="lib-g">${esc(tr.genre)}</span>` : ''}</td>
+      <td class="hide-m">${tr.genre ? `<span class="lib-g" lang="${nameLang(tr.genre)}">${esc(tr.genre)}</span>` : ''}</td>
       <td class="lib-d">${fmtDur(tr.duration_ms)}</td>
       <td class="lib-act"><button type="button" class="lib-play" aria-label="${esc(t('mu.playRow', { t: tr.title }))}">▶</button> ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener" aria-label="${esc(t('mu.openSp'))}" title="${esc(t('mu.openSp'))}">↗</a>` : ''}</td>
     </tr>`;
@@ -404,6 +354,7 @@ export async function initMusic() {
 
   audio.addEventListener('timeupdate', render);
   ['play', 'pause', 'loadedmetadata', 'emptied'].forEach((ev) => audio.addEventListener(ev, render));
+  audio.addEventListener('pause', () => setTimeout(() => viz?.redraw(), 50));
   audio.addEventListener('play', startViz);
   audio.addEventListener('ended', () => load(idx + 1, true, true));
   audio.addEventListener('error', () => { if (audio.dataset.src) { console.warn('[çal] önizleme yüklenemedi', audio.dataset.src); toast(t('mu.noPv'), 3600); } });
@@ -412,7 +363,7 @@ export async function initMusic() {
   renderVol();
   renderLib();
   if (tracks.length) show(0);
-  sizeViz();
+  viz?.resize();
   onLang(() => { renderLib(); show(idx); renderVol(); });
 
   // Bölüm yaklaşınca önizleme adreslerini sırayla hazırla (ilk tıklamada beklemesin)
@@ -421,7 +372,7 @@ export async function initMusic() {
     new IntersectionObserver(([e], io) => {
       if (!e.isIntersecting) return;
       io.disconnect();
-      sizeViz();
+      viz?.resize();
       (async () => {
         for (const tr of [cur(), ...tracks]) {
           if (needsPv(tr)) await resolvePv(tr); // eslint-disable-line no-await-in-loop
@@ -442,6 +393,15 @@ export async function initMusic() {
     prev: () => load(idx - 1, true),
     toggle,
     volume: (n) => (n == null ? vol : setVol(n)),
+    // bas seviyesi 0..1 (DRUG modunda sayfa bununla nefes alır)
+    level: () => {
+      if (!analyser || audio.paused) return 0;
+      if (!levelBuf || levelBuf.length !== analyser.frequencyBinCount) levelBuf = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(levelBuf);
+      let sum = 0;
+      for (let k = 1; k < 10; k++) sum += levelBuf[k];
+      return sum / (9 * 255);
+    },
     mute: toggleMute,
   };
 }

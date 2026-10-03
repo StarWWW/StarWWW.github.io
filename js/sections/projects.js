@@ -61,3 +61,71 @@ export async function initRepos() {
   render();
   onLang(render);
 }
+
+// UltraTurk kartı: ULTRAKILL'in açılış ekranı. Satırlar oyundaki VCR fontuyla tek tek yazılır,
+// sonra bozulma efektiyle Türkçe (UltraTurk'ün kendi çevirisi) ile İngilizce orijinal arasında gidip gelir.
+const UT_LINES = {
+  tr: ['İNSANLIK ÖLDÜ.', 'YAKITIN KAN.', 'CEHENNEM DOLU.'],
+  en: ['MANKIND IS DEAD.', 'BLOOD IS FUEL.', 'HELL IS FULL.'],
+};
+const GLITCH = '█▓▒░#%&@$*+=?!<>/\ĞÜŞİÖÇ';
+export function initUltraturkIntro() {
+  const box = document.getElementById('utLines');
+  const tag = document.getElementById('utLang');
+  if (!box) return;
+  const spans = [...box.children];
+  let lang = 'tr';
+  let timer = 0;
+  let running = false;
+  const wait = (ms) => new Promise((r) => { timer = setTimeout(r, ms); });
+  const paintTag = () => { if (tag) tag.textContent = t(lang === 'tr' ? 'pr.ut.tr' : 'pr.ut.en'); };
+  function setStatic() {
+    box.lang = 'tr';
+    spans.forEach((s, i) => { s.textContent = UT_LINES.tr[i]; s.classList.remove('typing'); });
+    lang = 'tr';
+    paintTag();
+  }
+  async function glitchOut() {
+    for (let k = 0; k < 6 && running; k++) {
+      spans.forEach((s) => { s.textContent = [...s.textContent].map((ch) => (ch === ' ' || Math.random() < 0.5 ? ch : GLITCH[(Math.random() * GLITCH.length) | 0])).join(''); });
+      box.classList.toggle('glitch', k % 2 === 0);
+      await wait(55);
+    }
+    box.classList.remove('glitch');
+    spans.forEach((s) => { s.textContent = ''; });
+  }
+  async function typeIn(lines) {
+    for (let i = 0; i < spans.length && running; i++) {
+      spans[i].classList.add('typing');
+      for (let c = 1; c <= lines[i].length && running; c++) {
+        spans[i].textContent = lines[i].slice(0, c);
+        await wait(lines[i][c - 1] === ' ' ? 30 : 55);
+      }
+      spans[i].classList.remove('typing');
+      await wait(320);
+    }
+  }
+  async function loop() {
+    while (running) {
+      await glitchOut();
+      if (!running) break;
+      lang = lang === 'tr' ? 'en' : 'tr';
+      box.lang = lang;
+      paintTag();
+      await typeIn(UT_LINES[lang]);
+      await wait(lang === 'tr' ? 3400 : 2600);
+    }
+  }
+  setStatic();
+  onLang(paintTag);
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !reducedMotion()) {
+      if (!running) { running = true; loop(); }
+    } else if (running) {
+      running = false;
+      clearTimeout(timer);
+      setStatic();
+    }
+  }, { threshold: 0.4 }).observe(box);
+}
+

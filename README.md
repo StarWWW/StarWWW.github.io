@@ -12,7 +12,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Projeler** | UltraTurk + 2048 AI LAB kartları; altında GitHub API'den otomatik repo listesi. |
 | **Envanter** | RPG envanteri: karakter kartı + XP, yetenek haritası (radar), "kuşanılanlar" (her sınıfın en iyisi), kategori sekmeleri, LV/A–Z sıralama, nadirlik renkleri (SIRADAN → EFSANEVİ), detay paneli. Puanları Kontrol Odası'ndan verirsin; puanlanmamışlar gri görünür. |
 | **Oyun rafı** | Gerçek DVD kutuları: Steam'in dikey kutu kapağı (yoksa tasarlanmış kapak), sırt, parlama, durum etiketi. Üstüne gelince kalkar; tıklayınca kutu dönerek öne gelir, disk dışarı kayar; **ÇEVİR** ile arka kapakta tüm bilgiler ve notun. Sürükleyerek döndürülür; <kbd>Esc</kbd> kapat, <kbd>Boşluk</kbd> çevir, <kbd>←</kbd> <kbd>→</kbd> gez. |
-| **Müzik** | Taşınabilir MP3 çalar + kitaplık + spektrum. Her şarkının **Spotify 30 sn önizlemesini** kendi çalarımızla çalar: ses ayarı her cihazda çalışır (VOL / − / + / ses çubuğu, klavyeyle de, iPhone dahil), spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki. |
+| **Müzik** | Taşınabilir MP3 çalar + kitaplık + spektrum. Her şarkının **Spotify 30 sn önizlemesini** kendi çalarımızla çalar: ses ayarı her cihazda çalışır (VOL / − / + / ses çubuğu, klavyeyle de, iPhone dahil), spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki. | Görselleştirici: albüm kapağıyla dönen plak, frekans halkası, osiloskop dalgası, vuruşta şok dalgası + parçacık, VU metre ve tahmini BPM; renkler kapaktan gelir, plağa tıklayınca çalar.
 | **FX** | Açılış ekranı, yumuşak kaydırma, beliren bölümler, harf harf başlıklar, 3B eğilen kartlar, mıknatıslı tuşlar, imleç köşeleri, piksel mod geçişi. Hero'daki **FX: TAM / AZ** anahtarıyla kapatılabilir. |
 | **Duvar** | Herkesin ortak sprey duvarı: canlı imleçler, damlayan boya, her pazartesi 00:00'da buff, arşiv. |
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
@@ -200,6 +200,10 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 - Sayfanın %80'i yıkılınca **404.html** boss'u uyanır.
 - **Stil metresi** (aynı hareketi tekrarlamak daha az puan verir): D DOODLE → C CRASH → B BRUTAL → A ANARŞİ → S SPREY → SS SSEGFAULT → SSS SSSUDO → ???
 - 12 başarım, online skor tablosu (3 harfli arcade adı), çıkınca VHS geri sarma.
+
+**DRUG modunun sırları** (`js/drug.js`; sadece hap yutulunca çalışır, terminalde `trip` bulunanları ve ipuçlarını listeler):
+- Her zaman: gökkuşağı imleç izi, hızlı kaydırınca eriyen sayfa, kayan şeritte gizli mesajlar, müzik çalarken sayfanın basla nefes alması.
+- 14 sır: ekranda gezen halüsinasyon böceklerini yakala (1 ve 5 böcek), klavyede `uyan` (kod yağmuru), `dans`, `ters` (ters dünya), `asit` (bunlar terminalde de çalışır), avatara 3 tık (üçüncü göz), Shift'i 2 sn basılı tut (negatif), logoya 7 tık, 25 sn hiçbir şey yapma (erime), bir bölüm başlığına çift tık (patlama), footer odasında pencereye (UFO) ve kediye (uçan kedi) tıkla, müzik çalarken DRUG'da kal (senkron). Hepsi bulununca başlık kalıcı olarak gökkuşağı olur.
 
 ## Animasyonlar (FX)
 

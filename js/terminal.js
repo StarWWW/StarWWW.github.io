@@ -131,6 +131,16 @@ export function initTerminal() {
     },
     lang(args) { const l = (args[0] || '').toLowerCase(); if (l !== 'tr' && l !== 'en') return say('lang tr | lang en', 'err'); setLang(l); say(`lang = ${l}`, 'ok'); },
     destroy() { close(); API.startGame?.(); },
+    trip() {
+      if (document.documentElement.dataset.mode !== 'drug') { say(L('önce hapı yut. (drug)', 'take the pill first. (drug)'), 'err'); return; }
+      const [n, total] = API.drug?.count?.() || [0, 14];
+      say(L(`sırlar: ${n}/${total}`, `secrets: ${n}/${total}`), 'y');
+      (API.drug?.list?.() || []).forEach((e) => print(e.found ? `<span class="ok">✓ ${esc(e.name)}</span>` : `<span class="d">? ??? — ${esc(e.hint)}</span>`));
+    },
+    uyan() { if (!API.drug?.trigger('uyan')) say(L('rüya görmüyorsun. henüz.', 'you are not dreaming. yet.'), 'd'); else close(); },
+    dans() { if (!API.drug?.trigger('dans')) say(L('müzik nerede?', 'where is the music?'), 'd'); else close(); },
+    ters() { if (!API.drug?.trigger('ters')) say(L('dünya zaten ters.', 'the world is already upside down.'), 'd'); else close(); },
+    asit() { if (!API.drug?.trigger('asit')) say(L('kimya dersi değil bu.', 'this is not chemistry class.'), 'd'); else close(); },
     konami() { COMMANDS.destroy(); },
     cowsay(args) {
       const msg = args.join(' ') || 'C.O.W.';
@@ -164,6 +174,10 @@ export function initTerminal() {
     logout() { API.adminLogout?.().then(() => say(L('çıkış yapıldı', 'logged out'), 'ok')); },
   };
   COMMANDS.yoket = COMMANDS.destroy;
+  COMMANDS.wake = COMMANDS.uyan;
+  COMMANDS.dance = COMMANDS.dans;
+  COMMANDS.flip = COMMANDS.ters;
+  COMMANDS.acid = COMMANDS.asit;
   COMMANDS.temizle = COMMANDS.clear;
   COMMANDS.yardım = COMMANDS.help;
   COMMANDS.yardim = COMMANDS.help;

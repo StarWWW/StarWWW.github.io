@@ -11,7 +11,7 @@ const FPS = 8;     // piksel sanat hissi için düşük kare hızı
 // 3x5 piksel yazı
 const FONT = {
   A: ['111', '101', '111', '101', '101'], B: ['110', '101', '110', '101', '110'], C: ['111', '100', '100', '100', '111'],
-  E: ['111', '100', '110', '100', '111'], G: ['111', '100', '101', '101', '111'], I: ['111', '010', '010', '010', '111'],
+  E: ['111', '100', '110', '100', '111'], G: ['111', '100', '101', '101', '111'], I: ['111', '010', '010', '010', '111'], 'İ': ['010', '000', '111', '010', '111'],
   M: ['101', '111', '111', '101', '101'], O: ['111', '101', '101', '101', '111'], P: ['111', '101', '111', '100', '100'],
   S: ['111', '100', '111', '001', '111'], T: ['111', '010', '010', '010', '010'], U: ['101', '101', '101', '101', '111'],
   V: ['101', '101', '101', '101', '010'], X: ['101', '101', '010', '101', '101'], Y: ['101', '101', '010', '010', '010'],
@@ -51,6 +51,10 @@ export function initRoom(canvas) {
   const bubbles = [];          // { who, text, until }
   const particles = [];        // nota / buhar / z
   let shooting = null;         // kayan yıldız
+  let ufo = null;              // DRUG: tavanda geçen UFO
+  let catFly = null;           // DRUG: uçan kedi
+  let pointer = null;          // imlecin sahnedeki yeri (DRUG: ay göze dönüşür)
+  const drugOn = () => document.documentElement.dataset.mode === 'drug';
   let lines = [];              // monitördeki kod satırları
   const rnd = mulberry32(7);
   const hot = [];              // tıklanabilir alanlar
@@ -153,8 +157,16 @@ export function initRoom(canvas) {
     for (let i = 0; i < 30; i += 2) px(x + 7 + i + ((24 % 2) ? 1 : 0), 24, c.sky);
     // ay
     const mx = x + 29; const my = 16;
-    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= 10) px(mx + dx, my + dy, c.moon);
-    px(mx - 1, my - 1, c.moonD); px(mx + 1, my + 1, c.moonD); px(mx + 2, my - 1, c.moonD);
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) if (dx * dx + dy * dy <= 10) px(mx + dx, my + dy, drugOn() ? '#F2EEE3' : c.moon);
+    if (drugOn()) {
+      // DRUG: ay bir göz, imleci izler
+      let ex = 0; let ey = 0;
+      if (pointer) { const dx = pointer[0] - mx; const dy = pointer[1] - my; const d = Math.hypot(dx, dy) || 1; ex = Math.round((dx / d) * 1.6); ey = Math.round((dy / d) * 1.4); }
+      rect(mx - 1 + ex, my - 1 + ey, 2, 2, '#D77BBA'); px(mx + ex, my + ey - 1 + (ey < 0 ? 0 : 0), '#000000');
+      if ((frame % 50) < 2) rect(mx - 3, my - 1, 7, 3, c.moonD); // göz kırpma
+    } else {
+      px(mx - 1, my - 1, c.moonD); px(mx + 1, my + 1, c.moonD); px(mx + 2, my - 1, c.moonD);
+    }
     // yıldızlar (göz kırpar)
     L.stars.forEach(([sx, sy, ph]) => { if ((frame + ph) % 30 < 24) px(x + sx, sy, c.star); });
     // kayan yıldız
@@ -187,7 +199,20 @@ export function initRoom(canvas) {
   }
 
   function drawCat(c) {
-    const x = L.win + 6; const y = FLOOR - 5;
+    let x = L.win + 6; let y = FLOOR - 5;
+    if (catFly) {
+      // DRUG: kedi gökkuşağı iziyle odanın içinde bir tur atar
+      const f = catFly.t / 48;
+      const nx = Math.round(L.win + 6 + Math.sin(f * Math.PI) * ((L.door ?? L.win + 160) - L.win - 20));
+      const ny = Math.round(FLOOR - 5 - Math.sin(f * Math.PI) * 30 + Math.sin(f * 18) * 2);
+      catFly.trail.push([nx, ny]);
+      if (catFly.trail.length > 16) catFly.trail.shift();
+      const rb = ['#AC3232', '#DF7126', '#FBF236', '#99E550', '#5FCDE4', '#D77BBA'];
+      catFly.trail.forEach(([tx, ty], i) => rb.forEach((col, k) => px(tx + 2, ty + 1 + k, col)));
+      x = nx; y = ny;
+      catFly.t += 1;
+      if (catFly.t > 48) catFly = null;
+    }
     px(x + 2, y, c.catD); px(x + 6, y, c.catD);
     rect(x + 1, y + 1, 8, 1, c.cat);
     rect(x, y + 2, 10, 2, c.cat);
@@ -196,7 +221,7 @@ export function initRoom(canvas) {
     const up = (frame >> 3) % 3 === 0;
     if (up) { px(x + 10, y + 3, c.catD); px(x + 11, y + 2, c.catD); px(x + 11, y + 1, c.catD); } else { px(x + 10, y + 4, c.catD); px(x + 11, y + 4, c.catD); px(x + 12, y + 3, c.catD); }
     hot.push({ id: 'cat', x: x - 1, y: y - 2, w: 14, h: 8 });
-    if (!running) return;
+    if (!running || catFly) return;
     if (frame % 24 === 0) particles.push({ k: 'z', x: x + 4, y: y - 2, life: 16 });
   }
 
@@ -321,6 +346,20 @@ export function initRoom(canvas) {
     text(b.text, bx + 2, by + 2, c.ink === '#99E550' ? '#99E550' : '#222034');
   }
 
+  function drawUfo() {
+    if (!ufo) return;
+    const x = Math.round(ufo.x); const y = 11;
+    if (frame % 8 < 5) { // ışın
+      for (let yy = y + 4; yy < FLOOR; yy++) { const hw = 1 + Math.floor((yy - y) / 4); rect(x + 4 - hw, yy, hw * 2 + 1, 1, 'rgba(153,229,80,.12)'); }
+    }
+    rect(x + 3, y - 2, 3, 2, '#5FCDE4');
+    rect(x, y, 9, 2, '#9BADB7');
+    rect(x + 1, y + 2, 7, 1, '#6b7882');
+    ['#FBF236', '#D77BBA', '#99E550'].forEach((col, k) => { if ((frame + k) % 3 === 0) px(x + 1 + k * 3, y + 1, col); });
+    if (running) ufo.x += 2.5;
+    if (ufo.x > W + 12) ufo = null;
+  }
+
   function drawParticles(c) {
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
@@ -378,6 +417,7 @@ export function initRoom(canvas) {
     drawScreen(c);
     drawExit(c);
     drawParticles(c);
+    drawUfo();
     for (let i = bubbles.length - 1; i >= 0; i--) {
       if (bubbles[i].until < frame) { bubbles.splice(i, 1); continue; }
       drawBubble(bubbles[i], c);
@@ -401,6 +441,7 @@ export function initRoom(canvas) {
   const hit = (x, y) => hot.find((h) => x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h);
   canvas.addEventListener('pointermove', (e) => {
     lastPointer = Date.now();
+    pointer = at(e);
     const h = hit(...at(e));
     canvas.style.cursor = h ? 'pointer' : '';
     canvas.title = h ? ({ lamp: 'ışık', monitor: 'terminal', speaker: 'müzik', window: 'dilek tut', cat: 'kedi', char: 'star', door: 'EXIT → başa dön' }[h.id] || '') : '';
@@ -413,13 +454,16 @@ export function initRoom(canvas) {
     if (h.id === 'lamp') lampOn = !lampOn;
     else if (h.id === 'monitor') API.terminal?.open?.();
     else if (h.id === 'speaker') API.music?.toggle?.();
-    else if (h.id === 'window') shooting = { t: 0 };
-    else if (h.id === 'cat') say('cat', 'MIYAV');
+    else if (h.id === 'window') {
+      if (drugOn()) { ufo = { x: -12 }; API.drug?.unlock?.('ufo'); } else shooting = { t: 0 };
+    } else if (h.id === 'cat') {
+      if (drugOn() && !catFly) { catFly = { t: 0, trail: [] }; say('cat', 'MİYAAV!'); API.drug?.unlock?.('cat'); } else say('cat', 'MİYAV');
+    }
     else if (h.id === 'char') say('char', ['CYA!', 'GG!', 'BYE!'][Math.floor(Math.random() * 3)]);
     else if (h.id === 'door') { if (API.fx?.scrollTo) API.fx.scrollTo('#top'); else window.scrollTo({ top: 0 }); }
     draw();
     // animasyonlar kapalıyken (FX: AZ) baloncuk ve kayan yıldız kendiliğinden kaybolsun
-    if (!running) setTimeout(() => { bubbles.length = 0; shooting = null; draw(); }, 2200);
+    if (!running) setTimeout(() => { bubbles.length = 0; shooting = null; ufo = null; catFly = null; draw(); }, 2200);
   });
 
   new ResizeObserver(() => resize()).observe(wrap);

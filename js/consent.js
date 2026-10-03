@@ -64,6 +64,7 @@ const CAT_TXT = {
       ['star.pv', ['Spotify önizleme adreslerinin önbelleği', 'Cache of Spotify preview addresses'], ['sen silene kadar', 'until you clear it']],
       ['star.visits · star.vno', ['"Selam tekrar!" karşılaması ve duvardaki ziyaretçi numaran', '"Welcome back!" greeting and your visitor number on the wall'], ['sen silene kadar', 'until you clear it']],
       ['star.scores · star.ach · star.arcade', ['Gizli oyundaki skorların, başarımların ve arcade adın', 'Your scores, achievements and arcade name in the hidden game'], ['sen silene kadar', 'until you clear it']],
+      ['star.trip · star.bugs', ['DRUG modunda bulduğun sırlar ve yakaladığın böcekler', 'Secrets you found and bugs you caught in DRUG mode'], ['sen silene kadar', 'until you clear it']],
       ['star.wall.local · star.gb.local', ['Çevrimdışı modda duvar ve defterin yerel kopyası', 'Local copy of the wall and guestbook in offline mode'], ['sen silene kadar', 'until you clear it']],
     ],
   },
