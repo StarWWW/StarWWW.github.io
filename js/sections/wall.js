@@ -252,7 +252,7 @@ export async function initWall() {
   async function openArchive() {
     modal.hidden = false;
     const grid = $('#archiveGrid');
-    grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('pr.loading'))}</p>`;
+    grid.innerHTML = `<p class="px" style="padding:20px">${esc(t('pr.loadingD'))}</p>`;
     const end2 = weekStart();
     const start = end2 - 8 * 7 * 86400000;
     let rows = [];

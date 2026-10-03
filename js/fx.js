@@ -31,9 +31,29 @@ onLang(() => splits.forEach((sp) => { sp.stale = true; }));
 
 // ---------------------------------------------------------------- yardımcılar
 const GLYPHS = '▓▒░█<>/\\_-=+*#%&?!';
+// Karıştırırken kutunun boyu sabit kalsın (harf genişlikleri farklı → kutular titremesin)
+function lockBox(el) {
+  if (el._lock || !el.offsetWidth) return;
+  const cs = getComputedStyle(el);
+  // kesirli genişlik (offsetWidth yuvarlar → komşular yarım piksel kayardı)
+  let w = cs.display === 'inline' ? NaN : parseFloat(cs.width);
+  if (!w) {
+    w = el.getBoundingClientRect().width;
+    if (cs.boxSizing !== 'border-box') w -= ['paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth'].reduce((a, k) => a + (parseFloat(cs[k]) || 0), 0);
+  }
+  el._lock = { width: el.style.width, minWidth: el.style.minWidth, maxWidth: el.style.maxWidth, whiteSpace: el.style.whiteSpace, display: el.style.display };
+  if (cs.display === 'inline') el.style.display = 'inline-block';
+  Object.assign(el.style, { width: `${w}px`, minWidth: `${w}px`, maxWidth: `${w}px`, whiteSpace: 'nowrap' });
+}
+function unlockBox(el) {
+  if (!el._lock) return;
+  Object.assign(el.style, el._lock);
+  el._lock = null;
+}
 export function scramble(el, finalText = el.textContent, dur = 420) {
   if (!el || !motionFull()) return;
   if (el._scr) cancelAnimationFrame(el._scr);
+  if (el.textContent === finalText) lockBox(el);
   const start = performance.now();
   const len = finalText.length;
   const step = (now) => {
@@ -46,12 +66,12 @@ export function scramble(el, finalText = el.textContent, dur = 420) {
     }
     el.textContent = out;
     if (p < 1) el._scr = requestAnimationFrame(step);
-    else { el.textContent = finalText; el._scr = null; }
+    else { el.textContent = finalText; el._scr = null; unlockBox(el); }
   };
   el._scr = requestAnimationFrame(step);
 }
 function cancelScrambles() {
-  $$('[data-scramble], .sec-num').forEach((el) => { if (el._scr) { cancelAnimationFrame(el._scr); el._scr = null; if (el._scrFinal) el.textContent = el._scrFinal; } el._scrFinal = null; });
+  $$('[data-scramble], .sec-num').forEach((el) => { if (el._scr) { cancelAnimationFrame(el._scr); el._scr = null; if (el._scrFinal) el.textContent = el._scrFinal; } el._scrFinal = null; unlockBox(el); });
 }
 
 // ---------------------------------------------------------------- hareket anahtarı
@@ -253,17 +273,18 @@ function initTicker() {
   if (!track) return;
   track.classList.add('js-mq');
   const tween = gsap.to(track, { xPercent: -50, duration: 32, ease: 'none', repeat: -1 });
-  let dir = 1;
+  // Kaydırınca hızlanır, sonra yavaşça normale döner. Yön değiştirmez → hız asla sıfırdan geçmez, şerit durmaz.
+  const settle = () => gsap.to(tween, { timeScale: 1, duration: 1.4, ease: 'power2.out', overwrite: true });
   ST.create({
     start: 0,
     end: 'max',
     onUpdate: (self) => {
-      dir = self.direction;
-      const v = Math.min(8, 1 + Math.abs(self.getVelocity()) / 350);
-      gsap.to(tween, { timeScale: v * dir, duration: 0.25, overwrite: true });
-      gsap.to(tween, { timeScale: dir, duration: 1.2, delay: 0.25, ease: 'power2.out', overwrite: false });
+      const v = Math.min(6, 1 + Math.abs(self.getVelocity()) / 400);
+      if (v > tween.timeScale() + 0.15) gsap.to(tween, { timeScale: v, duration: 0.2, ease: 'power1.out', overwrite: true, onComplete: settle });
     },
   });
+  // güvenlik: bir şey hızı bozarsa düzelt
+  setInterval(() => { if (!document.hidden && !document.documentElement.classList.contains('fx-frozen') && (tween.paused() || tween.timeScale() < 0.5)) { tween.paused(false); settle(); } }, 3000);
 }
 
 // ---------------------------------------------------------------- paralaks
@@ -504,7 +525,7 @@ function initTabTitle() {
 }
 function consoleSig() {
   const css = 'font-family:monospace;font-size:12px;line-height:1.1;color:#99E550;background:#222034;padding:8px 12px';
-  console.log('%c ███ ███ ███ ███ \n █    █  █ █ █ █ \n ███  █  ███ ██  \n   █  █  █ █ █ █ \n ███  █  █ █ █ █ \n\n every hello comes with a goodbye.\n ↑↑↓↓←→←→BA', css);
+  console.log('%c ███ ███ ███ ███ \n █    █  █ █ █ █ \n ███  █  ███ ██  \n   █  █  █ █ █ █ \n ███  █  █ █ █ █ \n\n every hello comes with a goodbye.\n psst: ` tuşu.', css);
 }
 
 // ---------------------------------------------------------------- oyun / panel sırasında

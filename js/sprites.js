@@ -2,6 +2,7 @@
 export const PAL = {
   k: '#222034', w: '#FFFFFF', p: '#F2EEE3', g: '#99E550', o: '#DF7126', m: '#D77BBA', c: '#5FCDE4',
   y: '#FBF236', s: '#CAB39D', z: '#9BADB7', r: '#AC3232', d: '#4B692F', b: '#000000', n: '#3F3F74',
+  u: '#8F563B', v: '#663931',
 };
 
 export const SPRITES = {
@@ -23,6 +24,13 @@ export const SPRITES = {
   cross: ['...kkk...', '...kgk...', '...kgk...', 'kkkk.kkkk', 'kggg.gggk', 'kkkk.kkkk', '...kgk...', '...kgk...', '...kkk...'],
   skull: ['..kkkkkk..', '.kwwwwwwk.', 'kwwwwwwwwk', 'kwkkwwkkwk', 'kwkkwwkkwk', 'kwwwkkwwwk', '.kwwwwwwk.', '..kwkwkk..', '..kkkkkk..'],
   battery: ['.kkkkkk.', 'kkggggkk', 'kggggggk', 'kggwgggk', 'kggggggk', 'kggggggk', 'kggggggk', 'kkkkkkkk'],
+  // envanter kategori ikonları (10x10)
+  term: ['kkkkkkkkkk', 'kokykgkzzk', 'kkkkkkkkkk', 'kbbbbbbbbk', 'kbgbbbbbbk', 'kbbgbbbbbk', 'kbgbbggbbk', 'kbbbbbbbbk', 'kbbbbbbbbk', 'kkkkkkkkkk'],
+  globe: ['...kkkk...', '..kcckck..', '.kccckcck.', 'kkkkkkkkkk', 'kcckccckck', 'kcckccckck', 'kkkkkkkkkk', '.kcckccck.', '..kckcck..', '...kkkk...'],
+  db: ['.kkkkkkkk.', 'kooooooook', 'kkkkkkkkkk', 'kooooooook', 'kowooooook', 'kkkkkkkkkk', 'kooooooook', 'kowooooook', 'kkkkkkkkkk', '.kkkkkkkk.'],
+  wrench: ['......kkk.', '.....kzzk.', '.....kzk..', '....kzzk.k', '...kzzzkzk', '..kzzzzzk.', '.kzzzkkk..', 'kzzzk.....', 'kzzk......', '.kk.......'],
+  brush: ['.......kk.', '......kmk.', '.....kmk..', '....kmk...', '...kzk....', '..kzk.....', '.kook.....', 'kooook....', 'koook.....', '.kkk......'],
+  grass: ['kkkkkkkkkk', 'kggggdgggk', 'kgdggggdgk', 'kdgdguudgk', 'kuuvuuuuuk', 'kuuuuuvuuk', 'kuvuuuuuuk', 'kuuuuvuuuk', 'kuuuuuuuvk', 'kkkkkkkkkk'],
 };
 
 function rows(name) {

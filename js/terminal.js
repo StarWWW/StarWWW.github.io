@@ -11,8 +11,8 @@ const FILES = {
     'star — 21 — computer engineering student.\nlead developer & translator of UltraTurk.\nplays games, listens to music, draws pixels.'),
   'cow.txt': () => L('C.O.W. = ????\ndosya boş. hiçbir anlamı yok. sorma.', 'C.O.W. = ????\nfile is empty. it means nothing. don\'t ask.'),
   'readme.md': () => L(
-    '# dijital oda\n- duvara sprey sık (herkes görür, pazartesi silinir)\n- deftere not bırak\n- mp3 çalarda müzik dinle\n- ↑↑↓↓←→←→BA ile sayfayı yok et',
-    '# digital room\n- spray the wall (everyone sees it, wiped on mondays)\n- leave a note in the guestbook\n- listen on the mp3 player\n- ↑↑↓↓←→←→BA to destroy the page'),
+    '# dijital oda\n- duvara sprey sık (herkes görür, pazartesi silinir)\n- deftere not bırak\n- mp3 çalarda müzik dinle\n- oyun rafındaki kutuları aç\n- ...ve belki daha fazlası',
+    '# digital room\n- spray the wall (everyone sees it, wiped on mondays)\n- leave a note in the guestbook\n- listen on the mp3 player\n- open the cases on the game shelf\n- ...and maybe more'),
   'secret.txt': () => '↑ ↑ ↓ ↓ ← → ← → B A',
   'ultraturk.txt': () => L(
     'ULTRATURK — ULTRAKILL için dublajlı Türkçe yama\nrol: baş geliştirici + çevirmen · ekip: star, sstoney\nthunderstore.io/c/ultrakill/p/UltraTurk/UltraTurk',
@@ -65,7 +65,7 @@ export function initTerminal() {
     help() {
       say(L('komutlar:', 'commands:'), 'y');
       say('  whoami · ls · cat <dosya> · cd <bölüm> · games · music · play [n] · pause · next · prev');
-      say('  spray · drug · real · lang tr|en · fx tam|az · destroy · cowsay <yazı> · github · discord');
+      say('  spray · drug · real · lang tr|en · fx tam|az · vol 0-10 · cowsay <yazı> · github · discord');
       say('  date · echo · history · clear · exit · login · admin', 'd');
     },
     whoami() {
@@ -111,6 +111,14 @@ export function initTerminal() {
     pause() { API.music?.pause(); say('❚❚'); },
     next() { API.music?.next(); setTimeout(() => COMMANDS.np(), 300); },
     prev() { API.music?.prev(); setTimeout(() => COMMANDS.np(), 300); },
+    vol(args) {
+      if (!API.music) return say('—', 'd');
+      if (args[0] === 'mute' || args[0] === 'sessiz') { API.music.mute(); return say(L('ses aç/kapa', 'mute toggled'), 'ok'); }
+      const n = Number(args[0]);
+      if (!args.length || Number.isNaN(n)) return say(`vol ${API.music.volume()} / 10 — ${L('kullanım: vol 0-10 | vol mute', 'usage: vol 0-10 | vol mute')}`, 'd');
+      API.music.volume(n);
+      say(`vol ${API.music.volume()} / 10 ${'▮'.repeat(API.music.volume())}${'▯'.repeat(10 - API.music.volume())}`, 'ok');
+    },
     spray() { close(); API.wall?.focus(); },
     drug() { if (document.documentElement.dataset.mode !== 'drug') API.flipMode?.(); say(L('hapı yuttun.', 'you took the pill.'), 'ok'); },
     real() { if (document.documentElement.dataset.mode === 'drug') API.flipMode?.(); say(L('gerçekliğe dönüldü.', 'back to reality.'), 'ok'); },

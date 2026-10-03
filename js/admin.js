@@ -11,6 +11,18 @@ import { drawFull, weekStart, WALL_W, WALL_H } from './spray.js';
 const L = (tr, en) => (getLang() === 'en' ? en : tr);
 const STATUSES = ['oynuyorum', 'oynadım', 'bitirdim', 'bıraktım', 'favori'];
 const STATUS_EN = { oynuyorum: 'PLAYING', oynadım: 'PLAYED', bitirdim: 'FINISHED', bıraktım: 'DROPPED', favori: 'FAVORITE' };
+// YouTube linki / kimliği → 11 karakterlik video kimliği
+const ytIdOf = (v) => {
+  const x = String(v || '').trim();
+  const m = x.match(/(?:youtu\.be\/|[?&]v=|\/embed\/|\/shorts\/|\/live\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : (/^[A-Za-z0-9_-]{11}$/.test(x) ? x : null);
+};
+const steamBox = (g) => {
+  const id = g.steam_appid || String(g.store_url || '').match(/\/app\/(\d+)/)?.[1] || String(g.cover_url || '').match(/\/apps\/(\d+)\//)?.[1];
+  return id ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${id}/library_600x900.jpg` : '';
+};
+const migNote = (msg) => (/youtube_id|box_url/.test(String(msg)) ? L(' — önce supabase/migrations/003_youtube_kapak.sql dosyasını SQL Editor\'de çalıştır.', ' — run supabase/migrations/003_youtube_kapak.sql in the SQL Editor first.') : '');
+
 const CART_COLORS = ['#AC3232', '#DF7126', '#FBF236', '#99E550', '#6ABE30', '#5FCDE4', '#639BFF', '#3F3F74', '#D77BBA', '#76428A', '#222034', '#9BADB7'];
 
 let root = null;
@@ -170,10 +182,11 @@ async function musicTab(body) {
       <div class="ad-meta" id="mMeta"></div>
       <div id="mPrev"></div>
       <ul class="ad-list" id="mRes"></ul>
-      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · SPOTIFY LİNKİ. ÇALAR ŞARKININ TAMAMINI SPOTIFY ÜZERİNDEN ÇALAR.', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · SPOTIFY LINK. THE PLAYER STREAMS THE FULL SONG VIA SPOTIFY.')}</div>
+      <div class="ad-foot">${L('KAYDEDİLENLER: ŞARKI · SANATÇI · ALBÜM · PARÇA NO · YIL · TÜR · SÜRE · KAPAK · SPOTIFY LİNKİ. YOUTUBE KARŞILIĞI OTOMATİK BULUNUR: ÇALAR ŞARKININ TAMAMINI HERKESE ÇALAR VE SES AYARLANIR. BULUNAMAZSA SPOTIFY ÇALAR.', 'SAVED: TITLE · ARTIST · ALBUM · TRACK NO · YEAR · GENRE · DURATION · COVER · SPOTIFY LINK. THE YOUTUBE MATCH IS FOUND AUTOMATICALLY: THE FULL SONG PLAYS FOR EVERYONE WITH VOLUME CONTROL. IF NONE, SPOTIFY PLAYS.')}</div>
     </section>
     <section class="ad-card">
       <div class="ad-card-h"><b>${L('KİTAPLIK', 'LIBRARY')}</b><span id="mCount"></span></div>
+      <div class="ad-meta" style="display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap"><span id="mYtInfo"></span><button type="button" class="btn" id="mYtAll" style="min-height:40px;font-size:11px">${L('YOUTUBE\'U EŞLEŞTİR', 'MATCH YOUTUBE')} ▶</button></div>
       <ul class="ad-list" id="mLib"></ul>
     </section>
   </div>`;
@@ -200,10 +213,13 @@ async function musicTab(body) {
     if (error) { body.querySelector('#mLib').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
     lib = data;
     body.querySelector('#mCount').textContent = `${lib.length} ${L('PARÇA', 'TRACKS')}`;
+    const yes = lib.filter((x) => x.youtube_id).length;
+    const todo = lib.filter((x) => x.youtube_id == null).length;
+    body.querySelector('#mYtInfo').textContent = `YOUTUBE: ${yes}/${lib.length}${todo ? ` · ${todo} ${L('BEKLİYOR', 'PENDING')}` : ''}`;
     body.querySelector('#mLib').innerHTML = lib.length ? lib.map((x, i) => `<li class="ad-row" data-id="${x.id}">
       ${artImg(x.artwork_url)}<div><div class="ad-t">${esc(x.title)} ${x.spotify_id ? '<span class="px" style="font-size:8px;background:#1ED760;color:#000;padding:1px 4px">SPOTIFY</span>' : `<span class="px" style="font-size:8px;background:var(--orange);padding:1px 4px">${L('ÖNİZLEME', 'PREVIEW')}</span>`}</div><div class="ad-s">${esc(x.artist)} · ${esc(x.album || '')}</div></div>
       <span class="ad-d">${fmtDur(x.duration_ms)}</span>
-      <div class="ad-acts"><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
+      <div class="ad-acts"><button type="button" data-yt title="${x.youtube_id ? `youtube.com/watch?v=${esc(x.youtube_id)}` : L('YouTube karşılığı yok — tıkla, link yapıştır', 'No YouTube match — click to paste a link')}" style="${x.youtube_id ? 'background:#FF0033;color:#fff;border-color:#FF0033' : x.youtube_id === '' ? 'opacity:.55' : 'border-style:dashed'}">YT${x.youtube_id ? ' ✓' : x.youtube_id === '' ? ' ✕' : ' ?'}</button><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === lib.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
       : `<li class="ad-empty">${L('Kitaplık boş. Soldan şarkı ara ve ekle.', 'Library is empty. Search and add songs on the left.')}</li>`;
     hydrateArt(body.querySelector('#mLib'));
   }
@@ -216,11 +232,52 @@ async function musicTab(body) {
       await sb.from('tracks').delete().eq('id', lib[i].id);
       return loadLib();
     }
+    if (e.target.closest('[data-yt]')) {
+      const x = lib[i];
+      const v = prompt(L(`"${x.title}" için YouTube linki ya da video kimliği.\nBoş bırakırsan otomatik yeniden aranır. "-" yazarsan YouTube kullanılmaz (Spotify çalar).`, `YouTube link or video id for "${x.title}".\nLeave empty to search again automatically. Type "-" to never use YouTube (Spotify plays).`), x.youtube_id ? `https://www.youtube.com/watch?v=${x.youtube_id}` : '');
+      if (v === null) return;
+      const val = v.trim() === '-' ? '' : v.trim() ? ytIdOf(v) : null;
+      if (v.trim() && v.trim() !== '-' && !val) { toast(L('Geçerli bir YouTube linki değil.', 'Not a valid YouTube link.')); return; }
+      const { error } = await sb.from('tracks').update({ youtube_id: val }).eq('id', x.id);
+      if (error) { toast(error.message + migNote(error.message), 6000); return; }
+      if (val === null) await matchYt(x.id);
+      toast(L('Kaydedildi', 'Saved'));
+      return loadLib();
+    }
     const j = e.target.closest('[data-up]') ? i - 1 : e.target.closest('[data-down]') ? i + 1 : -1;
     if (j < 0 || j >= lib.length) return;
     const order = lib.map((x) => x.id);
     [order[i], order[j]] = [order[j], order[i]];
     await Promise.all(order.map((id, k) => sb.from('tracks').update({ sort: k }).eq('id', id)));
+    loadLib();
+  });
+
+  // youtube-match fonksiyonu: şarkının YouTube karşılığını bulur ve tracks tablosuna yazar
+  async function matchYt(id) {
+    const { data, error } = await sb.functions.invoke('youtube-match', { body: { id } });
+    if (error) {
+      let msg = error.message;
+      try { msg = (await error.context?.json())?.error || msg; } catch { /* yok */ }
+      throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }
+  body.querySelector('#mYtAll').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const todo = lib.filter((x) => x.youtube_id == null);
+    if (!todo.length) { toast(L('Hepsi eşleşmiş ✓', 'All matched ✓')); return; }
+    btn.disabled = true;
+    let ok = 0;
+    for (const [k, x] of todo.entries()) {
+      body.querySelector('#mYtInfo').textContent = `YOUTUBE: ${k + 1}/${todo.length} · ${x.title}`;
+      try { if ((await matchYt(x.id))?.youtube_id) ok++; } catch (err) { // eslint-disable-line no-await-in-loop
+        toast(L('Eşleştirme çalışmadı: ', 'Matching failed: ') + (err.message || err) + migNote(err.message) + L(' — "youtube-match" fonksiyonu yayında mı? (README → Adım 8)', ' — is the "youtube-match" function deployed? (README → Step 8)'), 8000);
+        break;
+      }
+    }
+    btn.disabled = false;
+    toast(L(`${ok} şarkı YouTube ile eşleşti`, `${ok} songs matched on YouTube`));
     loadLib();
   });
 
@@ -297,15 +354,17 @@ async function musicTab(body) {
     btn.textContent = '…';
     let full = r;
     try { full = { ...r, ...(await invoke({ track: r.spotify_id })) }; } catch { /* arama sonucu da yeterli */ }
-    const { error } = await sb.from('tracks').insert({
+    const { data: added, error } = await sb.from('tracks').insert({
       spotify_id: full.spotify_id, spotify_url: full.spotify_url, explicit: Boolean(full.explicit),
       title: full.title, artist: full.artist, album: full.album, track_number: full.track_number, track_count: full.track_count,
       year: full.year, genre: full.genre, duration_ms: full.duration_ms, artwork_url: full.artwork_url, sort: lib.length,
-    });
+    }).select('id').single();
     if (error) { toast(error.message); btn.disabled = false; btn.textContent = `+ ${L('EKLE', 'ADD')}`; return; }
     toast(L(`Eklendi: ${full.title}`, `Added: ${full.title}`));
     await loadLib();
     renderResults(false);
+    // YouTube karşılığını arka planda bul
+    if (added?.id != null) matchYt(added.id).then((d) => { if (d?.youtube_id) toast(L(`YouTube bulundu: ${full.title} ✓`, `YouTube found: ${full.title} ✓`)); loadLib(); }).catch(() => {});
   });
 
   await loadLib();
@@ -336,11 +395,11 @@ async function gamesTab(body) {
     shelf = data;
     body.querySelector('#gCount').textContent = `${shelf.length} ${L('OYUN', 'GAMES')}`;
     body.querySelector('#gLib').innerHTML = shelf.length ? shelf.map((g, i) => `<li class="ad-row" data-id="${g.id}" style="grid-template-columns:44px minmax(0,1fr) auto">
-      ${artImg(g.cover_url, true)}
+      <img alt="" src="${esc(g.box_url || steamBox(g) || '')}" style="width:44px;height:62px;object-fit:cover;border:3px solid var(--ink);background:${esc(g.color || '#AC3232')}" onerror="this.removeAttribute('src')">
       <div><div class="ad-t">${esc(g.name)} ${g.now_playing ? `<span class="px" style="font-size:9px;background:var(--acid);padding:2px 5px">${L('ŞU AN', 'NOW')}</span>` : ''}</div>
       <div class="ad-s"><select data-status style="font-family:var(--f-px);font-size:10px;border:2px solid var(--ink);padding:2px">${STATUSES.map((s) => `<option value="${s}" ${s === g.status ? 'selected' : ''}>${getLang() === 'en' ? STATUS_EN[s] : s.toUpperCase()}</option>`).join('')}</select>
       <label style="font-family:var(--f-px);font-size:9px;margin-left:8px"><input type="checkbox" data-now ${g.now_playing ? 'checked' : ''}> ${L('ŞU AN', 'NOW')}</label></div></div>
-      <div class="ad-acts"><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === shelf.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
+      <div class="ad-acts"><button type="button" data-note title="${esc(g.note || '')}">${L('NOT', 'NOTE')}${g.note ? ' ✓' : ''}</button><button type="button" data-box>${L('KAPAK', 'COVER')}</button><button type="button" data-up ${i === 0 ? 'disabled' : ''} aria-label="${L('Yukarı', 'Up')}">↑</button><button type="button" data-down ${i === shelf.length - 1 ? 'disabled' : ''} aria-label="${L('Aşağı', 'Down')}">↓</button><button type="button" class="del" data-del>${L('SİL', 'DEL')}</button></div></li>`).join('')
       : `<li class="ad-empty">${L('Raf boş. Soldan oyun ara ve ekle.', 'Shelf is empty. Search and add games on the left.')}</li>`;
     hydrateArt(body.querySelector('#gLib'));
   }
@@ -349,6 +408,22 @@ async function gamesTab(body) {
   lib.addEventListener('click', async (e) => {
     const row = e.target.closest('[data-id]'); if (!row) return;
     const i = shelf.findIndex((g) => String(g.id) === row.dataset.id);
+    if (e.target.closest('[data-note]')) {
+      const v = prompt(L(`"${shelf[i].name}" için notun (kutunun arkasında görünür, en fazla 160 harf):`, `Your note for "${shelf[i].name}" (shown on the back of the case, max 160 chars):`), shelf[i].note || '');
+      if (v === null) return;
+      const { error } = await sb.from('games').update({ note: v.trim().slice(0, 160) }).eq('id', shelf[i].id);
+      if (error) { toast(error.message); return; }
+      toast(L('Kaydedildi', 'Saved'));
+      return loadShelf();
+    }
+    if (e.target.closest('[data-box]')) {
+      const v = prompt(L(`"${shelf[i].name}" kutu kapağı (dikey resim linki). Boş bırakırsan Steam kapağı ya da tasarlanmış kapak kullanılır.`, `Case cover for "${shelf[i].name}" (portrait image link). Leave empty to use the Steam cover or a designed one.`), shelf[i].box_url || steamBox(shelf[i]));
+      if (v === null) return;
+      const { error } = await sb.from('games').update({ box_url: v.trim() }).eq('id', shelf[i].id);
+      if (error) { toast(error.message + migNote(error.message), 6000); return; }
+      toast(L('Kaydedildi', 'Saved'));
+      return loadShelf();
+    }
     if (e.target.closest('[data-del]')) {
       if (!confirm(L(`"${shelf[i].name}" raftan kaldırılsın mı?`, `Remove "${shelf[i].name}" from the shelf?`))) return;
       await sb.from('games').delete().eq('id', shelf[i].id);
@@ -419,7 +494,7 @@ async function gamesTab(body) {
     prev.innerHTML = `<div class="ad-prev">
       <div class="px" style="font-size:11px;color:var(--grey)">${L('RAFA BÖYLE GİRECEK — ALANLARI DÜZELTEBİLİRSİN', 'THIS GOES ON THE SHELF — YOU CAN EDIT THE FIELDS')}</div>
       <div class="ad-prev-top">
-        <div class="ad-prev-cover"><img alt="" id="gpCover"></div>
+        <div class="ad-prev-cover"><img alt="" id="gpCover"><img alt="" id="gpBox" style="display:block;width:100%;margin-top:8px;border:3px solid var(--ink)" onerror="this.remove()"></div>
         <div class="ad-fields">
           ${field('name', L('AD', 'NAME'), d.name)}
           ${field('developers', L('GELİŞTİRİCİ', 'DEVELOPER'), (d.developers || []).join(', '))}
@@ -428,15 +503,20 @@ async function gamesTab(body) {
           ${field('genres', L('TÜR', 'GENRE'), (d.genres || []).join(', '))}
           ${field('platforms', 'PLATFORM', (d.platforms || []).join(', '))}
           ${field('metacritic', 'METACRITIC', d.metacritic)}
+          ${field('box_url', L('KUTU KAPAĞI', 'CASE COVER'), d.box_url || steamBox(d))}
         </div>
       </div>
       <div class="ad-seg" role="radiogroup" aria-label="${L('Durum', 'Status')}">${STATUSES.map((s) => `<button type="button" role="radio" aria-checked="${s === status}" data-st="${s}">${getLang() === 'en' ? STATUS_EN[s] : s.toUpperCase()}</button>`).join('')}</div>
-      <div class="ad-line"><span>${L('KARTUŞ RENGİ', 'CARTRIDGE COLOR')}</span><div class="ad-sw" role="radiogroup">${CART_COLORS.map((c) => `<button type="button" role="radio" aria-checked="${c === col}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div>
+      <div class="ad-line"><span>${L('KUTU RENGİ', 'CASE COLOR')}</span><div class="ad-sw" role="radiogroup">${CART_COLORS.map((c) => `<button type="button" role="radio" aria-checked="${c === col}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}</div>
         <label><input type="checkbox" id="gNow"> ${L('"ŞU AN" ROZETİ', '"NOW" BADGE')}</label></div>
       <div class="ad-line"><textarea id="gNote" rows="2" maxlength="160" placeholder="${L('notun (isteğe bağlı)', 'your note (optional)')}"></textarea></div>
       <button type="button" class="btn btn-or" id="gAdd">${L('RAFA KOY', 'PUT ON SHELF')} ↘</button>
     </div>`;
     if (d.cover_url) pixelate(d.cover_url, 64, 30).then((src) => { const im = prev.querySelector('#gpCover'); if (im && src) im.src = src; });
+    const boxIn = prev.querySelector('[data-f="box_url"]');
+    const showBox = () => { const im = prev.querySelector('#gpBox'); if (im && boxIn.value.trim()) im.src = boxIn.value.trim(); };
+    boxIn.addEventListener('change', showBox);
+    showBox();
     prev.querySelector('.ad-seg').addEventListener('click', (e) => {
       const b = e.target.closest('[data-st]'); if (!b) return;
       status = b.dataset.st;
@@ -458,10 +538,10 @@ async function gamesTab(body) {
       const { error } = await sb.from('games').insert({
         name: f('name'), developers: arr('developers'), publishers: arr('publishers'), released: f('released') || null,
         genres: arr('genres'), platforms: arr('platforms'), metacritic: Number(f('metacritic')) || null,
-        cover_url: d.cover_url || '', store_url: d.store_url || '', steam_appid: d.steam_appid || null, rawg_id: d.rawg_id || null,
+        cover_url: d.cover_url || '', store_url: d.store_url || '', steam_appid: d.steam_appid || null, rawg_id: d.rawg_id || null, box_url: f('box_url'),
         color: col, status, now_playing: now, note: prev.querySelector('#gNote').value.trim(), sort: shelf.length,
       });
-      if (error) { toast(error.message); btn.disabled = false; return; }
+      if (error) { toast(error.message + migNote(error.message), 6000); btn.disabled = false; return; }
       toast(L(`Rafa kondu: ${f('name')}`, `On the shelf: ${f('name')}`));
       prev.innerHTML = '';
       loadShelf();

@@ -5,6 +5,7 @@
 //     Şubat 2026'dan beri Spotify geliştirici uygulamaları için uygulama sahibinin Premium olması şart).
 //  2) Link: open.spotify.com/track/... linkinden bilgileri herkese açık embed sayfasından çeker,
 //     albüm adı / parça no / türü iTunes'tan tamamlar. Anahtar gerektirmez.
+// YouTube karşılığı ayrı fonksiyonda: youtube-match
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const cors = {
@@ -161,7 +162,7 @@ Deno.serve(async (req) => {
       return json(await fromEmbed(id));
     }
 
-    return json({ error: 'q veya track gerekli' }, 400);
+    return json({ error: 'q ya da track gerekli' }, 400);
   } catch (e) {
     return json({ error: String(e) }, 500);
   }

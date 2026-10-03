@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>STAR — dijital oda</title>
-<meta name="description" content="star'ın dijital odası: 21 yaşında bilgisayar mühendisliği öğrencisi, UltraTurk'ün baş geliştiricisi. Duvara sprey sık, terminali kurcala, sayfayı yok et.">
+<meta name="description" content="star'ın dijital odası: 21 yaşında bilgisayar mühendisliği öğrencisi, UltraTurk'ün baş geliştiricisi. Duvara sprey sık, terminali kurcala, oyun rafını karıştır, müzik dinle.">
 <meta name="theme-color" content="#222034">
 <meta property="og:title" content="STAR — dijital oda">
 <meta property="og:description" content="Oyna. Çevir. Kodla. Tekrarla.">
@@ -107,7 +107,7 @@
       <div class="cta-row">
         <button type="button" class="btn btn-acc" id="ctaSpray" data-d data-magnetic data-cursor="SPREY"><span class="spr" data-sprite="spray" data-scale="3"></span><span data-i18n="cta.spray">SPREY MODU</span></button>
         <button type="button" class="btn" id="ctaTerm" data-d data-magnetic data-cursor="` _"><span class="term cta-tick">` _</span><span data-i18n="cta.term">TERMİNAL</span></button>
-        <button type="button" class="btn btn-dash" id="ctaGame" data-d data-magnetic data-cursor="???" aria-label="Gizli bir şey var. İpucu: klasik bir kod." data-i18n-attr="aria-label:cta.gameLabel"><span class="desk-only">↑↑↓↓←→←→BA ?</span><span class="mob-only" data-i18n="cta.gameMobile">YOK ET ?</span></button>
+        <a class="btn btn-dash" href="#oda" id="ctaTour" data-d data-magnetic data-cursor="↓"><span data-i18n="cta.tour">ODAYI GEZ</span><span class="cta-arrow" aria-hidden="true">↓</span></a>
       </div>
     </div>
   </div>
@@ -163,7 +163,7 @@
       <p class="rv" style="--i:1" data-d data-i18n-html="oda.p1">21 yaşındayım, bilgisayar mühendisliği okuyorum. Boş zamanımın çoğu oyunlarda geçiyor; kalanında da ULTRAKILL'in dublajlı Türkçe yaması UltraTurk'ün başındayım <span class="hand">(baş geliştirici + çevirmen)</span>.</p>
       <p class="rv" style="--i:2" data-d data-i18n-html="oda.p2">LoL, Minecraft, Cyberpunk, ULTRAKILL, VALORANT, Undertale, Outer Wilds… liste uzayıp gidiyor. Gerçekten <mark>çok fazla</mark> oyun oynadım.</p>
       <p class="rv" style="--i:3" data-d data-i18n="oda.p3">Müzik olmadan kod yazamam. Boş bir kanvas görünce de piksel çizmeden duramam.</p>
-      <p class="px oda-todo rv" style="--i:4" data-d data-i18n="oda.todo">BURADA NE YAPABİLİRSİN → DUVARA SPREY SIK · TERMİNALİ KURCALA · SAYFAYI YERLE BİR ET · DEFTERE NOT BIRAK</p>
+      <p class="px oda-todo rv" style="--i:4" data-d data-i18n="oda.todo">BURADA NE YAPABİLİRSİN → DUVARA SPREY SIK · TERMİNALİ KURCALA · MÜZİK DİNLE · DEFTERE NOT BIRAK · (BELKİ BAŞKA ŞEYLER DE VARDIR)</p>
     </div>
     <div class="oda-notes">
       <div class="sticky sticky-y rv" data-rv="slap" style="--i:1" data-d><span class="tape" aria-hidden="true"></span><p class="hand" data-i18n="oda.cow">not: şapkadaki C.O.W. hiçbir anlama gelmiyor. neden yazdım bilmiyorum. sorma.</p></div>
@@ -222,19 +222,36 @@
     </article>
     <article class="proj-card tilt-r proj-offset rv" style="--i:2" data-tilt>
       <span class="tape tape-p" aria-hidden="true"></span>
-      <div class="proj-top px"><span data-i18n="pr.g.kind">PROJE_02 // OYUN</span><span data-i18n="pr.side">YAN GÖREV</span></div>
+      <div class="proj-top px"><span data-i18n="pr.g.kind">PROJE_02 // YAPAY ZEKÂ</span><span data-i18n="pr.side">YAN GÖREV</span></div>
       <div class="g2048-cover" data-d>
         <div class="g2048" id="g2048" aria-hidden="true"></div>
-        <span class="hand" data-i18n="pr.g.slogan">kaydır. birleştir. tekrarla.</span>
+        <div class="g2048-side">
+          <span class="px g2048-live"><i class="blink">●</i> <span data-i18n="pr.g.live">AI OYNUYOR</span></span>
+          <span class="hand" data-i18n="pr.g.slogan">kendi kendine oynamayı öğrendi.</span>
+        </div>
       </div>
       <div class="proj-body">
-        <h3 class="brut proj-name" data-d>2048</h3>
-        <p data-d data-i18n="pr.g.desc">Klasik 2048'in benim versiyonum.</p>
-        <div class="chips"><span class="chip" data-d data-i18n="pr.g.tag">OYUN</span></div>
-        <div class="btn-row">
-          <a class="btn btn-acc" data-d href="#" id="link2048play" data-i18n="pr.g.play">OYNA ↗</a>
-          <a class="btn" data-d href="#" id="link2048code" data-i18n="pr.g.code">KOD ↗</a>
+        <div class="ut-head" data-d>
+          <span class="g2048-badge px" aria-hidden="true">2048</span>
+          <div><h3 class="brut proj-name">2048 AI LAB</h3><p class="px proj-kicker" data-i18n="pr.g.kicker">YAPAY ZEKÂ LABORATUVARI</p></div>
         </div>
+        <p data-d data-i18n="pr.g.desc">2048'de en üst seviyelere ulaşmak için eğitilmiş bir yapay zekâ ve her kararını canlı izleyebildiğin bir site. Kendi kendine milyonlarca oyun oynayarak TD öğrenmesiyle eğitildi; tarayıcıda tüm çekirdeklerde paralel Expectimax arama yapıyor.</p>
+        <dl class="term cast g2048-stats" data-d>
+          <div><dt data-i18n="pr.g.s1">16384 karosu</dt><dd>%94,5</dd></div>
+          <div><dt data-i18n="pr.g.s2">Ort. skor</dt><dd>324.606</dd></div>
+          <div><dt data-i18n="pr.g.s3">En yüksek</dt><dd>385.172</dd></div>
+          <div><dt data-i18n="pr.g.s4">Model</dt><dd data-i18n="pr.g.s4v">67 Mn ağırlık</dd></div>
+          <div><dt data-i18n="pr.g.s5">Eğitim</dt><dd data-i18n="pr.g.s5v">8,8 Mn oyun</dd></div>
+          <div><dt>Turbo</dt><dd data-i18n="pr.g.s6v">~146 bin hamle/sn</dd></div>
+        </dl>
+        <div class="chips">
+          <span class="chip chip-or" data-d>RUST</span>
+          <span class="chip" data-d>N-TUPLE</span>
+          <span class="chip" data-d data-i18n="pr.g.td">TD ÖĞRENME</span>
+          <span class="chip chip-cy" data-d>EXPECTIMAX</span>
+          <span class="chip" data-d>WEB WORKERS</span>
+        </div>
+        <p class="hand g2048-soon" data-d data-i18n="pr.g.soon">kaynak kodu ve canlı demo yakında burada ↗</p>
       </div>
     </article>
   </div>
@@ -254,24 +271,47 @@
     <h2 class="sec-title brut" data-d data-i18n="sk.title">ENVANTER</h2>
     <div class="sec-note hand" data-i18n="sk.note">LV = kendime verdiğim puan (1–10)</div>
   </div>
-  <div class="inv-grid">
-    <div class="inv-side">
-      <div class="char-stage rv" data-d>
-        <div class="char-floor" aria-hidden="true"></div>
-        <div class="char-sprite bob"><span class="spr" data-sprite="jet" data-scale="9"></span></div>
-        <span class="px char-l" data-i18n="sk.char">KARAKTER // STAR</span>
-        <span class="px char-r">LV 21</span>
+  <div class="inv2">
+    <aside class="inv2-side">
+      <div class="char-card rv" data-d>
+        <div class="char-stage">
+          <div class="char-floor" aria-hidden="true"></div>
+          <div class="char-glow" aria-hidden="true"></div>
+          <div class="char-sprite bob"><span class="spr" data-sprite="jet" data-scale="8"></span></div>
+          <span class="px char-l" data-i18n="sk.char">KARAKTER // STAR</span>
+          <span class="px char-r">LV 21</span>
+        </div>
+        <div class="char-info">
+          <div class="char-name"><span class="brut">STAR</span><span class="px char-cls" data-i18n="sk.cls">MÜHENDİS · ÇIRAK</span></div>
+          <div class="xp">
+            <div class="xp-l px"><span>XP</span><span id="skXp">0 / 430</span></div>
+            <div class="xp-bar"><i id="skXpBar"></i></div>
+          </div>
+          <dl class="char-stats term" id="skStats"></dl>
+        </div>
       </div>
-      <div role="tablist" class="sk-tabs" id="skTabs" aria-label="Kategoriler" data-i18n-attr="aria-label:sk.cats"></div>
-      <p class="term dim" id="skCount"></p>
-    </div>
-    <div class="inv-main">
-      <div class="inv-head"><span class="px" id="skHead"></span></div>
-      <div class="sk-bars" id="skBars" role="tabpanel"></div>
-      <div class="inv-head inv-head-2"><span class="px" data-i18n="sk.inv">ENVANTER — DİĞER HER ŞEY</span>
-        <span class="px legend"><span><i style="background:var(--cyan)"></i>WEB</span><span><i style="background:var(--orange)"></i><span data-i18n="sk.c.veri">VERİ</span></span><span><i style="background:var(--steel)"></i><span data-i18n="sk.c.arac">ARAÇ</span></span><span><i style="background:var(--pink)"></i><span data-i18n="sk.c.oyun">OYUN+SANAT</span></span></span>
+      <div class="inv-card rv" style="--i:1">
+        <div class="card-h px"><span data-i18n="sk.radar">YETENEK HARİTASI</span><span class="dim">/ 10</span></div>
+        <svg class="radar" id="skRadar" viewBox="0 0 330 250" role="img" aria-label="Kategorilere göre ortalama seviye" data-i18n-attr="aria-label:sk.radarLabel"></svg>
       </div>
-      <div class="inv-slots" id="skSlots"></div>
+      <div class="inv-card rv" style="--i:2">
+        <div class="card-h px"><span data-i18n="sk.equip">KUŞANILANLAR</span><span class="dim" data-i18n="sk.equipNote">her sınıfın en iyisi</span></div>
+        <ul class="equip" id="skEquip"></ul>
+      </div>
+    </aside>
+    <div class="inv2-main">
+      <div class="inv2-bar">
+        <div role="tablist" class="inv2-tabs" id="skTabs" aria-label="Kategoriler" data-i18n-attr="aria-label:sk.cats"></div>
+        <div class="inv2-sort" role="group" aria-label="Sırala" data-i18n-attr="aria-label:sk.sort">
+          <button type="button" class="px" data-sort="lv" aria-pressed="true">LV ▼</button>
+          <button type="button" class="px" data-sort="az" aria-pressed="false">A–Z</button>
+        </div>
+      </div>
+      <div class="inv2-body">
+        <div class="inv2-grid" id="skGrid" role="tabpanel"></div>
+        <aside class="inspect" id="skInspect" aria-live="polite"></aside>
+      </div>
+      <div class="rarity px" id="skRarity"></div>
     </div>
   </div>
 </section>
@@ -284,11 +324,12 @@
     <div class="sec-note hand" data-i18n="gm.note">sadece aklıma gelenler</div>
   </div>
   <div class="shelf-wrap">
+    <div class="shelf-head px"><span id="gmCount"></span><span class="shelf-hint" data-i18n="gm.hint">bir kutuya tıkla — dönsün, arkasını oku</span></div>
     <div class="shelf" id="shelf" data-lenis-prevent-wheel role="list" aria-label="Oyunlar" data-i18n-attr="aria-label:gm.list"></div>
     <div class="shelf-plank" aria-hidden="true"></div>
     <div class="shelf-foot">
       <div class="shelf-msg rv" data-rv="left"><span class="spr" data-sprite="pad" data-scale="4"></span><p class="hand" data-i18n-html="gm.msg">gerçekten çok fazla oyun oynadım.<br>bu raf sadece buzdağının görünen kısmı.</p></div>
-      <div class="cart-detail rv" id="cartDetail" aria-live="polite"></div>
+      <div class="shelf-now rv" id="shelfNow" aria-live="polite"></div>
     </div>
   </div>
 </section>
@@ -329,12 +370,18 @@
           <button type="button" class="px" id="mpNext" aria-label="Sonraki şarkı" data-i18n-attr="aria-label:mu.next">▶▶</button>
           <span></span><button type="button" class="px" id="mpBack" aria-label="10 saniye geri" data-i18n-attr="aria-label:mu.back">−10</button><span></span>
         </div>
+        <div class="mp3-vol" role="group" aria-label="Ses" data-i18n-attr="aria-label:mu.volG">
+          <button type="button" class="px vol-mute" id="mpMute" aria-pressed="false" aria-label="Sesi kapat" data-i18n-attr="aria-label:mu.mute">VOL</button>
+          <button type="button" class="px vol-step" id="mpVolDown" aria-label="Sesi kıs" data-i18n-attr="aria-label:mu.volDown">−</button>
+          <div class="vol-segs" id="mpVol" role="slider" tabindex="0" aria-label="Ses düzeyi" data-i18n-attr="aria-label:mu.volLevel" aria-valuemin="0" aria-valuemax="10" aria-valuenow="8"></div>
+          <button type="button" class="px vol-step" id="mpVolUp" aria-label="Sesi aç" data-i18n-attr="aria-label:mu.volUp">+</button>
+        </div>
         <span class="tag mp3-sticker" aria-hidden="true">star</span>
         <span class="spr mp3-spark" data-sprite="sparkle" data-scale="4" aria-hidden="true"></span>
         <span class="mp3-jack" aria-hidden="true"></span>
       </div>
       <svg class="earbuds" width="300" height="120" viewBox="0 0 300 120" aria-hidden="true"><path d="M156 0 C 156 46, 96 40, 84 80 M156 0 C 166 56, 236 48, 226 90"/><circle cx="84" cy="92" r="13"/><circle cx="226" cy="102" r="13"/></svg>
-      <p class="hand mp3-note rv" data-rv="wipe" style="--i:6" data-i18n-html="mu.hint">Spotify'a giriş yaptıysan<br>şarkının tamamı çalar ♪</p>
+      <p class="hand mp3-note rv" data-rv="wipe" style="--i:6" data-i18n-html="mu.hint">şarkının tamamı çalar,<br>ses de ayarlanır ♪</p>
       <audio id="mpAudio" preload="none" crossorigin="anonymous"></audio>
     </div>
     <div class="library rv" style="--i:2">
@@ -342,9 +389,15 @@
         <span class="px" id="libCount">KİTAPLIK</span>
         <label class="lib-filter"><span class="px" data-i18n="mu.filter">FİLTRE</span><input class="term" id="libFilter" placeholder="şarkı, sanatçı, albüm..." data-i18n-attr="placeholder:mu.filterPh"></label>
       </div>
-      <div class="sp-dock">
-        <div class="sp-dock-l px"><span class="sp-dot" aria-hidden="true"></span><span data-i18n="mu.dock">ŞİMDİ ÇALIYOR · SPOTIFY</span><span class="sp-hint" id="spHint" hidden data-i18n="mu.loginHint">30 SN ÖNİZLEME — TAMAMI İÇİN SPOTIFY'A GİRİŞ YAP</span></div>
-        <div class="sp-frame"><div id="spEmbed"></div><p class="px sp-wait" id="spWait" data-i18n="mu.dockWait">BİR ŞARKI SEÇ, SPOTIFY BURADA AÇILIR</p></div>
+      <div class="dock">
+        <div class="dock-l px"><span class="sp-dot" aria-hidden="true"></span><span id="dockSrc" data-i18n="mu.dock">ŞİMDİ ÇALIYOR</span><span class="sp-hint" id="spHint" hidden data-i18n="mu.loginHint">30 SN ÖNİZLEME — TAMAMI İÇİN SPOTIFY'A GİRİŞ YAP</span></div>
+        <div class="dock-body">
+          <div class="tv" id="ytWrap" hidden><div class="tv-screen"><div id="ytEmbed"></div></div><span class="tv-led" aria-hidden="true"></span></div>
+          <div class="sp-frame" id="spWrap" hidden><div id="spEmbed"></div></div>
+          <div class="dock-info" id="dockInfo">
+            <p class="px dock-wait" id="dockWait" data-i18n="mu.dockWait">BİR ŞARKI SEÇ — BURADA ÇALAR</p>
+          </div>
+        </div>
       </div>
       <div class="lib-scroll" data-lenis-prevent>
         <table class="lib-table">
@@ -434,7 +487,7 @@
   </div>
   <div class="px foot-bar">
     <span data-i18n="ft.copy2">© 2026 STAR · GITHUB PAGES'TE BARINIR · EL YAPIMI, KALIPSIZ</span>
-    <span><span data-i18n="ft.hint">` = TERMİNAL · ↑↑↓↓←→←→BA = ???</span> · <span data-i18n="ft.now">ŞU AN</span>: <b class="mode-name">REAL</b> · <button type="button" class="foot-fx px" id="motionToggle2">FX</button></span>
+    <span><span data-i18n="ft.hint">` = TERMİNAL</span> · <span data-i18n="ft.now">ŞU AN</span>: <b class="mode-name">REAL</b> · <button type="button" class="foot-fx px" id="motionToggle2">FX</button></span>
   </div>
 </footer>
 </div>

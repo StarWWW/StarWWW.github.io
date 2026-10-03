@@ -28,8 +28,8 @@ API.setMode = setMode;
 // ---------- ticker ----------
 function buildTicker() {
   const words = document.documentElement.lang === 'en'
-    ? ['STAR', '21 Y/O', 'COMPUTER ENGINEERING', 'ULTRATURK', 'PIXEL ART', 'EVERY HELLO COMES WITH A GOODBYE', '↑↑↓↓←→←→BA']
-    : ['STAR', '21 YAŞ', 'BİLGİSAYAR MÜHENDİSLİĞİ', 'ULTRATURK', 'PIXEL ART', 'EVERY HELLO COMES WITH A GOODBYE', '↑↑↓↓←→←→BA'];
+    ? ['STAR', '21 Y/O', 'COMPUTER ENGINEERING', 'ULTRATURK', 'ULTRAKILL TURKISH DUB', 'PIXEL ART', 'GAMER', 'MUSIC ADDICT', 'EVERY HELLO COMES WITH A GOODBYE']
+    : ['STAR', '21 YAŞ', 'BİLGİSAYAR MÜHENDİSLİĞİ', 'ULTRATURK', 'ULTRAKILL TÜRKÇE DUBLAJ', 'PIXEL ART', 'OYUNCU', 'MÜZİK BAĞIMLISI', 'EVERY HELLO COMES WITH A GOODBYE'];
   const spark = spriteSVG('sparkle', 2);
   const one = words.map((w) => `<span>${w}</span><span class="spr">${spark}</span>`).join('');
   $('#ticker').innerHTML = one + one;
@@ -88,12 +88,16 @@ function initKonami() {
     pos = e.code === KONAMI[pos] ? pos + 1 : (e.code === KONAMI[0] ? 1 : 0);
     if (pos === KONAMI.length) { pos = 0; startGame(); }
   });
-  let lastClick = 0;
-  $('#ctaGame').addEventListener('click', () => {
-    const touch = matchMedia('(pointer: coarse)').matches || innerWidth < 640;
-    if (touch || Date.now() - lastClick < 4000) { startGame(); return; }
-    lastClick = Date.now();
-    toast(t('konami.hint'), 3600);
+  // klavyesi olmayanlar için gizli kapı: LVL 21 çıkartmasına art arda 5 kez dokun
+  const sticker = $('.lvl-sticker');
+  let taps = [];
+  sticker?.addEventListener('click', () => {
+    const now = Date.now();
+    taps = taps.filter((x) => now - x < 2500).concat(now);
+    sticker.classList.remove('poke');
+    void sticker.offsetWidth;
+    sticker.classList.add('poke');
+    if (taps.length >= 5) { taps = []; startGame(); }
   });
 }
 

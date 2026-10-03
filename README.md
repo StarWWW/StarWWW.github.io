@@ -9,15 +9,15 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 |---|---|
 | **REAL ↔ DRUG mod** | Üstteki hap düğmesi. DRUG: siyah zemin, glitch, RGB kayması, renk döngüsü, GIF avatar. |
 | **TR / EN** | Tüm metinler iki dilli; seçim tarayıcıda hatırlanır. |
-| **Projeler** | UltraTurk + 2048 kartları; altında GitHub API'den otomatik repo listesi. |
-| **Envanter** | Yetenekler. Puanı 0 olanlar görünmez — puanları Kontrol Odası'ndan verirsin. |
-| **Oyun rafı** | Kartuşlar; kapaklar otomatik 8-bit'e çevrilir, üstüne gelince tüm bilgiler. |
-| **Müzik** | Taşınabilir MP3 çalar + kitaplık, **Spotify** ile. Ziyaretçi tarayıcısında Spotify'a giriş yaptıysa şarkının tamamı çalar, yapmadıysa Spotify önizleme verir. |
+| **Projeler** | UltraTurk + 2048 AI LAB kartları; altında GitHub API'den otomatik repo listesi. |
+| **Envanter** | RPG envanteri: karakter kartı + XP, yetenek haritası (radar), "kuşanılanlar" (her sınıfın en iyisi), kategori sekmeleri, LV/A–Z sıralama, nadirlik renkleri (SIRADAN → EFSANEVİ), detay paneli. Puanları Kontrol Odası'ndan verirsin; puanlanmamışlar gri görünür. |
+| **Oyun rafı** | Gerçek DVD kutuları: Steam'in dikey kutu kapağı (yoksa tasarlanmış kapak), sırt, parlama, durum etiketi. Üstüne gelince kalkar; tıklayınca kutu dönerek öne gelir, disk dışarı kayar; **ÇEVİR** ile arka kapakta tüm bilgiler ve notun. Sürükleyerek döndürülür; <kbd>Esc</kbd> kapat, <kbd>Boşluk</kbd> çevir, <kbd>←</kbd> <kbd>→</kbd> gez. |
+| **Müzik** | Taşınabilir MP3 çalar + kitaplık + TV. Şarkının YouTube karşılığı varsa **tamamı herkese çalar ve ses ayarlanır** (VOL / − / + / ses çubuğu, klavyeyle de); yoksa Spotify çalar (Spotify'a giriş yapan ziyaretçiye tam şarkı, yapmayana önizleme). |
 | **FX** | Açılış ekranı, yumuşak kaydırma, beliren bölümler, harf harf başlıklar, 3B eğilen kartlar, mıknatıslı tuşlar, imleç köşeleri, piksel mod geçişi. Hero'daki **FX: TAM / AZ** anahtarıyla kapatılabilir. |
 | **Duvar** | Herkesin ortak sprey duvarı: canlı imleçler, damlayan boya, her pazartesi 00:00'da buff, arşiv. |
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
 | **Gizli terminal** | <kbd>`</kbd> tuşu (1'in solundaki tuş). `help` yaz. |
-| **Sayfayı Yok Et** | <kbd>↑↑↓↓←→←→BA</kbd> ya da terminalde `destroy`. Mobilde "YOK ET ?" düğmesi. |
+| **Sayfayı Yok Et** | Gizli. Nasıl açıldığı en alttaki "Gizli şeyler" bölümünde — sitede hiçbir yerde yazmıyor. |
 | **Kontrol Odası** | Terminalde `login`. Şarkı/oyun ara-ekle, yetenek puanla, duvar/defter/skor moderasyonu. |
 
 Supabase ayarlanmadan da site çalışır: içerik `data/*.json`'dan gelir; duvar, defter ve skor tablosu sadece ziyaretçinin kendi tarayıcısında tutulur.
@@ -37,7 +37,7 @@ js/sections/*.js    bölümler
 js/game/game.js     Sayfayı Yok Et
 js/admin.js         Kontrol Odası
 data/*.json         Supabase yokken kullanılan içerik
-supabase/           veritabanı şeması, başlangıç verisi, oyun arama fonksiyonu
+supabase/           veritabanı şeması, başlangıç verisi, migration'lar, Edge Function'lar
 assets/             avatarlar, UltraTurk logosu, favicon
 ```
 
@@ -80,7 +80,10 @@ supabase.com → **New project**. Bölge olarak Frankfurt (eu-central-1) Türkiy
 **SQL Editor → New query**:
 1. `supabase/schema.sql` dosyasının tamamını yapıştır → **Run**.
 2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve 43 yetenek; sadece bir kez).
-3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar). Daha önce kurduysan sadece bunu çalıştırman yeterli.
+3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar).
+4. Yeni bir sorguda `supabase/migrations/003_youtube_kapak.sql` → **Run** (şarkılara `youtube_id`, oyunlara `box_url` = DVD kutu kapağı).
+
+Daha önce kurduysan sadece henüz çalıştırmadığın migration'ları çalıştır (002, 003). İkisi de tekrar çalıştırılabilir, bir şey bozmaz.
 
 ### 3. Siteyi bağla
 **Project Settings → API**: `Project URL` ve `anon public` anahtarını `js/config.js` içine yaz:
@@ -130,24 +133,36 @@ Fonksiyon sadece yöneticiler tarafından çağrılabilir; anahtar sitede görü
 3. **Aramak** için (isteğe bağlı): https://developer.spotify.com/dashboard → **Create app** (Redirect URI: `https://starwww.github.io`, API: *Web API*). Client ID ve Client secret'ı Supabase → **Edge Functions → Secrets**'a `SPOTIFY_CLIENT_ID` ve `SPOTIFY_CLIENT_SECRET` olarak ekle.
    > Spotify, Şubat 2026'dan beri geliştirici uygulamaları için **uygulama sahibinin Premium olmasını** şart koşuyor ve aramaları 10 sonuçla sınırlıyor. Premium yoksa link yapıştırma yolu her zaman çalışır.
 
-**Tam şarkı kimde çalar?** Spotify'ın kuralı: ziyaretçi aynı tarayıcıda open.spotify.com'a giriş yaptıysa embed şarkının tamamını çalar; giriş yapmadıysa (ya da tarayıcısı üçüncü taraf çerezleri engelliyorsa) Spotify kısa bir önizleme verir. Çalar bunu algılayıp "tamamı için Spotify'a giriş yap" uyarısı gösterir.
+**Tam şarkı kimde çalar?** Spotify'ın kuralı: ziyaretçi aynı tarayıcıda open.spotify.com'a giriş yaptıysa embed şarkının tamamını çalar; giriş yapmadıysa (ya da tarayıcısı üçüncü taraf çerezleri engelliyorsa) Spotify kısa bir önizleme verir. Spotify'ın gömülü çalarında ses ayarı da yoktur. Bu yüzden çalar önce YouTube'u dener (adım 8).
 
-### 8. (İsteğe bağlı) Eski duvarları temizle
+### 8. YouTube eşleştirme (tam şarkı + ses ayarı herkese)
+1. Supabase → **Edge Functions → Deploy a new function → Via Editor**
+   - İsim: **`youtube-match`**
+   - İçerik: `supabase/functions/youtube-match/index.ts` dosyasının tamamı → **Deploy**.
+2. Bu kadar. Anahtar gerekmez. Bir şarkının YouTube karşılığı yoksa, ilk çalındığında (ya da müzik bölümü ilk açıldığında) fonksiyon resmi yüklemeyi bulur ("Sanatçı - Topic" kanalı, süre uyumu; canlı/cover/remix/slowed elenir) ve veritabanına kaydeder — her şarkı en fazla bir kez aranır.
+3. Kontrol Odası → *Müzik Ekle* → kitaplıkta her şarkının yanında **YT ✓ / YT ? / YT ✕** görünür. **YOUTUBE'U EŞLEŞTİR** hepsini birden arar. **YT** düğmesiyle yanlış eşleşmeyi düzeltebilir (link yapıştır), boş bırakıp yeniden aratabilir ya da `-` yazıp o şarkıda YouTube'u kapatabilirsin.
+4. (İsteğe bağlı) Resmi YouTube Data API'yi kullanmak istersen Secrets'a `YOUTUBE_API_KEY` ekle; yoksa fonksiyon YouTube'un arama sayfasını okur.
+
+YouTube videoyu o sitede oynatmayı reddederse çalar sessizce Spotify'a geçer. Not: YouTube müzik videolarını `localhost`/`127.0.0.1` üzerinde çoğu zaman oynatmaz (hata 150) — bunu yayındaki sitede dene.
+
+### 9. (İsteğe bağlı) Eski duvarları temizle
 Duvar her pazartesi kendiliğinden boşalır (eski çizgiler arşivde görünür). Veritabanı şişmesin diye 12 haftadan eskileri silmek için `schema.sql`'in en altındaki `pg_cron` satırını kullan.
 
 ## İçerik güncelleme
 
-- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür ve kapak otomatik gelir.
-- **Oyun ekle:** *Oyun Ekle* → ara → **SEÇ** → durumu, notu, kartuş rengini seç → **RAFA KOY**. Geliştirici, yayıncı, çıkış tarihi, tür, platform ve kapak otomatik gelir.
+- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür ve kapak otomatik gelir; YouTube karşılığı arka planda bulunur.
+- **Oyun ekle:** *Oyun Ekle* → ara → **SEÇ** → durumu, notu, kutu rengini seç → **RAFA KOY**. Geliştirici, yayıncı, çıkış tarihi, tür, platform, kapak ve DVD kutu kapağı otomatik gelir.
+- **Oyun düzenle:** raf listesinde **NOT** (kutunun arkasındaki not), **KAPAK** (kutu kapağı resmi; boş = Steam kapağı ya da tasarlanmış kapak), durum ve "ŞU AN".
 - **Yetenek puanla:** *Yetenekler* → kaydırıcılar → **KAYDET**.
 - **Moderasyon:** *Duvar + Defter* → duvarda bir çizgiye tıkla → **SEÇİLİYİ SİL**; not ve skor silme; **ŞİMDİ BUFF'LA**.
-- **Projeler:** kartlar `index.html` içinde (`<!-- 02 PROJELER -->`). 2048'in linkleri şimdilik `#` — repo/demo adresi belli olunca `link2048play` ve `link2048code` id'li bağlantıları güncelle. Repo listesinde gizlemek istediklerini `data/projects.json` → `hideRepos`'a yaz.
+- **Projeler:** kartlar `index.html` içinde (`<!-- 02 PROJELER -->`). 2048 AI LAB kartında "kaynak kodu ve canlı demo yakında" yazıyor — linkler hazır olunca o satırı (`g2048-soon`) gerçek bağlantılarla değiştir. Repo listesinde gizlemek istediklerini `data/projects.json` → `hideRepos`'a yaz.
 
 ## Gizli şeyler
 
-**Terminal komutları:** `help`, `whoami`, `ls`, `ls projects`, `cat about.txt`, `cat cow.txt`, `cat .secret.txt`, `cd duvar`, `games`, `music`, `play 2`, `pause`, `next`, `spray`, `drug`, `real`, `lang en`, `destroy`, `cowsay merhaba`, `github`, `discord`, `sudo rm -rf /`, `login`, `logout`. <kbd>Tab</kbd> tamamlar, <kbd>↑</kbd>/<kbd>↓</kbd> geçmiş.
+**Terminal komutları:** `help`, `whoami`, `ls`, `ls projects`, `cat about.txt`, `cat cow.txt`, `cat .secret.txt`, `cd duvar`, `games`, `music`, `play 2`, `pause`, `next`, `vol 5`, `vol mute`, `spray`, `drug`, `real`, `lang en`, `cowsay merhaba`, `github`, `discord`, `sudo rm -rf /`, `login`, `logout`. <kbd>Tab</kbd> tamamlar, <kbd>↑</kbd>/<kbd>↓</kbd> geçmiş.
 
-**Sayfayı Yok Et:**
+**Sayfayı Yok Et** (sitede hiçbir yerde yazmıyor, `help`'te de yok):
+- Açmanın yolları: klavyede <kbd>↑↑↓↓←→←→BA</kbd>, terminalde `destroy` (ya da `yoket`), mobilde hero'daki pembe **LVL 21** çıkartmasına art arda 5 kez dokun. İpucu sadece terminaldeki `.secret.txt` dosyasında.
 - <kbd>WASD</kbd> uç, fare nişan, sol tık ateş, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (ya da tekerlek) silah, <kbd>Shift</kbd> atıl, <kbd>Esc</kbd> bitir.
 - Silahlar: **sprey bombası** (sınırsız, boya sıçratır), **glitch bombası** (3 hak, zincirleme patlar), **piksel çekiç** (yakın dövüş; atılırken çift hasar).
 - Kırılan şeylerden **bug**'lar çıkar; **MERGE CONFLICT** öldürülünce ikiye bölünür.

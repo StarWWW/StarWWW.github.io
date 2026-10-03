@@ -42,6 +42,9 @@ export function toast(msg, ms = 2600) {
   setTimeout(() => t.remove(), ms);
 }
 
+// İsim büyük harfe çevrilirken doğru dil: Türkçe harf varsa tr, yoksa en (JavaScript → JAVASCRİPT olmasın)
+export const nameLang = (s) => (/[çğıöşüÇĞİÖŞÜ]/.test(String(s || '')) ? 'tr' : 'en');
+
 export const fmtDur = (ms) => {
   const s = Math.max(0, Math.round((ms || 0) / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;

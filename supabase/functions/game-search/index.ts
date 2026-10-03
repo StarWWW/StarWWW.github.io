@@ -57,7 +57,14 @@ Deno.serve(async (req) => {
         rawg_id: g.id, name: g.name, released: g.released,
         developers: names(g.developers), publishers: names(g.publishers), genres: names(g.genres), platforms: platforms(g),
         metacritic: g.metacritic ?? null, cover_url: g.background_image ?? '', store_url: steamUrl ?? g.website ?? '', steam_appid: steamId,
+        box_url: '',
       };
+      // Dikey kutu kapağı (Steam kütüphane görseli, 600x900) — varsa
+      if (steamId) {
+        const box = `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamId}/library_600x900.jpg`;
+        const head = await fetch(box, { method: 'HEAD' }).catch(() => null);
+        if (head?.ok) out.box_url = box;
+      }
       if (steamId) {
         const sd = await fetch(`https://store.steampowered.com/api/appdetails?appids=${steamId}&l=turkish&cc=tr`).then((r) => r.json()).catch(() => null);
         const x = sd?.[steamId]?.success ? sd[steamId].data : null;
