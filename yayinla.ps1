@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Continue'
 Set-Location -LiteralPath $PSScriptRoot
 try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 
-$SITE = 'https://starwww.github.io'
+$SITE = 'https://starwww.dev'
 
 function Yaz([string]$metin, [string]$renk = 'Gray') { Write-Host $metin -ForegroundColor $renk }
 function Sor([string]$soru) { if ($Sessiz) { return '' } return Read-Host $soru }

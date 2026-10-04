@@ -79,6 +79,32 @@ Klasördeki **`yayinla.bat`** dosyasına çift tıkla: değişen dosyaları gös
 3. Repo → **Settings → Pages → Build and deployment**: Source = *Deploy from a branch*, Branch = `main` / `(root)`.
 4. Bir iki dakika sonra site `https://starwww.github.io` adresinde.
 
+## Özel alan adı: starwww.dev
+
+Repodaki `CNAME` dosyası GitHub Pages'e siteyi `starwww.dev`'de yayınlamasını söyler; `starwww.github.io` oraya otomatik yönlenir.
+
+1. Alan adını aldığın yerin DNS ayarlarına şu kayıtları ekle (eski A/AAAA/CNAME kayıtlarını, varsa "park" sayfası yönlendirmesini sil):
+
+   | Tür | Ad | Değer |
+   |---|---|---|
+   | A | `@` | `185.199.108.153` |
+   | A | `@` | `185.199.109.153` |
+   | A | `@` | `185.199.110.153` |
+   | A | `@` | `185.199.111.153` |
+   | AAAA | `@` | `2606:50c0:8000::153` |
+   | AAAA | `@` | `2606:50c0:8001::153` |
+   | AAAA | `@` | `2606:50c0:8002::153` |
+   | AAAA | `@` | `2606:50c0:8003::153` |
+   | CNAME | `www` | `starwww.github.io` |
+
+   Cloudflare kullanıyorsan bu kayıtlar "DNS only" (gri bulut) olsun, yoksa GitHub sertifika alamaz.
+2. Repo → **Settings → Pages → Custom domain**: `starwww.dev` yazılı olmalı (CNAME dosyası yayınlanınca kendisi dolar) → DNS kontrolü geçince **Enforce HTTPS**'i işaretle.
+   `.dev` uzantısı tarayıcılarda sadece HTTPS ile açılır; GitHub'ın sertifikası gelene kadar (genelde birkaç dakika, en çok 24 saat) adres hata verebilir.
+3. GitHub → **Settings (hesap) → Pages → Add a domain**: `starwww.dev`'i doğrula (verdiği TXT kaydını DNS'e ekle). Alan adının başkası tarafından GitHub'da kullanılmasını engeller.
+4. Supabase → **Authentication → URL Configuration**: Site URL = `https://starwww.dev`, Redirect URLs'e `https://starwww.dev/**` ekle (yoksa `login` sonrası yanlış adrese düşersin).
+
+Not: tercihler (dil, mod, çerez izni, DRUG sırları) tarayıcıda adrese bağlı tutulur; yeni adreste ziyaretçilerden bir kez yeniden istenir.
+
 ## Supabase kurulumu (duvar, defter, skor, Kontrol Odası)
 
 ### 1. Proje
@@ -105,12 +131,12 @@ supabaseAnonKey: 'eyJhbGciOi...',
 
 ### 4. GitHub ile giriş
 1. GitHub → **Settings → Developer settings → OAuth Apps → New OAuth App**
-   - Homepage URL: `https://starwww.github.io`
+   - Homepage URL: `https://starwww.dev`
    - Authorization callback URL: `https://xxxxxxxx.supabase.co/auth/v1/callback`
 2. Oluşan **Client ID** ve yeni bir **Client secret**'ı Supabase → **Authentication → Sign In / Providers → GitHub**'a yapıştır, etkinleştir.
 3. Supabase → **Authentication → URL Configuration** (bunu atlarsan GitHub'dan sonra `localhost:3000`'e düşersin — Site URL'nin varsayılan değeri o):
-   - Site URL: `https://starwww.github.io`
-   - Redirect URLs: `https://starwww.github.io/**` ve `http://localhost:8080/**`
+   - Site URL: `https://starwww.dev`
+   - Redirect URLs: `https://starwww.dev/**` ve `http://localhost:8080/**`
    - **Save**'e basmayı unutma.
 
 ### 5. Kendini yönetici yap
@@ -138,7 +164,7 @@ Fonksiyon sadece yöneticiler tarafından çağrılabilir; anahtar sitede görü
    - İsim: **`spotify`**
    - İçerik: `supabase/functions/spotify/index.ts` dosyasının tamamı → **Deploy**.
 2. Bu kadarıyla Kontrol Odası'nda **Spotify şarkı linkini yapıştırarak** ekleyebilirsin (Spotify uygulamasında şarkı → Paylaş → Şarkı bağlantısını kopyala). Albüm, parça no, yıl, tür, süre ve kapak otomatik gelir. Anahtar gerekmez.
-3. **Aramak** için (isteğe bağlı): https://developer.spotify.com/dashboard → **Create app** (Redirect URI: `https://starwww.github.io`, API: *Web API*). Client ID ve Client secret'ı Supabase → **Edge Functions → Secrets**'a `SPOTIFY_CLIENT_ID` ve `SPOTIFY_CLIENT_SECRET` olarak ekle.
+3. **Aramak** için (isteğe bağlı): https://developer.spotify.com/dashboard → **Create app** (Redirect URI: `https://starwww.dev`, API: *Web API*). Client ID ve Client secret'ı Supabase → **Edge Functions → Secrets**'a `SPOTIFY_CLIENT_ID` ve `SPOTIFY_CLIENT_SECRET` olarak ekle.
    > Spotify, Şubat 2026'dan beri geliştirici uygulamaları için **uygulama sahibinin Premium olmasını** şart koşuyor ve aramaları 10 sonuçla sınırlıyor. Premium yoksa link yapıştırma yolu her zaman çalışır.
 
 **Sitedeki çalar ne çalar?** Spotify'ın gömülü çalarında ses ayarı yoktur ve bir web sayfası başka bir sitenin çalarının sesini değiştiremez. Bu yüzden çalar her şarkının Spotify'daki **30 saniyelik önizlemesini** kendi çalarıyla çalar; ses düğmeleri bu sayede çalışır. Şarkının tamamı için her yerde "Spotify'da dinle" linki var.
