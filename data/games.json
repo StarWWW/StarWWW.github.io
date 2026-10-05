@@ -1,61 +1,7 @@
 [
   {
-    "name": "ULTRAKILL",
-    "released": "2020-09-03",
-    "developers": [
-      "Arsi \"Hakita\" Patala"
-    ],
-    "publishers": [
-      "New Blood Interactive"
-    ],
-    "genres": [
-      "Aksiyon",
-      "Bağımsız"
-    ],
-    "platforms": [
-      "Windows"
-    ],
-    "metacritic": null,
-    "cover_url": "https://cdn.akamai.steamstatic.com/steam/apps/1229490/header.jpg",
-    "store_url": "https://store.steampowered.com/app/1229490/",
-    "color": "#AC3232",
-    "status": "oynuyorum",
-    "now_playing": true,
-    "note": "",
-    "steam_appid": 1229490,
-    "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1229490/library_600x900.jpg"
-  },
-  {
-    "name": "Undertale",
-    "released": "2015-09-15",
-    "developers": [
-      "tobyfox"
-    ],
-    "publishers": [
-      "tobyfox"
-    ],
-    "genres": [
-      "Bağımsız",
-      "RYO"
-    ],
-    "platforms": [
-      "Windows",
-      "macOS",
-      "Linux"
-    ],
-    "metacritic": 92,
-    "cover_url": "https://cdn.akamai.steamstatic.com/steam/apps/391540/header.jpg",
-    "store_url": "https://store.steampowered.com/app/391540/",
-    "color": "#222034",
-    "status": "oynadım",
-    "now_playing": false,
-    "note": "",
-    "steam_appid": 391540,
-    "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391540/library_600x900.jpg"
-  },
-  {
     "name": "Outer Wilds",
-    "released": "2019-05-28",
+    "released": "2019-05-29",
     "developers": [
       "Mobius Digital"
     ],
@@ -67,73 +13,112 @@
       "Macera"
     ],
     "platforms": [
-      "Windows"
+      "PC",
+      "PlayStation",
+      "Xbox",
+      "Nintendo"
     ],
     "metacritic": 85,
-    "cover_url": "https://cdn.akamai.steamstatic.com/steam/apps/753640/header.jpg",
+    "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/753640/079ae4a7ff4b5875adc5c63c4c0b84e5a3e6966b/header.jpg?t=1785424341",
     "store_url": "https://store.steampowered.com/app/753640/",
-    "color": "#DF7126",
-    "status": "oynadım",
+    "steam_appid": 753640,
+    "rawg_id": 58764,
+    "color": "#663931",
+    "status": "favori",
     "now_playing": false,
     "note": "",
-    "steam_appid": 753640,
     "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/753640/library_600x900.jpg"
   },
   {
-    "name": "Cyberpunk 2077",
-    "released": "2020-12-10",
+    "name": "Ultrakill",
+    "released": "2020-09-02",
     "developers": [
-      "CD PROJEKT RED"
+      "Arsi \"Hakita\" Patala"
     ],
     "publishers": [
-      "CD PROJEKT RED"
+      "New Blood Interactive"
     ],
     "genres": [
+      "Aksiyon",
+      "Bağımsız Yapımcı",
+      "Erken Erişim"
+    ],
+    "platforms": [
+      "PC",
+      "Linux"
+    ],
+    "metacritic": null,
+    "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1229490/header.jpg?t=1783942574",
+    "store_url": "https://store.steampowered.com/app/1229490/",
+    "steam_appid": 1229490,
+    "rawg_id": 428741,
+    "color": "#AC3232",
+    "status": "favori",
+    "now_playing": false,
+    "note": "",
+    "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1229490/library_600x900.jpg"
+  },
+  {
+    "name": "Undertale",
+    "released": "2015-09-14",
+    "developers": [
+      "tobyfox"
+    ],
+    "publishers": [
+      "tobyfox"
+    ],
+    "genres": [
+      "Bağımsız Yapımcı",
       "RYO"
     ],
     "platforms": [
-      "Windows",
-      "macOS"
+      "PC",
+      "PlayStation",
+      "Xbox",
+      "Apple Macintosh",
+      "Linux",
+      "Nintendo"
     ],
-    "metacritic": 86,
-    "cover_url": "https://cdn.akamai.steamstatic.com/steam/apps/1091500/header.jpg",
-    "store_url": "https://store.steampowered.com/app/1091500/",
-    "color": "#FBF236",
+    "metacritic": 92,
+    "cover_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391540/header.jpg?t=1757349115",
+    "store_url": "https://store.steampowered.com/app/391540/",
+    "steam_appid": 391540,
+    "rawg_id": 13627,
+    "color": "#222034",
     "status": "oynadım",
     "now_playing": false,
     "note": "",
-    "steam_appid": 1091500,
-    "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1091500/library_600x900.jpg"
+    "box_url": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/391540/library_600x900.jpg"
   },
   {
-    "name": "Minecraft",
-    "released": "2011-11-18",
+    "name": "Valorant",
+    "released": "2020-06-02",
     "developers": [
-      "Mojang Studios"
+      "Riot Games"
     ],
     "publishers": [
-      "Mojang Studios",
-      "Xbox Game Studios"
+      "Riot Games"
     ],
     "genres": [
-      "Sandbox",
-      "Hayatta kalma"
+      "Action",
+      "Shooter",
+      "Strategy"
     ],
     "platforms": [
-      "Windows",
-      "macOS",
-      "Linux",
-      "Konsol",
-      "Mobil"
+      "PC",
+      "PlayStation",
+      "Xbox"
     ],
-    "metacritic": null,
-    "cover_url": "",
-    "store_url": "https://www.minecraft.net/",
-    "color": "#6ABE30",
+    "metacritic": 80,
+    "cover_url": "https://media.rawg.io/media/games/b11/b11127b9ee3c3701bd15b9af3286d20e.jpg",
+    "store_url": "https://playvalorant.com/",
+    "steam_appid": null,
+    "rawg_id": 415171,
+    "color": "#AC3232",
     "status": "oynadım",
     "now_playing": false,
     "note": "",
-    "box_url": ""
+    "box_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvZQ1n-y0kNVgjP6w1XDIkagBYSCCO4bgNOIZXt3ZekA&s=10"
   },
   {
     "name": "League of Legends",
@@ -145,43 +130,23 @@
       "Riot Games"
     ],
     "genres": [
-      "MOBA"
+      "Action",
+      "RPG",
+      "Strategy"
     ],
     "platforms": [
-      "Windows",
-      "macOS"
+      "PC",
+      "Apple Macintosh"
     ],
-    "metacritic": null,
-    "cover_url": "",
-    "store_url": "https://www.leagueoflegends.com/",
+    "metacritic": 78,
+    "cover_url": "https://media.rawg.io/media/games/78b/78bc81e247fc7e77af700cbd632a9297.jpg",
+    "store_url": "https://store.steampowered.com/app/20590",
+    "steam_appid": 20590,
+    "rawg_id": 23598,
     "color": "#639BFF",
     "status": "oynadım",
     "now_playing": false,
     "note": "",
-    "box_url": ""
-  },
-  {
-    "name": "VALORANT",
-    "released": "2020-06-02",
-    "developers": [
-      "Riot Games"
-    ],
-    "publishers": [
-      "Riot Games"
-    ],
-    "genres": [
-      "Taktik FPS"
-    ],
-    "platforms": [
-      "Windows"
-    ],
-    "metacritic": null,
-    "cover_url": "",
-    "store_url": "https://playvalorant.com/",
-    "color": "#D77BBA",
-    "status": "oynadım",
-    "now_playing": false,
-    "note": "",
-    "box_url": ""
+    "box_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRtU_suntEUChcFpRuR_yxhQgrTHQuaAfWFLhEOHyfgPw&s=10"
   }
 ]
