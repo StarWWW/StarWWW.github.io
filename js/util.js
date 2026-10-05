@@ -75,9 +75,10 @@ export function h(tag, attrs = {}, ...kids) {
   return el;
 }
 
-export function toast(msg, ms = 2600) {
+export function toast(msg, ms = 2600, { sound = true } = {}) {
   const root = document.getElementById('toasts');
   if (!root) return;
+  if (sound) API.sfx?.play('toast');
   const t = h('div', { class: 'toast' }, msg);
   root.append(t);
   setTimeout(() => t.remove(), ms);

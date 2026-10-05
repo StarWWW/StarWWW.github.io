@@ -43,6 +43,7 @@ export function initTerminal() {
 
   function open() {
     lastFocus = document.activeElement;
+    if (term.hidden) API.sfx?.play('open');
     term.hidden = false;
     if (!opened) {
       opened = true;
@@ -51,6 +52,7 @@ export function initTerminal() {
     setTimeout(() => input.focus(), 0);
   }
   function close() {
+    if (!term.hidden) API.sfx?.play('close');
     term.hidden = true;
     if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
   }
@@ -65,7 +67,7 @@ export function initTerminal() {
     help() {
       say(L('komutlar:', 'commands:'), 'y');
       say('  whoami · ls · cat <dosya> · cd <bölüm> · games · music · play [n] · pause · next · prev');
-      say('  spray · drug · real · lang tr|en · fx tam|az · vol 0-10 · cowsay <yazı> · github · discord');
+      say('  spray · drug · real · lang tr|en · fx tam|az · vol 0-10 · ses aç|kapat · cowsay <yazı> · github · discord');
       say('  date · echo · history · clear · exit · login · admin', 'd');
     },
     whoami() {
@@ -111,6 +113,14 @@ export function initTerminal() {
     pause() { API.music?.pause(); say('❚❚'); },
     next() { API.music?.next(); setTimeout(() => COMMANDS.np(), 300); },
     prev() { API.music?.prev(); setTimeout(() => COMMANDS.np(), 300); },
+    ses(args) {
+      const a = (args[0] || '').toLowerCase();
+      const on = { aç: true, ac: true, on: true, açık: true, kapat: false, kapa: false, off: false, kapalı: false };
+      if (!API.sfx) return say(L('ses efektleri yüklenmedi', 'sound effects are not loaded'), 'err');
+      if (a in on) API.sfx.set(on[a]); else if (!a) API.sfx.toggle();
+      else return say(L('kullanım: ses aç | ses kapat', 'usage: sfx on | sfx off'), 'd');
+      say(API.sfx.enabled() ? L('ses efektleri açık ♪', 'sound effects on ♪') : L('ses efektleri kapalı', 'sound effects off'), 'ok');
+    },
     vol(args) {
       if (!API.music) return say('—', 'd');
       if (args[0] === 'mute' || args[0] === 'sessiz') { API.music.mute(); return say(L('ses aç/kapa', 'mute toggled'), 'ok'); }
@@ -173,6 +183,7 @@ export function initTerminal() {
     logout() { API.adminLogout?.().then(() => say(L('çıkış yapıldı', 'logged out'), 'ok')); },
   };
   COMMANDS.yoket = COMMANDS.destroy;
+  COMMANDS.sfx = COMMANDS.ses;
   COMMANDS.wake = COMMANDS.uyan;
   COMMANDS.flip = COMMANDS.ters;
   COMMANDS.acid = COMMANDS.asit;
@@ -191,11 +202,14 @@ export function initTerminal() {
     if (fn) {
       try { fn(args); } catch (err) { say(String(err), 'err'); }
     } else {
+      API.sfx?.play('error');
       say(`${cmd}: ${L('komut bulunamadı. "help" dene.', 'command not found. try "help".')}`, 'err');
     }
   }
 
-  form.addEventListener('submit', (e) => { e.preventDefault(); run(input.value); input.value = ''; });
+  form.addEventListener('submit', (e) => { e.preventDefault(); API.sfx?.play('enter'); run(input.value); input.value = ''; });
+  // tuş vuruşu sesi (yazı tuşları ve silme)
+  input.addEventListener('keydown', (e) => { if ((e.key.length === 1 || e.key === 'Backspace') && !e.ctrlKey && !e.metaKey) API.sfx?.play('type'); });
   input.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') { e.preventDefault(); hIdx = Math.max(0, hIdx - 1); input.value = history[hIdx] || ''; }
     else if (e.key === 'ArrowDown') { e.preventDefault(); hIdx = Math.min(history.length, hIdx + 1); input.value = history[hIdx] || ''; }

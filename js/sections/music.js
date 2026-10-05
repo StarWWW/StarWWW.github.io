@@ -108,7 +108,7 @@ export async function initMusic() {
   mini.inert = true;
   mini.innerHTML = `
     <div class="mm-body">
-      <div class="mm-head"><span class="px mm-brand">S★MP3</span><button type="button" class="px mm-x" data-a="x">✕</button></div>
+      <div class="mm-head"><span class="px mm-brand">S★MP3</span><button type="button" class="px mm-x" data-a="x" data-sfx="close">✕</button></div>
       <div class="mm-screen">
         <span class="px mm-state"></span>
         <button type="button" class="mm-art" data-a="go"><img class="pixelated" alt="" width="96" height="96"></button>
@@ -128,7 +128,7 @@ export async function initMusic() {
       </div>
       <div class="mm-segs" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<i style="--j:${i}"></i>`).join('')}</div>
     </div>
-    <button type="button" class="mm-grip" data-a="grip" aria-expanded="false"><span class="mm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="px mm-grip-t">MP3</span><span class="mm-arrow" aria-hidden="true">▶</span></button>`;
+    <button type="button" class="mm-grip" data-a="grip" data-sfx="slide" aria-expanded="false"><span class="mm-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="px mm-grip-t">MP3</span><span class="mm-arrow" aria-hidden="true">▶</span></button>`;
   document.body.append(mini);
   const mmBody = mini.querySelector('.mm-body');
   const grip = mini.querySelector('.mm-grip');

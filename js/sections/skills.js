@@ -106,7 +106,7 @@ export async function initSkills() {
     if (!sel || !list.some((s) => s.name === sel)) sel = list[0].name;
     grid.innerHTML = list.map((s, k) => {
       const r = rarity(s.level);
-      return `<button type="button" class="item r${r} rv" data-rv="pop" style="--i:${k};--cc:${CATCOL[s.category]}" data-name="${esc(s.name)}" tabindex="${s.name === sel ? 0 : -1}" aria-pressed="${s.name === sel}" aria-label="${esc(`${s.name}, ${s.level ? `LV ${s.level}` : t('sk.r0')}, ${t(`sk.r${r}`)}`)}" data-d>
+      return `<button type="button" data-sfx="select" class="item r${r} rv" data-rv="pop" style="--i:${k};--cc:${CATCOL[s.category]}" data-name="${esc(s.name)}" tabindex="${s.name === sel ? 0 : -1}" aria-pressed="${s.name === sel}" aria-label="${esc(`${s.name}, ${s.level ? `LV ${s.level}` : t('sk.r0')}, ${t(`sk.r${r}`)}`)}" data-d>
         <span class="item-cat" aria-hidden="true"></span>
         <span class="item-ico" aria-hidden="true">${spriteSVG(ICON[s.category], 3)}</span>
         <span class="item-nm${longest(s.name) > 9 ? ' long' : ''}" lang="${nameLang(s.name)}">${esc(s.name)}</span>

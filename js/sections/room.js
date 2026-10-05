@@ -522,20 +522,22 @@ export function initRoom(canvas) {
     const h = hit(...at(e));
     if (!h) return;
     const say = (who, t) => { for (let i = bubbles.length - 1; i >= 0; i--) if (bubbles[i].who === who) bubbles.splice(i, 1); bubbles.push({ who, text: t, until: frame + 20 }); };
-    if (h.id === 'lamp') lampOn = !lampOn;
-    else if (h.id === 'monitor') API.terminal?.open?.();
-    else if (h.id === 'speaker') API.music?.toggle?.();
+    const sfx = (n) => API.sfx?.play(n);
+    if (h.id === 'lamp') { lampOn = !lampOn; sfx('lamp'); }
+    else if (h.id === 'monitor') { sfx('beep'); API.terminal?.open?.(); }
+    else if (h.id === 'speaker') { sfx('click'); API.music?.toggle?.(); }
     else if (h.id === 'window') {
-      if (drugOn()) { ufo = { x: -12 }; API.drug?.unlock?.('ufo'); } else shooting = { t: 0 };
+      if (drugOn()) { ufo = { x: -12 }; sfx('ufo'); API.drug?.unlock?.('ufo'); } else { shooting = { t: 0 }; sfx('twinkle'); }
     } else if (h.id === 'cat') {
       if (drugOn() && !fly) {
+        sfx('meowBig');
         say('cat', 'MİYAAV!');
         API.drug?.unlock?.('cat');
         if (!reducedMotion()) startFly();
-      } else if (!fly) say('cat', 'MİYAV');
+      } else if (!fly) { sfx('meow'); say('cat', 'MİYAV'); }
     }
-    else if (h.id === 'char') say('char', ['CYA!', 'GG!', 'BYE!'][Math.floor(Math.random() * 3)]);
-    else if (h.id === 'door') { if (API.fx?.scrollTo) API.fx.scrollTo('#top'); else window.scrollTo({ top: 0 }); }
+    else if (h.id === 'char') { sfx('bye'); say('char', ['CYA!', 'GG!', 'BYE!'][Math.floor(Math.random() * 3)]); }
+    else if (h.id === 'door') { sfx('creak'); if (API.fx?.scrollTo) API.fx.scrollTo('#top'); else window.scrollTo({ top: 0 }); }
     draw();
     // animasyonlar kapalıyken (FX: AZ) baloncuk ve kayan yıldız kendiliğinden kaybolsun
     if (!running) setTimeout(() => { bubbles.length = 0; shooting = null; ufo = null; draw(); }, 2200);

@@ -86,10 +86,12 @@ export function initDrug() {
     found.add(id);
     store.set('star.trip', [...found]);
     const e = EGGS[id];
+    API.sfx?.play('secret');
     eggToast(`${L('SIR', 'SECRET')} ${found.size}/${N} · ${L(e[0], e[1])}`, L(e[2], e[3]));
     if (found.size === N) setTimeout(finale, 1600);
   }
   function finale() {
+    API.sfx?.play('bigSecret');
     matrixRain(9000);
     eggToast(L(`TAM TRİP · ${N}/${N}`, `FULL TRIP · ${N}/${N}`), L('her şeyi gördün. gerçeklik bir daha asla aynı olmayacak.', 'you have seen everything. reality will never be the same.'), true);
   }
@@ -186,6 +188,7 @@ export function initDrug() {
     b.addEventListener('animationend', () => b.remove());
     b.addEventListener('click', () => {
       b.classList.add('splat');
+      API.sfx?.play('splat');
       b.disabled = true;
       bugsCaught += 1;
       store.set('star.bugs', bugsCaught);
@@ -202,6 +205,7 @@ export function initDrug() {
   function matrixRain(ms = 7000) {
     if (rainOn) return;
     rainOn = true;
+    API.sfx?.play('rain');
     const c = document.createElement('canvas');
     c.className = 'trip-rain';
     c.setAttribute('aria-hidden', 'true');
@@ -247,7 +251,7 @@ export function initDrug() {
     if (!id || !isDrug()) return false;
     if (id === 'wake') matrixRain(7000);
     if (id === 'flip') flipWorld();
-    if (id === 'acid') flash('trip-acid', 10000);
+    if (id === 'acid') { API.sfx?.play('acid'); flash('trip-acid', 10000); }
     unlock(id);
     return true;
   }
@@ -284,6 +288,7 @@ export function initDrug() {
         easing: (p) => p * p, // yerçekimi: gittikçe hızlanır
         onComplete: () => {
           html.classList.add('trip-thud');
+          API.sfx?.play('thud');
           setTimeout(() => {
             html.classList.remove('trip-thud', 'trip-flip');
             // dönüş animasyonu gerçekten bitince dönme noktasını bırak (erken bırakırsa sayfa sıçrar)
@@ -304,6 +309,7 @@ export function initDrug() {
     const begin = () => {
       track();
       html.classList.add('trip-flip');
+      API.sfx?.play('whoosh');
       setTimeout(fall, 850);
     };
     // sona yakınsa düşecek yer yok: bir flaşın arkasında başa ışınlan
@@ -317,7 +323,7 @@ export function initDrug() {
   let shiftTimer = 0;
   function startShift() {
     if (!isDrug() || shiftTimer) return;
-    shiftTimer = setTimeout(() => { html.classList.add('trip-neg'); unlock('negative'); }, 1800);
+    shiftTimer = setTimeout(() => { html.classList.add('trip-neg'); API.sfx?.play('invert'); unlock('negative'); }, 1800);
   }
   document.addEventListener('keyup', (e) => {
     if (e.key !== 'Shift') return;
@@ -350,6 +356,7 @@ export function initDrug() {
     }, 2200 + Math.random() * 3200);
   }
   function openEyes() {
+    API.sfx?.play('eyes');
     if (!eyes) {
       eyes = document.createElement('div');
       eyes.className = 'av-eyes';
@@ -409,6 +416,7 @@ export function initDrug() {
     if (logoClicks.length < 7) return;
     logoClicks = [];
     flash('trip-logo', 6000);
+    API.sfx?.play('glitch');
     burst(logo.getBoundingClientRect());
     unlock('logo');
   });
@@ -436,10 +444,10 @@ export function initDrug() {
     melting = true;
     unlock('melt');
     if (reducedMotion()) return;
-    melt.start({ cancelled: () => !melting }).then((ok) => { if (!ok && melting) html.classList.add('trip-melt'); });
+    melt.start({ cancelled: () => !melting }).then((ok) => { if (melting) API.sfx?.play('melt'); if (!ok && melting) html.classList.add('trip-melt'); });
   }
   function poke() {
-    if (melting) { melting = false; html.classList.remove('trip-melt'); melt.stop(); }
+    if (melting) { melting = false; html.classList.remove('trip-melt'); if (melt.active()) API.sfx?.play('reform'); melt.stop(); }
     clearTimeout(idleTimer);
     if (!isDrug()) return;
     idleTimer = setTimeout(beginMelt, 25000);
@@ -454,6 +462,7 @@ export function initDrug() {
     window.getSelection()?.removeAllRanges();
     if (!isDrug() || h.dataset.boom) return;
     h.dataset.boom = '1';
+    API.sfx?.play('break');
     const text = h.textContent;
     h.innerHTML = [...text].map((ch) => `<span class="boom-ch" style="--dx:${(Math.random() - 0.5) * 520}px;--dy:${(Math.random() - 0.7) * 320}px;--r:${(Math.random() - 0.5) * 720}deg">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join('');
     requestAnimationFrame(() => h.classList.add('booming'));

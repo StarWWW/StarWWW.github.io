@@ -100,7 +100,7 @@ export async function initShelf() {
   // ---------- raf ----------
   function caseHTML(g, i) {
     return `<div class="case-slot rv" data-rv="drop" role="listitem" style="--i:${i}">
-      <button type="button" class="case${isDark(colorOf(g)) ? ' dark' : ''}${g.now_playing ? ' is-now' : ''}" data-i="${i}" style="--c:${esc(colorOf(g))}" aria-label="${esc(t('gm.open', { n: g.name }))}" data-cursor="${esc(t('gm.flip'))}">
+      <button type="button" data-sfx="none" class="case${isDark(colorOf(g)) ? ' dark' : ''}${g.now_playing ? ' is-now' : ''}" data-i="${i}" style="--c:${esc(colorOf(g))}" aria-label="${esc(t('gm.open', { n: g.name }))}" data-cursor="${esc(t('gm.flip'))}">
         <span class="case-3d">
           <span class="case-face case-spine">${spineHTML(g)}</span>
           <span class="case-face case-front">${frontHTML(g)}</span>
@@ -208,10 +208,10 @@ export async function initShelf() {
         </div></div>
       </div>
       <div class="cv-ui">
-        <button type="button" class="btn cv-nav" id="cvPrev">←</button>
-        <button type="button" class="btn btn-acc" id="cvFlip" aria-pressed="false"></button>
-        <button type="button" class="btn btn-ink" id="cvClose"></button>
-        <button type="button" class="btn cv-nav" id="cvNext">→</button>
+        <button type="button" class="btn cv-nav" id="cvPrev" data-sfx="none">←</button>
+        <button type="button" class="btn btn-acc" id="cvFlip" data-sfx="none" aria-pressed="false"></button>
+        <button type="button" class="btn btn-ink" id="cvClose" data-sfx="none"></button>
+        <button type="button" class="btn cv-nav" id="cvNext" data-sfx="none">→</button>
       </div>
       <p class="cv-keys px" id="cvKeys"></p>`;
     document.body.appendChild(v);
@@ -257,6 +257,7 @@ export async function initShelf() {
   function paintAng() {
     box.style.transform = `rotateY(${ang}deg)`;
     const back = isBack();
+    if (back !== v.classList.contains('flipped') && !v.hidden) API.sfx?.play('flip');
     v.classList.toggle('flipped', back);
     el('cvFace').textContent = t(back ? 'gm.back' : 'gm.front');
     el('cvFlip').setAttribute('aria-pressed', String(back));
@@ -310,6 +311,7 @@ export async function initShelf() {
     if (busy || !games[i]) return;
     if (!v) build();
     busy = true;
+    API.sfx?.play('caseOpen');
     lastFocus = document.activeElement;
     const rm = reducedMotion();
     size();
@@ -341,6 +343,7 @@ export async function initShelf() {
   async function close() {
     if (!v || v.hidden || busy) return;
     busy = true;
+    API.sfx?.play('caseClose');
     const rm = reducedMotion();
     const src = shelf.querySelector(`.case[data-i="${cur}"]`);
     v.classList.remove('disc-out');
@@ -369,6 +372,7 @@ export async function initShelf() {
   async function go(d) {
     if (busy || games.length < 2) return;
     busy = true;
+    API.sfx?.play('slide');
     const rm = reducedMotion();
     const n = (cur + d + games.length) % games.length;
     v.classList.remove('disc-out');

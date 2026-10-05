@@ -61,7 +61,8 @@ export async function initWall() {
     const btn = $('#sprayToggle');
     btn.setAttribute('aria-pressed', String(on));
     $('#sprayState').textContent = on ? t('wl.on') : t('wl.off2');
-    if (on) toast(t('wl.sprayHint'));
+    API.sfx?.play(on ? 'shake' : 'toggleOff');
+    if (on) toast(t('wl.sprayHint'), 2600, { sound: false });
   }
   $('#sprayToggle').addEventListener('click', () => setSpray(!spraying));
 
@@ -155,16 +156,27 @@ export async function initWall() {
     if (!spraying || e.button > 0) return;
     e.preventDefault();
     try { wall.setPointerCapture(e.pointerId); } catch { /* sentetik olay */ }
-    if (begin(toNorm(e))) requestAnimationFrame(dripTick);
+    if (begin(toNorm(e))) { requestAnimationFrame(dripTick); hissStart(e); }
   });
   wall.addEventListener('pointermove', (e) => {
     sendCursor(e);
     if (!cur) return;
+    hissMove(e);
     const co = e.getCoalescedEvents ? e.getCoalescedEvents() : null;
     (co && co.length ? co : [e]).forEach((ev) => cur && addPoint(toNorm(ev)));
     broadcastPartial(false);
   });
-  const end = () => finish();
+  // sprey sesi: basılıyken fısıldar, hızlı çizince daha parlak
+  let hiss = null; let hx = 0; let hy = 0; let ht = 0;
+  function hissStart(e) { hiss?.stop(); hiss = API.sfx?.loop('spray') || null; hx = e.clientX; hy = e.clientY; ht = performance.now(); }
+  function hissMove(e) {
+    if (!hiss) return;
+    const now = performance.now();
+    const v = Math.hypot(e.clientX - hx, e.clientY - hy) / Math.max(8, now - ht);
+    hx = e.clientX; hy = e.clientY; ht = now;
+    hiss.set(v / 2.5);
+  }
+  const end = () => { hiss?.stop(); hiss = null; finish(); };
   wall.addEventListener('pointerup', end);
   wall.addEventListener('pointercancel', end);
   window.addEventListener('pointerup', end);

@@ -1765,3 +1765,21 @@ html[data-mode="drug"] .mm-segs i.on:nth-child(n+8) { background: var(--pink); }
    ========================================================= */
 body { -webkit-user-select: none; user-select: none; }
 input, textarea, select, [contenteditable="true"], .terminal-out, .legal { -webkit-user-select: text; user-select: text; }
+
+
+/* =========================================================
+   v9 — ses efektleri düğmesi (js/sfx.js)
+   ========================================================= */
+.sfx-btn { display: grid; place-items: center; flex-shrink: 0; width: 44px; height: 44px; padding: 0; border: 3px solid var(--line); background: var(--panel); color: var(--fg); transition: background-color .15s, color .15s; -webkit-tap-highlight-color: transparent; }
+.sfx-btn svg { display: block; }
+.sfx-btn .sfx-x { display: none; }
+.sfx-btn[aria-pressed="false"] { color: var(--muted); }
+.sfx-btn[aria-pressed="false"] .sfx-w { display: none; }
+.sfx-btn[aria-pressed="false"] .sfx-x { display: inline; color: var(--hot); }
+.sfx-btn[aria-pressed="true"] .sfx-w { animation: sfx-wave 1.2s steps(2) infinite; }
+@keyframes sfx-wave { 50% { opacity: .35; } }
+@media (hover: hover) and (pointer: fine) { .sfx-btn:hover { background: var(--yellow); color: var(--ink); } }
+html[data-mode="drug"] .sfx-btn { border-color: var(--cyan); background: #000; color: var(--cyan); }
+@media (hover: hover) and (pointer: fine) { html[data-mode="drug"] .sfx-btn:hover { background: var(--cyan); color: #000; } }
+@media (max-width: 640px) { .sfx-btn { width: 38px; height: 40px; } }
+@media (max-width: 360px) { .sfx-btn { width: 34px; } .sfx-btn svg { width: 16px; height: 14px; } }

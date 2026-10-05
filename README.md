@@ -20,6 +20,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Sayfayı Yok Et** | Gizli. Nasıl açıldığı en alttaki "Gizli şeyler" bölümünde — sitede hiçbir yerde yazmıyor. |
 | **Kontrol Odası** | Terminalde `login`. Şarkı/oyun ara-ekle, yetenek puanla, duvar/defter/skor moderasyonu. |
 | **Footer** | Veda ekranı: kayan şerit, imlece tepki veren dev BYE, piksel piksel çizilen gece odası (lamba, monitör, hoparlör, pencere, kedi, EXIT kapısı tıklanabilir), site haritası, canlı oda durumu (İstanbul saati, çalan şarkı, oyun, duvar, defter). |
+| **Ses efektleri** | `js/sfx.js`: hepsi Web Audio ile anında sentezlenen 8-bit sesler (dosya yok). Tıklama ve üzerine gelme, hap yutma (REAL↔DRUG), terminal (açılış, tuş, Enter, hata), oyun kutusu (klak, disk, çevirme), duvarda sprey tıssı (hızlı çizince parlaklaşır), defter, kopyalama, bildirimler, footer odası (lamba, monitör, kedi miyavı, kapı gıcırtısı, kayan yıldız, UFO), DRUG sırları ve "sayfayı yok et" oyunu (ateş, kırılma, patlama, rütbe, başarım, boss). Üst bardaki hoparlör düğmesi ya da terminalde `ses aç` / `ses kapat`; tercih çerez izniyle saklanır. Bir düğmeye özel ses: `data-sfx="ad"`, sessiz: `data-sfx="none"`. |
 | **Gizlilik + çerezler** | `gizlilik.html` (KVKK aydınlatma metni + gizlilik politikası, TR/EN) ve KVKK/GDPR'a uygun çerez onayı: Tümünü kabul et / Sadece zorunlu / Tercihleri yönet; kategoriler Zorunlu · Fonksiyonel · Analitik · Pazarlama. Footer'daki **Çerez Tercihleri** ile her an değiştirilir. |
 
 Supabase ayarlanmadan da site çalışır: içerik `data/*.json`'dan gelir; duvar, defter ve skor tablosu sadece ziyaretçinin kendi tarayıcısında tutulur.
@@ -218,7 +219,7 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 
 ## Gizli şeyler
 
-**Terminal komutları:** `help`, `whoami`, `ls`, `ls projects`, `cat about.txt`, `cat cow.txt`, `cat .secret.txt`, `cd duvar`, `games`, `music`, `play 2`, `pause`, `next`, `vol 5`, `vol mute`, `spray`, `drug`, `real`, `lang en`, `cowsay merhaba`, `github`, `discord`, `sudo rm -rf /`, `login`, `logout`. <kbd>Tab</kbd> tamamlar, <kbd>↑</kbd>/<kbd>↓</kbd> geçmiş.
+**Terminal komutları:** `help`, `whoami`, `ls`, `ls projects`, `cat about.txt`, `cat cow.txt`, `cat .secret.txt`, `cd duvar`, `games`, `music`, `play 2`, `pause`, `next`, `vol 5`, `vol mute`, `ses aç`, `ses kapat`, `spray`, `drug`, `real`, `lang en`, `cowsay merhaba`, `github`, `discord`, `sudo rm -rf /`, `login`, `logout`. <kbd>Tab</kbd> tamamlar, <kbd>↑</kbd>/<kbd>↓</kbd> geçmiş.
 
 **Sayfayı Yok Et** (sitede hiçbir yerde yazmıyor, `help`'te de yok):
 - Açmanın yolları: klavyede <kbd>↑↑↓↓←→←→BA</kbd>, terminalde `destroy` (ya da `yoket`), mobilde hero'daki pembe **LVL 21** çıkartmasına art arda 5 kez dokun. İpucu sadece terminaldeki `.secret.txt` dosyasında.

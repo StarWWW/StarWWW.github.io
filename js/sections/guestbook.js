@@ -91,10 +91,12 @@ export async function initGuestbook() {
       store.set('star.gb.last', Date.now());
       $('#gbMsg').value = '';
       status.textContent = t('gb.sent');
+      API.sfx?.play('success');
       render();
     } catch (err) {
       console.warn('[guestbook]', err);
       status.textContent = t('gb.err');
+      API.sfx?.play('error');
     } finally {
       btn.disabled = false;
     }

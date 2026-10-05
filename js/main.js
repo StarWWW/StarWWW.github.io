@@ -12,6 +12,7 @@ import { initFx } from './fx.js';
 import { initConsent } from './consent.js';
 import { initFooter } from './sections/footer.js';
 import { initDrug } from './drug.js';
+import { initSfx } from './sfx.js';
 
 // ---------- mod: REAL / DRUG ----------
 // DRUG avatarı (animasyonlu WebP) sadece gerekince yüklenir; REAL modda hiç indirilmez
@@ -31,7 +32,7 @@ function setMode(mode, announce = true) {
   const btn = $('#modeToggle');
   btn.setAttribute('aria-pressed', String(next === 'drug'));
   document.querySelector('meta[name="theme-color"]').content = next === 'drug' ? '#000000' : '#222034';
-  if (announce) toast(t(next === 'drug' ? 'mode.drug' : 'mode.real'), 1400);
+  if (announce) { API.sfx?.play(next === 'drug' ? 'pillDrug' : 'pillReal'); toast(t(next === 'drug' ? 'mode.drug' : 'mode.real'), 1400, { sound: false }); }
 }
 API.setMode = setMode;
 
@@ -135,6 +136,8 @@ function initCursors() {
 // ---------- başlat ----------
 function boot() {
   initConsent();
+  initSfx({ label: (on) => t(on ? 'sfx.on' : 'sfx.off') });
+  onLang(() => API.sfxPaint?.());
   applyI18n();
   hydrateSprites();
   buildTicker();
@@ -151,7 +154,7 @@ function boot() {
   $('#modeToggle').addEventListener('click', flipMode);
   ['pointerenter', 'focus'].forEach((ev) => $('#modeToggle').addEventListener(ev, loadDrugAvatar, { once: true }));
   $$('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
-  $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => toast(t('ft.copied'))));
+  $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => { API.sfx?.play('copy'); toast(t('ft.copied'), 2600, { sound: false }); }));
   $('#ctaTerm').addEventListener('click', () => API.terminal?.open());
   $('#ctaSpray').addEventListener('click', () => API.wall?.focus());
 

@@ -50,14 +50,15 @@
     <a href="#duvar" data-i18n="nav.duvar" data-scramble>06 DUVAR</a>
   </nav>
   <div class="top-ctrl">
+    <button type="button" class="sfx-btn" id="sfxToggle" data-sfx="none" data-cursor="SES" aria-pressed="true" aria-label="Ses efektleri"></button>
     <div class="lang" role="group" aria-label="Dil / Language">
-      <button type="button" data-lang="tr" aria-pressed="true">TR</button>
-      <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      <button type="button" data-lang="tr" data-sfx="select" aria-pressed="true">TR</button>
+      <button type="button" data-lang="en" data-sfx="select" aria-pressed="false">EN</button>
     </div>
-    <button type="button" class="pill" id="modeToggle" data-magnetic data-cursor="HAP" aria-pressed="false" aria-label="Modu değiştir: REAL / DRUG" data-i18n-attr="aria-label:mode.label">
+    <button type="button" class="pill" id="modeToggle" data-sfx="none" data-magnetic data-cursor="HAP" aria-pressed="false" aria-label="Modu değiştir: REAL / DRUG" data-i18n-attr="aria-label:mode.label">
       <span class="pill-real">REAL</span><span class="pill-drug">DRUG</span>
     </button>
-    <button type="button" class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mobileNav" aria-label="Menü" data-i18n-attr="aria-label:nav.menu">≡</button>
+    <button type="button" class="menu-btn" id="menuBtn" data-sfx="slide" aria-expanded="false" aria-controls="mobileNav" aria-label="Menü" data-i18n-attr="aria-label:nav.menu">≡</button>
   </div>
   <span class="topbar-prog" aria-hidden="true"><i id="scrollProg"></i></span>
 </header>
@@ -423,7 +424,7 @@
           <button type="button" role="radio" aria-checked="true" class="px" data-size="22" data-i18n="wl.mid">ORTA</button>
           <button type="button" role="radio" aria-checked="false" class="px" data-size="40" data-i18n="wl.thick">KALIN</button>
         </div>
-        <button type="button" class="btn btn-acc spray-toggle" id="sprayToggle" aria-pressed="false"><span data-i18n="wl.toggle">SPREY MODU</span>: <b id="sprayState" data-i18n="wl.off">KAPALI</b></button>
+        <button type="button" class="btn btn-acc spray-toggle" id="sprayToggle" data-sfx="none" aria-pressed="false"><span data-i18n="wl.toggle">SPREY MODU</span>: <b id="sprayState" data-i18n="wl.off">KAPALI</b></button>
       </div>
       <div class="buff rv" data-rv="slap" style="--i:3">
         <div class="buff-in">
@@ -509,7 +510,7 @@
 <div class="fx-line" aria-hidden="true"></div>
 
 <div class="terminal" id="terminal" role="dialog" aria-label="Gizli terminal" data-i18n-attr="aria-label:term.label" hidden>
-  <div class="terminal-bar px"><span data-i18n="term.title">~/oda — GİZLİ TERMİNAL</span><button type="button" class="terminal-close px" id="termClose" aria-label="Terminali kapat" data-i18n-attr="aria-label:term.close">` / ESC ✕</button></div>
+  <div class="terminal-bar px"><span data-i18n="term.title">~/oda — GİZLİ TERMİNAL</span><button type="button" class="terminal-close px" id="termClose" data-sfx="none" aria-label="Terminali kapat" data-i18n-attr="aria-label:term.close">` / ESC ✕</button></div>
   <div class="terminal-out term" id="termOut" aria-live="polite" data-lenis-prevent></div>
   <form class="terminal-in term" id="termForm">
     <label for="termInput" class="prompt"><span class="acc">star@oda</span>:<span class="cy">~</span>$</label>
@@ -524,7 +525,7 @@
   </div>
 </div>
 
-<button type="button" class="totop" id="toTop" aria-label="Yukarı çık" data-i18n-attr="aria-label:totop" data-magnetic data-cursor="YUKARI"><span class="spr" data-sprite="star" data-scale="3"></span><span class="px">↑</span></button>
+<button type="button" class="totop" id="toTop" data-sfx="whooshUp" aria-label="Yukarı çık" data-i18n-attr="aria-label:totop" data-magnetic data-cursor="YUKARI"><span class="spr" data-sprite="star" data-scale="3"></span><span class="px">↑</span></button>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 </body>
 </html>
