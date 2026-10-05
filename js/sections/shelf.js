@@ -267,7 +267,7 @@ export async function initShelf() {
     const W = Math.round(Math.max(150, Math.min(340, window.innerWidth * (window.innerWidth < 640 ? 0.7 : 0.6), (window.innerHeight - 210) / 1.5)));
     v.style.setProperty('--cw', `${W}px`);
     v.style.setProperty('--ch', `${Math.round(W * 1.5)}px`);
-    v.style.setProperty('--cd', `${Math.max(12, Math.round(W * 0.075))}px`);
+    v.style.setProperty('--cd', `${Math.round(W * 0.1)}px`); // raftaki kutuyla aynı oran (css: .case --d)
   }
 
   function labels() {

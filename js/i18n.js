@@ -55,7 +55,7 @@ const EN = {
   'gb.legal': 'your note is public and stored on a server · <a href="gizlilik.html">privacy</a>',
   'ld.inv': 'OPENING THE INVENTORY…', 'ld.shelf': 'STACKING THE SHELF…', 'ld.lib': 'LOADING THE LIBRARY…',
   'ft.roomHint': 'night mode: click things in the room',
-  'ft.cont': 'CONTINUE?', 'ft.contBtn': 'YES ↑ BACK TO TOP', 'ft.map': 'MAP', 'ft.status': 'ROOM STATUS', 'ft.privacy': 'PRIVACY POLICY', 'ft.cookies': 'COOKIE SETTINGS',
+  'ft.map': 'MAP', 'ft.status': 'ROOM STATUS', 'ft.privacy': 'PRIVACY POLICY', 'ft.cookies': 'COOKIE SETTINGS',
   'mu.volG': 'Volume', 'mu.pvBadge': 'SPOTIFY · 30-SEC PREVIEW', 'mu.mute': 'Mute', 'mu.volLevel': 'Volume level',
 };
 
@@ -139,7 +139,6 @@ const DYN = {
   // --- müzik ---
   'mu.muted': ['SES KAPALI', 'MUTED'],
   'pr.loadingD': ['yükleniyor...', 'loading...'],
-  'ft.over': ['OYUN BİTTİ', 'GAME OVER'], 'ft.coin': ['JETON AT ↻', 'INSERT COIN ↻'], 'ft.credit': ['KREDİ 01 · DEVAM?', 'CREDIT 01 · CONTINUE?'],
   'ft.clock': ['İSTANBUL', 'ISTANBUL'], 'ft.playing': ['ÇALIYOR', 'PLAYING'], 'ft.gaming': ['OYUNDA', 'IN GAME'], 'ft.wall': ['DUVAR', 'WALL'], 'ft.notes': ['DEFTER', 'GUESTBOOK'],
   'ft.wallN': ['bu hafta {n} çizgi', '{n} strokes this week'], 'ft.notesN': ['{n} not', '{n} notes'], 'ft.silence': ['sessizlik', 'silence'], 'ft.paused': ['(duraklatıldı)', '(paused)'],
   'ft.mq': ['GÖRÜŞÜRÜZ|HOŞÇA KAL|BYE|OYUN BİTTİ?|BİR DAHAKİ SEFERE|ODANIN IŞIKLARI AÇIK KALSIN|SEE YA', 'SEE YA|GOODBYE|BYE|GAME OVER?|UNTIL NEXT TIME|LEAVE THE LIGHTS ON|LATER'],

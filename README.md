@@ -19,7 +19,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Gizli terminal** | <kbd>`</kbd> tuşu (1'in solundaki tuş). `help` yaz. |
 | **Sayfayı Yok Et** | Gizli. Nasıl açıldığı en alttaki "Gizli şeyler" bölümünde — sitede hiçbir yerde yazmıyor. |
 | **Kontrol Odası** | Terminalde `login`. Şarkı/oyun ara-ekle, yetenek puanla, duvar/defter/skor moderasyonu. |
-| **Footer** | Veda ekranı: kayan şerit, imlece tepki veren dev BYE, arcade "DEVAM?" geri sayımı (0'da OYUN BİTTİ → JETON AT), piksel piksel çizilen gece odası (lamba, monitör, hoparlör, pencere, kedi, EXIT kapısı tıklanabilir), site haritası, canlı oda durumu (İstanbul saati, çalan şarkı, oyun, duvar, defter). |
+| **Footer** | Veda ekranı: kayan şerit, imlece tepki veren dev BYE, piksel piksel çizilen gece odası (lamba, monitör, hoparlör, pencere, kedi, EXIT kapısı tıklanabilir), site haritası, canlı oda durumu (İstanbul saati, çalan şarkı, oyun, duvar, defter). |
 | **Gizlilik + çerezler** | `gizlilik.html` (KVKK aydınlatma metni + gizlilik politikası, TR/EN) ve KVKK/GDPR'a uygun çerez onayı: Tümünü kabul et / Sadece zorunlu / Tercihleri yönet; kategoriler Zorunlu · Fonksiyonel · Analitik · Pazarlama. Footer'daki **Çerez Tercihleri** ile her an değiştirilir. |
 
 Supabase ayarlanmadan da site çalışır: içerik `data/*.json`'dan gelir; duvar, defter ve skor tablosu sadece ziyaretçinin kendi tarayıcısında tutulur.

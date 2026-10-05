@@ -9,7 +9,7 @@
 // Performans: sayfanın köküne (html) her karede CSS değişkeni yazmak 4-5 bin öğenin stilini yeniden hesaplatıyordu
 // (kare başına ~20 ms). Artık efektler sadece ekrandaki birkaç öğeye doğrudan yazılır.
 import { API, store, esc, reducedMotion } from './util.js';
-import { getLang } from './i18n.js';
+import { getLang, onLang } from './i18n.js';
 import { spriteSVG } from './sprites.js';
 import { createMelt } from './melt.js';
 
@@ -476,9 +476,26 @@ export function initDrug() {
   }
   setInterval(() => { if (!beatRaf && isDrug() && API.music?.isPlaying?.()) beatRaf = requestAnimationFrame(beatLoop); }, 700);
 
+  // ---------- yazı tipi değişince sayfa kaymasın ----------
+  // DRUG'daki glitch/terminal fontları REAL'dekilerden dar; dar ekranda satır sayısı azalıp sayfa kaymasın diye bu yazılar
+  // DRUG'dayken REAL'deki yüksekliklerine sabitlenir (ölçüm bir an REAL fontuyla yapılır, ekrana o hâli çizilmez).
+  const fontLocked = [...document.querySelectorAll('.manifesto, .sec-title, .bye')];
+  function lockHeights() {
+    fontLocked.forEach((el) => { el.style.minHeight = ''; });
+    if (!isDrug()) return;
+    fontLocked.forEach((el) => el.classList.add('font-real'));
+    const hs = fontLocked.map((el) => parseFloat(getComputedStyle(el).height) || el.offsetHeight); // kesirli, dönüşümsüz
+    fontLocked.forEach((el, i) => { el.classList.remove('font-real'); el.style.minHeight = `${hs[i]}px`; });
+  }
+  let lockTm = 0;
+  window.addEventListener('resize', () => { clearTimeout(lockTm); lockTm = setTimeout(lockHeights, 150); });
+  onLang(() => requestAnimationFrame(lockHeights));
+  document.fonts?.ready.then(lockHeights);
+
   // ---------- mod değişimi ----------
   function onMode() {
     const on = isDrug();
+    lockHeights();
     if (on) {
       scheduleBug(); poke();
       if (!store.get('star.trip.hint', false)) {

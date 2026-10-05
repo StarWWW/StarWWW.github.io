@@ -315,13 +315,18 @@ function initHeroMouse() {
   const layers = [['.hero-title', 14], ['.avatar-win', -16], ['.pill-note', 10], ['.hero-note', 8], ['.halftone', -24]]
     .map(([s, d]) => [$(s), d]).filter(([el]) => el)
     .map(([el, d]) => ({ x: gsap.quickTo(el, 'x', { duration: 0.9, ease: 'power3.out' }), y: gsap.quickTo(el, 'y', { duration: 0.9, ease: 'power3.out' }), d }));
-  hero.addEventListener('pointermove', (e) => {
-    const r = hero.getBoundingClientRect();
-    const nx = (e.clientX - r.left) / r.width - 0.5;
-    const ny = (e.clientY - r.top) / r.height - 0.5;
+  // Bütün pencereyi dinler: fare sayfanın yanındaki boşluğa geçse de efekt kesilmez, sıfırlanmaz.
+  // Sadece bölüm ekrandayken çalışır; fare pencereden çıkınca ya da bölüm ekrandan çıkınca yerine döner.
+  const reset = () => layers.forEach((l) => { l.x(0); l.y(0); });
+  let heroOn = true;
+  new IntersectionObserver(([e]) => { heroOn = e.isIntersecting; if (!heroOn) reset(); }).observe(hero);
+  window.addEventListener('pointermove', (e) => {
+    if (!heroOn || e.pointerType !== 'mouse') return;
+    const nx = e.clientX / window.innerWidth - 0.5;
+    const ny = e.clientY / window.innerHeight - 0.5;
     layers.forEach((l) => { l.x(nx * l.d); l.y(ny * l.d); });
-  });
-  hero.addEventListener('pointerleave', () => layers.forEach((l) => { l.x(0); l.y(0); }));
+  }, { passive: true });
+  document.addEventListener('mouseout', (e) => { if (!e.relatedTarget) reset(); });
 }
 
 // ---------------------------------------------------------------- imleç köşeleri
