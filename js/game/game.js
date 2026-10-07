@@ -329,7 +329,7 @@ class Game {
     const m = Math.hypot(dx, dy) || 1;
     p.vx = (dx / m) * 1150; p.vy = (dy / m) * 1150;
     p.dashT = 0.18; p.dashCd = 0.7; p.inv = Math.max(p.inv, 0.28);
-    API.sfx?.play('dash');
+    API.sfx?.play('dash', { x: p.x - scrollX });
     const close = this.bugs.some((b) => Math.hypot(b.x - p.x, b.y - p.y) < 70) || this.bullets.some((b) => Math.hypot(b.x - p.x, b.y - p.y) < 60);
     if (close) this.addStyle(L('SON ANDA KAÇIŞ', 'CLOSE CALL'), 35);
   }
@@ -431,18 +431,18 @@ class Game {
     if (w === 0) {
       this.cool[0] = WEAPONS[0].rate;
       this.shots++;
-      API.sfx?.play('shoot');
+      API.sfx?.play('shoot', { x: p.x - scrollX });
       this.projectiles.push({ type: 'spray', x: p.x + ux * 26, y: p.y + uy * 26 - 6, vx: ux * 920 + p.vx * 0.35, vy: uy * 920 + p.vy * 0.35, g: 650, life: 1.3, color: pick(PAINT), rot: 0 });
     } else if (w === 1) {
       if (this.ammo <= 0) { this.cool[1] = 0.3; return; }
       this.ammo--; this.cool[1] = WEAPONS[1].rate; this.shots++;
-      API.sfx?.play('lob');
+      API.sfx?.play('lob', { x: p.x - scrollX });
       this.projectiles.push({ type: 'glitch', x: p.x + ux * 26, y: p.y + uy * 26, vx: ux * 640 + p.vx * 0.3, vy: uy * 640 + p.vy * 0.3, g: 320, life: 1.1, fuse: -1, rot: 0 });
     } else {
       this.cool[2] = WEAPONS[2].rate; this.shots++;
       const cx = p.x + ux * 46; const cy = p.y + uy * 46;
       this.swing = { t: 0.16, ang: Math.atan2(uy, ux) };
-      API.sfx?.play('swing');
+      API.sfx?.play('swing', { x: cx - scrollX });
       const dashing = p.dashT > 0;
       const dmg = dashing ? 14 : 7;
       let hit = 0; const killed = [];
@@ -458,7 +458,7 @@ class Game {
       if (this.boss && this.inBoss(cx, cy, 70)) { hit++; this.damageBoss(dashing ? 8 : 5); }
       if (hit) {
         this.hits++; this.st.hammer += hit; this.shake = Math.max(this.shake, 6);
-        API.sfx?.play('hit');
+        API.sfx?.play('hit', { x: cx - scrollX });
         if (this.st.hammer >= 40) this.unlock('cekic');
         for (let i = 0; i < 10; i++) this.particles.push({ x: cx, y: cy, vx: rand(-260, 260), vy: rand(-320, 80), life: 0.4, s: 5, color: '#FBF236', r: 0 });
       }
@@ -515,7 +515,7 @@ class Game {
   }
 
   glitchBlast(x, y, R, depth, chain) {
-    if (!depth) API.sfx?.play('boom');
+    if (!depth) API.sfx?.play('boom', { x: x - scrollX });
     const killed = [];
     this.near(x, y, R).forEach((tg) => {
       if (Game.dist(tg, x, y) > R) return;
@@ -573,7 +573,7 @@ class Game {
   destroyTarget(tg, src) {
     tg.dead = true;
     tg.el.style.visibility = 'hidden';
-    API.sfx?.play('break');
+    API.sfx?.play('break', { x: tg.x + tg.w / 2 - scrollX });
     tg.el.classList.remove('g-glitched');
     this.order.push(tg);
     this.destroyed += tg.area;
@@ -647,7 +647,7 @@ class Game {
     if (b.hp > 0 && !b.merge) return;
     this.bugs.splice(i, 1);
     this.st.bugs++;
-    API.sfx?.play('splat');
+    API.sfx?.play('splat', { x: b.x - scrollX });
     if (this.st.bugs >= 30) this.unlock('bug');
     this.score += (b.merge ? 600 : 250) * RANKS[this.rankIdx].mult;
     this.addStyle(b.merge ? L('MERGE ÇÖZÜLDÜ', 'MERGE RESOLVED') : L('BUG EZİLDİ', 'BUG SQUASHED'), b.merge ? 30 : 15);
@@ -746,7 +746,7 @@ class Game {
     const p = this.player;
     if (p.inv > 0 || this.over) return;
     p.hp -= dmg; p.inv = 0.9;
-    API.sfx?.play('hurt');
+    API.sfx?.play('hurt', { x: p.x - scrollX });
     this.st.dmg += dmg;
     const dx = p.x - fx; const dy = p.y - fy; const d = Math.hypot(dx, dy) || 1;
     p.vx += (dx / d) * 600; p.vy += (dy / d) * 600;
@@ -776,7 +776,7 @@ class Game {
     if (idx !== this.rankIdx) {
       const up = idx > this.rankIdx;
       this.rankIdx = idx;
-      if (up) API.sfx?.play('rankUp');
+      if (up) API.sfx?.play('rankUp', { k: idx });
       if (up) { this.ui.rankL.classList.remove('bump'); void this.ui.rankL.offsetWidth; this.ui.rankL.classList.add('bump'); }
       if (idx > this.peakRank) this.peakRank = idx;
       if (idx === RANKS.length - 1) this.unlock('cow');

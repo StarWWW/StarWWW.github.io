@@ -311,7 +311,7 @@ export async function initShelf() {
     if (busy || !games[i]) return;
     if (!v) build();
     busy = true;
-    API.sfx?.play('caseOpen');
+    API.sfx?.play('caseOpen', { el: src });
     lastFocus = document.activeElement;
     const rm = reducedMotion();
     size();

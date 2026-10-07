@@ -188,7 +188,7 @@ export function initDrug() {
     b.addEventListener('animationend', () => b.remove());
     b.addEventListener('click', () => {
       b.classList.add('splat');
-      API.sfx?.play('splat');
+      API.sfx?.play('splat', { el: b });
       b.disabled = true;
       bugsCaught += 1;
       store.set('star.bugs', bugsCaught);
@@ -356,7 +356,7 @@ export function initDrug() {
     }, 2200 + Math.random() * 3200);
   }
   function openEyes() {
-    API.sfx?.play('eyes');
+    API.sfx?.play('eyes', { el: avWin });
     if (!eyes) {
       eyes = document.createElement('div');
       eyes.className = 'av-eyes';
@@ -416,7 +416,7 @@ export function initDrug() {
     if (logoClicks.length < 7) return;
     logoClicks = [];
     flash('trip-logo', 6000);
-    API.sfx?.play('glitch');
+    API.sfx?.play('glitch', { el: logo });
     burst(logo.getBoundingClientRect());
     unlock('logo');
   });
@@ -462,7 +462,7 @@ export function initDrug() {
     window.getSelection()?.removeAllRanges();
     if (!isDrug() || h.dataset.boom) return;
     h.dataset.boom = '1';
-    API.sfx?.play('break');
+    API.sfx?.play('break', { el: h });
     const text = h.textContent;
     h.innerHTML = [...text].map((ch) => `<span class="boom-ch" style="--dx:${(Math.random() - 0.5) * 520}px;--dy:${(Math.random() - 0.7) * 320}px;--r:${(Math.random() - 0.5) * 720}deg">${ch === ' ' ? '&nbsp;' : esc(ch)}</span>`).join('');
     requestAnimationFrame(() => h.classList.add('booming'));

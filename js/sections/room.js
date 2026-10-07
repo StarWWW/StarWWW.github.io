@@ -522,8 +522,8 @@ export function initRoom(canvas) {
     const h = hit(...at(e));
     if (!h) return;
     const say = (who, t) => { for (let i = bubbles.length - 1; i >= 0; i--) if (bubbles[i].who === who) bubbles.splice(i, 1); bubbles.push({ who, text: t, until: frame + 20 }); };
-    const sfx = (n) => API.sfx?.play(n);
-    if (h.id === 'lamp') { lampOn = !lampOn; sfx('lamp'); }
+    const sfx = (n, o = {}) => API.sfx?.play(n, { x: e.clientX, ...o });
+    if (h.id === 'lamp') { lampOn = !lampOn; sfx('lamp', { k: lampOn ? 'on' : 'off' }); }
     else if (h.id === 'monitor') { sfx('beep'); API.terminal?.open?.(); }
     else if (h.id === 'speaker') { sfx('click'); API.music?.toggle?.(); }
     else if (h.id === 'window') {

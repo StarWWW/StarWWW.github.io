@@ -60,7 +60,7 @@ const CAT_TXT = {
     items: [
       ['star.lang · star.mode', ['Dil (TR/EN) ve REAL/DRUG modu', 'Language (TR/EN) and REAL/DRUG mode'], ['sen silene kadar', 'until you clear it']],
       ['star.vol · star.muted', ['MP3 çaların ses seviyesi', 'MP3 player volume'], ['sen silene kadar', 'until you clear it']],
-      ['star.sfx', ['Ses efektleri açık mı kapalı mı', 'Whether sound effects are on or off'], ['sen silene kadar', 'until you clear it']],
+      ['star.sfx · star.sfxVol', ['Ses efektleri açık mı, ses düzeyi', 'Whether sound effects are on, and their volume'], ['sen silene kadar', 'until you clear it']],
       ['star.sprayColor · star.spraySize', ['Sprey rengi ve uç kalınlığı', 'Spray colour and nozzle size'], ['sen silene kadar', 'until you clear it']],
       ['star.pv', ['Spotify önizleme adreslerinin önbelleği', 'Cache of Spotify preview addresses'], ['sen silene kadar', 'until you clear it']],
       ['star.visits · star.vno', ['"Selam tekrar!" karşılaması ve duvardaki ziyaretçi numaran', '"Welcome back!" greeting and your visitor number on the wall'], ['sen silene kadar', 'until you clear it']],

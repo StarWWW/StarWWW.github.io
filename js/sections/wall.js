@@ -61,7 +61,7 @@ export async function initWall() {
     const btn = $('#sprayToggle');
     btn.setAttribute('aria-pressed', String(on));
     $('#sprayState').textContent = on ? t('wl.on') : t('wl.off2');
-    API.sfx?.play(on ? 'shake' : 'toggleOff');
+    API.sfx?.play(on ? 'shake' : 'toggleOff', { el: $('#sprayToggle') });
     if (on) toast(t('wl.sprayHint'), 2600, { sound: false });
   }
   $('#sprayToggle').addEventListener('click', () => setSpray(!spraying));
@@ -174,7 +174,7 @@ export async function initWall() {
     const now = performance.now();
     const v = Math.hypot(e.clientX - hx, e.clientY - hy) / Math.max(8, now - ht);
     hx = e.clientX; hy = e.clientY; ht = now;
-    hiss.set(v / 2.5);
+    hiss.set(v / 2.5, e.clientX);
   }
   const end = () => { hiss?.stop(); hiss = null; finish(); };
   wall.addEventListener('pointerup', end);
