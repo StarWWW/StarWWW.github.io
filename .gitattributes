@@ -1,0 +1,2 @@
+# Kütüphaneler SRI (integrity) hash'iyle yüklenir: satır sonları asla değişmesin
+js/vendor/** -text

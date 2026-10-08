@@ -2,7 +2,7 @@ import { getSupabase, selectAll } from '../supabase.js';
 import { $, esc, store, toast, uuid, API } from '../util.js';
 import { t, onLang } from '../i18n.js';
 import { spriteSVG } from '../sprites.js';
-import { COLORS, MAX_POINTS, WALL_W, WALL_H, drawStroke, drawDrip, drawFull, weekStart, nextBuff, isoWeek } from '../spray.js';
+import { COLORS, SIZES, MAX_POINTS, WALL_W, WALL_H, drawStroke, drawDrip, drawFull, cleanStroke, cleanPoints, weekStart, nextBuff, isoWeek } from '../spray.js';
 
 const COLOR_NAMES = {
   '#99E550': ['Asit yeşil', 'Acid green'], '#DF7126': ['Turuncu', 'Orange'], '#D77BBA': ['Pembe', 'Pink'], '#5FCDE4': ['Camgöbeği', 'Cyan'],
@@ -22,6 +22,8 @@ export async function initWall() {
 
   let color = store.get('star.sprayColor', COLORS[0]);
   let size = store.get('star.spraySize', 22);
+  if (!COLORS.includes(color)) color = COLORS[0];
+  if (!SIZES.includes(size)) size = 22;
   let spraying = false;
   let sb = null;
   let channel = null;
@@ -193,10 +195,18 @@ export async function initWall() {
     channel.send({ type: 'broadcast', event: 'cur', payload: { cid: clientId, n: visitorNo, x, y, s: spraying } });
   }
   const remote = new Map();
-  function showCursor({ cid, n, x, y, s }) {
+  const MAX_REMOTE = 24;
+  const num01 = (v) => typeof v === 'number' && v >= 0 && v <= 1;
+  function showCursor(p) {
+    // canlı kanal herkese açık: gelen her mesaj doğrulanır
+    if (!p || typeof p.cid !== 'string' || p.cid.length > 64 || !num01(p.x) || !num01(p.y)) return;
+    const { cid, x, y } = p;
+    const n = Number.isInteger(p.n) && p.n >= 1 && p.n <= 999 ? p.n : '?';
+    const s = p.s === true;
     if (cid === clientId) return;
     let r = remote.get(cid);
     if (!r) {
+      if (remote.size >= MAX_REMOTE) return;
       const el = document.createElement('div');
       el.className = 'rcur';
       el.innerHTML = `<span class="ico"></span><b>${esc(t('wl.visitor', { n }))}</b>`;
@@ -236,10 +246,10 @@ export async function initWall() {
       const lastBuff = buff?.[0]?.at ? Date.parse(buff[0].at) : 0;
       const from = new Date(Math.max(since, lastBuff)).toISOString();
       try {
-        strokes = await selectAll(() => sb.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', from).order('created_at', { ascending: true }));
+        strokes = (await selectAll(() => sb.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', from).order('created_at', { ascending: true }))).map(cleanStroke).filter(Boolean);
       } catch (err) { console.warn('[wall] okunamadı', err); strokes = []; }
     } else {
-      strokes = store.get(LOCAL_KEY, []).filter((s) => Date.parse(s.created_at) >= since);
+      strokes = store.get(LOCAL_KEY, []).filter((s) => Date.parse(s.created_at) >= since).map(cleanStroke).filter(Boolean);
     }
     known.clear();
     strokes.forEach((s) => known.add(s.id));
@@ -282,11 +292,11 @@ export async function initWall() {
           selectAll(() => db.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', iso).order('created_at', { ascending: true })),
           db.from('wall_buffs').select('at').gte('at', iso).order('at', { ascending: true }),
         ]);
-        rows = list;
+        rows = list.map(cleanStroke).filter(Boolean);
         buffs = (bf.data || []).map((b) => Date.parse(b.at)).filter(Number.isFinite);
         if (buffs.length) curStart = Math.max(curStart, buffs[buffs.length - 1]);
       } else {
-        rows = store.get(LOCAL_KEY, []).filter((x) => Date.parse(x.created_at) >= start);
+        rows = store.get(LOCAL_KEY, []).filter((x) => Date.parse(x.created_at) >= start).map(cleanStroke).filter(Boolean);
       }
     } catch (err) {
       console.warn('[wall] arşiv okunamadı', err);
@@ -332,6 +342,20 @@ export async function initWall() {
     $('#wallLive').textContent = sb ? t('wl.live', { n }) : t('wl.offline');
   }
 
+  // canlı kanaldan gelen mesajlara saniyede üst sınır (kanalı biri doldurursa sayfa kasılmasın)
+  const MAX_LIVE = 40;
+  let budgetT = 0; let budgetN = 0;
+  function inBudget() {
+    const now = performance.now();
+    if (now - budgetT > 1000) { budgetT = now; budgetN = 0; }
+    return ++budgetN <= 150;
+  }
+  // tamamlanmayan canlı çizgiler bir süre sonra unutulsun (kaydı gelirse baştan çizilir)
+  setInterval(() => {
+    const now = Date.now();
+    live.forEach((s, id) => { if (now - s.t > 20000) { live.delete(id); known.delete(id); } });
+  }, 10000);
+
   async function connect() {
     sb = await getSupabase();
     const notice = $('#wallNotice');
@@ -344,18 +368,26 @@ export async function initWall() {
     notice.hidden = true;
     channel = sb.channel('wall', { config: { presence: { key: clientId }, broadcast: { self: false } } });
     channel
-      .on('broadcast', { event: 'cur' }, ({ payload }) => showCursor(payload))
+      .on('broadcast', { event: 'cur' }, ({ payload }) => { if (inBudget()) showCursor(payload); })
       .on('broadcast', { event: 'paint' }, ({ payload: p }) => {
+        // canlı kanal herkese açık: renk/boyut listede, noktalar 0–1 aralığında, çizgi başına en fazla MAX_POINTS
+        if (!inBudget() || !p || typeof p.id !== 'string' || p.id.length > 64 || !COLORS.includes(p.color) || !SIZES.includes(p.size)) return;
         if (known.has(p.id) && !live.has(p.id)) return;
         let s = live.get(p.id);
+        if (!s && live.size >= MAX_LIVE) return;
         if (!s) { s = { id: p.id, color: p.color, size: p.size, points: [], drips: [] }; live.set(p.id, s); known.add(p.id); }
+        s.t = Date.now();
         if (p.from !== s.points.length) return;
+        const pts = cleanPoints(p.pts, MAX_POINTS - s.points.length);
+        if (!pts?.length) return;
         const start = s.points.length;
-        s.points.push(...p.pts);
+        s.points.push(...pts);
         drawStroke(ctx, s, start);
       })
       .on('presence', { event: 'sync' }, () => liveLabel(Object.keys(channel.presenceState()).length))
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wall_strokes' }, ({ new: row }) => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wall_strokes' }, ({ new: raw }) => {
+        const row = cleanStroke(raw);
+        if (!row) return;
         const partial = live.get(row.id);
         if (partial) {
           drawStroke(ctx, row, partial.points.length);

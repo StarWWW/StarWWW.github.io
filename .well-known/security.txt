@@ -1,0 +1,4 @@
+Contact: https://github.com/StarWWW/StarWWW.github.io/security/advisories/new
+Expires: 2027-10-08T00:00:00.000Z
+Preferred-Languages: tr, en
+Canonical: https://starwww.dev/.well-known/security.txt

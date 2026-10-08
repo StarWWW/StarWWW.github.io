@@ -8,13 +8,25 @@
 //                  bulup preview_url'ye kaydeder. Her şarkı için bir kez çalışır; sitedeki çalar bunu çalar.
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// Tarayıcıdan sadece site (ve yerel geliştirme) çağırabilsin
+const ORIGINS = new Set(['https://starwww.dev', 'http://localhost:8080', 'http://127.0.0.1:8080']);
+const corsOf = (req: Request) => {
+  const origin = req.headers.get('Origin') ?? '';
+  return {
+    'Access-Control-Allow-Origin': ORIGINS.has(origin) ? origin : 'https://starwww.dev',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    Vary: 'Origin',
+  };
 };
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+const responder = (req: Request) => {
+  const cors = corsOf(req);
+  return {
+    cors,
+    json: (data: unknown, status = 200) =>
+      new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } }),
+  };
+};
 
 type Track = {
   spotify_id: string; spotify_url: string; title: string; artist: string; album: string | null;
@@ -134,25 +146,31 @@ function parseId(input: string): string | null {
 }
 
 Deno.serve(async (req) => {
+  const { cors, json } = responder(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method !== 'POST') return json({ error: 'POST gerekli' }, 405);
 
   let body: { q?: string; offset?: number; track?: string; preview?: number | string } = {};
   try { body = await req.json(); } catch { /* boş */ }
 
   // herkese açık: şarkının Spotify önizlemesini bul ve kaydet ('' = Spotify'da önizlemesi yok)
   if (body.preview != null) {
+    const trackId = Number(body.preview);
+    if (!Number.isSafeInteger(trackId) || trackId <= 0) return json({ error: 'geçersiz şarkı' }, 400);
     try {
       const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-      const { data: tr, error } = await db.from('tracks').select('id,spotify_id,preview_url').eq('id', body.preview).maybeSingle();
+      const { data: tr, error } = await db.from('tracks').select('id,spotify_id,preview_url').eq('id', trackId).maybeSingle();
       if (error) throw error;
       if (!tr) return json({ error: 'şarkı yok' }, 404);
       if (isSpPreview(tr.preview_url) || tr.preview_url === '') return json({ preview_url: tr.preview_url || null, cached: true });
-      if (!tr.spotify_id) return json({ preview_url: null });
+      if (!tr.spotify_id || !/^[A-Za-z0-9]{22}$/.test(tr.spotify_id)) return json({ preview_url: null });
       const pv = previewOf(await embedEntity(tr.spotify_id));
       await db.from('tracks').update({ preview_url: pv ?? '' }).eq('id', tr.id);
       return json({ preview_url: pv });
     } catch (e) {
-      return json({ error: String(e) }, 500);
+      // ayrıntı sadece Supabase günlüğünde; herkese açık yanıtta iç bilgi yok
+      console.error('[preview]', e);
+      return json({ error: 'önizleme alınamadı' }, 500);
     }
   }
 

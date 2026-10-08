@@ -127,7 +127,8 @@ export function copyText(text) {
 // Basit küfür filtresi; asıl koruma admin silmesi.
 const BAD = ['amk', 'aq', 'orospu', 'piç', 'sik', 'yarrak', 'göt', 'ananı', 'fuck', 'shit', 'nigger', 'faggot', 'cunt'];
 export function cleanText(s) {
-  let out = String(s || '').replace(/\s+/g, ' ').trim();
+  // görünmez / yön değiştiren karakterler atılır (veritabanı da kabul etmez: supabase/migrations/004_guvenlik.sql)
+  let out = String(s || '').replace(/\s+/g, ' ').replace(/[\u0000-\u001F\u007F-\u009F­​-‏‪-‮⁠-⁩﻿]/g, '').trim();
   for (const w of BAD) out = out.replace(new RegExp(`(^|[^\\p{L}])(${w})(?=[^\\p{L}]|$)`, 'giu'), (m, a, b) => a + '*'.repeat(b.length));
   return out;
 }

@@ -6,7 +6,7 @@ import { esc, fmtDur, toast, API } from './util.js';
 import { getLang } from './i18n.js';
 import { pixelate, dominantColor, DB32 } from './pixelate.js';
 import { CATS } from './sections/skills.js';
-import { drawFull, weekStart, WALL_W, WALL_H } from './spray.js';
+import { drawFull, cleanStroke, weekStart, WALL_W, WALL_H } from './spray.js';
 
 const L = (tr, en) => (getLang() === 'en' ? en : tr);
 // kırık görseller (CSP satır içi onerror'a izin vermez)
@@ -666,7 +666,8 @@ async function modTab(body) {
     const from = new Date(Math.max(weekStart(), buff?.[0]?.at ? Date.parse(buff[0].at) : 0)).toISOString();
     const { data, error } = await sb.from('wall_strokes').select('id,color,size,points,drips,created_at').gte('created_at', from).order('created_at', { ascending: true }).limit(5000);
     if (error) { toast(error.message); return; }
-    strokes = data;
+    // bozuk kayıt çizilmez ama listede kalır (silinebilsin)
+    strokes = (data || []).map((s) => cleanStroke(s) || { ...s, points: [], drips: [] });
     sel = null;
     body.querySelector('#wDelSel').disabled = true;
     body.querySelector('#wCount').textContent = `${strokes.length} ${L('ÇİZGİ', 'STROKES')}`;

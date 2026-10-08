@@ -6,6 +6,31 @@ export const WALL_H = 800;
 export const COLORS = ['#99E550', '#DF7126', '#D77BBA', '#5FCDE4', '#FBF236', '#AC3232', '#FFFFFF', '#222034'];
 export const SIZES = [10, 22, 40];
 export const MAX_POINTS = 600;
+export const MAX_DRIPS = 12;
+const MAX_DRIP_LEN = 0.2;
+
+// Dışarıdan gelen (veritabanı, canlı yayın, eski yerel kayıt) her çizgi buradan geçer: renk/boyut listede olmalı,
+// noktalar 0–1 aralığında sayı çifti olmalı. Bozuk ya da kötü niyetli bir kayıt duvarı dondurmasın diye.
+const unit = (v) => typeof v === 'number' && v >= 0 && v <= 1;
+export function cleanPoints(list, max = MAX_POINTS) {
+  if (!Array.isArray(list)) return null;
+  const out = [];
+  for (let i = 0; i < list.length && out.length < max; i++) {
+    const p = list[i];
+    if (Array.isArray(p) && p.length === 2 && unit(p[0]) && unit(p[1])) out.push([p[0], p[1]]);
+  }
+  return out;
+}
+export function cleanStroke(st) {
+  if (!st || typeof st !== 'object' || !COLORS.includes(st.color) || !SIZES.includes(st.size)) return null;
+  if (typeof st.id !== 'string' || st.id.length > 64) return null;
+  const points = cleanPoints(st.points);
+  if (!points?.length) return null;
+  const drips = (Array.isArray(st.drips) ? st.drips : []).slice(0, MAX_DRIPS)
+    .filter((d) => Array.isArray(d) && d.length === 3 && unit(d[0]) && unit(d[1]) && typeof d[2] === 'number' && d[2] >= 0 && d[2] <= MAX_DRIP_LEN)
+    .map((d) => [d[0], d[1], d[2]]);
+  return { ...st, points, drips };
+}
 
 const rgba = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
@@ -60,7 +85,8 @@ export function drawStroke(ctx, st, fromIdx = 0, scale = 1) {
     if (!prev) { put(px * W, py * H); prev = pts[i]; continue; }
     const qx = prev[0] * W; const qy = prev[1] * H;
     const dx = px * W - qx; const dy = py * H - qy;
-    const steps = Math.max(1, Math.floor(Math.hypot(dx, dy) / (spacing * scale)));
+    // üst sınır: duvarın köşegeni bile ~600 adımda biter
+    const steps = Math.min(1200, Math.max(1, Math.floor(Math.hypot(dx, dy) / (spacing * scale))));
     for (let s = 1; s <= steps; s++) put(qx + (dx * s) / steps, qy + (dy * s) / steps);
     prev = pts[i];
   }

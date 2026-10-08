@@ -4,20 +4,34 @@
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const RAWG = 'https://api.rawg.io/api';
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+// Tarayıcıdan sadece site (ve yerel geliştirme) çağırabilsin
+const ORIGINS = new Set(['https://starwww.dev', 'http://localhost:8080', 'http://127.0.0.1:8080']);
+const corsOf = (req: Request) => {
+  const origin = req.headers.get('Origin') ?? '';
+  return {
+    'Access-Control-Allow-Origin': ORIGINS.has(origin) ? origin : 'https://starwww.dev',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    Vary: 'Origin',
+  };
 };
-const json = (data: unknown, status = 200) =>
-  new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
+const responder = (req: Request) => {
+  const cors = corsOf(req);
+  return {
+    cors,
+    json: (data: unknown, status = 200) =>
+      new Response(JSON.stringify(data), { status, headers: { ...cors, 'Content-Type': 'application/json' } }),
+  };
+};
 
 type Named = { name: string };
 const names = (a?: Named[]) => (a ?? []).map((x) => x.name);
 const platforms = (g: { parent_platforms?: { platform: Named }[] }) => (g.parent_platforms ?? []).map((p) => p.platform.name);
 
 Deno.serve(async (req) => {
+  const { cors, json } = responder(req);
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
+  if (req.method !== 'POST') return json({ error: 'POST gerekli' }, 405);
 
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
@@ -47,6 +61,7 @@ Deno.serve(async (req) => {
 
     if (body.id) {
       const id = Number(body.id);
+      if (!Number.isSafeInteger(id) || id <= 0) return json({ error: 'geçersiz id' }, 400);
       const [g, st] = await Promise.all([
         fetch(`${RAWG}/games/${id}?key=${key}`).then((r) => r.json()),
         fetch(`${RAWG}/games/${id}/stores?key=${key}`).then((r) => r.json()).catch(() => ({})),

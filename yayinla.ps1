@@ -45,22 +45,30 @@ if ((Test-Path '.git/rebase-merge') -or (Test-Path '.git/rebase-apply') -or (Tes
   Bitir 1
 }
 
-# Güvenlik: gizli Supabase anahtarı (service_role) asla siteye gitmesin
-$cfgYol = 'js/config.js'
-if (Test-Path -LiteralPath $cfgYol) {
-  $cfg = Get-Content -LiteralPath $cfgYol -Raw -Encoding UTF8
-  foreach ($m in [regex]::Matches($cfg, 'eyJ[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+)\.[A-Za-z0-9_-]+')) {
+# Güvenlik: gönderilecek dosyalarda gizli anahtar olmasın
+# (Supabase service_role / sb_secret anahtarı, özel anahtar dosyası, GitHub token'ı)
+$adaylar = @(git -c core.quotepath=off diff --name-only HEAD 2>$null) + @(git -c core.quotepath=off ls-files --others --exclude-standard)
+$sizinti = @()
+foreach ($dosya in ($adaylar | Where-Object { $_ } | Sort-Object -Unique)) {
+  if ($dosya -match '^(assets/|js/vendor/)' -or -not (Test-Path -LiteralPath $dosya -PathType Leaf)) { continue }
+  if ((Get-Item -LiteralPath $dosya).Length -gt 2MB) { continue }
+  $icerik = Get-Content -LiteralPath $dosya -Raw -Encoding UTF8
+  if (-not $icerik) { continue }
+  if ($icerik -cmatch 'sb_secret_[A-Za-z0-9_-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|\bgh[pousr]_[A-Za-z0-9]{30,}') { $sizinti += $dosya; continue }
+  foreach ($m in [regex]::Matches($icerik, 'eyJ[A-Za-z0-9_-]+\.([A-Za-z0-9_-]+)\.[A-Za-z0-9_-]+')) {
     $p = $m.Groups[1].Value.Replace('-', '+').Replace('_', '/')
     while ($p.Length % 4) { $p += '=' }
     try {
       $json = [System.Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p))
-      if ($json -match '"role"\s*:\s*"service_role"') {
-        Yaz 'DUR! js/config.js içinde GİZLİ service_role anahtarı var.' Red
-        Yaz 'Bunu yayınlarsan herkes veritabanına tam erişir. Supabase > Project Settings > API kısmındaki "anon public" anahtarını kullan.' Red
-        Bitir 1
-      }
+      if ($json -cmatch '"role"\s*:\s*"service_role"') { $sizinti += $dosya; break }
     } catch {}
   }
+}
+if ($sizinti) {
+  Yaz 'DUR! Şu dosyalarda GİZLİ bir anahtar var, hiçbir şey gönderilmedi:' Red
+  $sizinti | ForEach-Object { Yaz "  $_" Red }
+  Yaz 'Bunu yayınlarsan herkes görür. Sitede sadece Supabase > Project Settings > API kısmındaki "anon public" anahtarı olabilir.' Red
+  Bitir 1
 }
 
 # Gizli dosyalar yanlışlıkla eklenmesin

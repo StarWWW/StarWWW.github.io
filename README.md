@@ -40,7 +40,8 @@ js/config.js        ← AYARLAR (Supabase adresi/anahtarı burada)
 js/head.js          sayfa çizilmeden önce dil/mod/hareket ayarı (CSP yüzünden ayrı dosya)
 js/main.js          her şeyi başlatır
 js/consent.js       çerez / depolama izni (banner + tercih penceresi)
-js/fx.js            animasyon sistemi (GSAP + ScrollTrigger + SplitText + Lenis, CDN)
+js/fx.js            animasyon sistemi (GSAP + ScrollTrigger + SplitText + Lenis)
+js/vendor/          dış kütüphanelerin sabit sürümlü kopyaları (GSAP, Lenis, supabase-js); siteden yüklenir
 js/sections/*.js    bölümler
 js/game/game.js     Sayfayı Yok Et
 js/admin.js         Kontrol Odası
@@ -117,8 +118,9 @@ supabase.com → **New project**. Bölge olarak Frankfurt (eu-central-1) Türkiy
 2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve 43 yetenek; sadece bir kez).
 3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar).
 4. Yeni bir sorguda `supabase/migrations/003_kutu_kapak.sql` → **Run** (oyunlara `box_url` = DVD kutu kapağı; eski iTunes önizlemelerini temizler, çalar sadece Spotify önizlemesi çalar).
+5. Yeni bir sorguda `supabase/migrations/004_guvenlik.sql` → **Run** (güvenlik sıkılaştırması: ziyaretçi rollerinin yetkileri daraltılır, duvar çizgileri/defter notları/linkler veritabanında doğrulanır, toplam hız sınırı).
 
-Daha önce kurduysan sadece henüz çalıştırmadığın migration'ları çalıştır (002, 003). İkisi de tekrar çalıştırılabilir, bir şey bozmaz.
+Daha önce kurduysan sadece henüz çalıştırmadığın migration'ları çalıştır (002, 003, 004). Hepsi tekrar çalıştırılabilir, bir şey bozmaz.
 
 ### 3. Siteyi bağla
 **Project Settings → API**: `Project URL` ve `anon public` anahtarını `js/config.js` içine yaz:
@@ -197,17 +199,23 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
   <script type="text/plain" data-consent="analytics" data-src="https://analitik-araci.com/script.js"></script>
   ```
   İzin verildiği anda yüklenir. Ekledikten sonra `gizlilik.html` ve CSP'deki adresleri güncellemeyi unutma.
-- **Gizlilik politikası** (`gizlilik.html`): sitedeki gerçek veri akışına göre yazıldı (defter, duvar, skor, Kontrol Odası, Supabase/GitHub/jsDelivr/Spotify/Steam). Yeni bir hizmet ya da veri eklersen burayı da güncelle. Çerez tabloları `consent.js`'ten otomatik üretilir.
+- **Gizlilik politikası** (`gizlilik.html`): sitedeki gerçek veri akışına göre yazıldı (defter, duvar, skor, Kontrol Odası, Supabase/GitHub/Spotify/Steam). Yeni bir hizmet ya da veri eklersen burayı da güncelle. Çerez tabloları `consent.js`'ten otomatik üretilir.
 - Not: metin özenle hazırlandı ama hukuki danışmanlık yerine geçmez. Veri sorumlusu olarak takma adın kullanılıyor; KVKK açısından daha sağlam olsun istersen gerçek adını ve bir iletişim e-postasını `gizlilik.html` → 01. bölüme ekleyebilirsin.
 
 ## Güvenlik
 
-- **Content-Security-Policy** her sayfada `<meta>` olarak var: betikler sadece siteden ve jsDelivr'dan, bağlantılar sadece Supabase ve GitHub API'ye, ses sadece Spotify'ın önizleme sunucusundan. Yeni bir dış hizmet eklersen `index.html`'deki CSP satırına adresini ekle, yoksa tarayıcı engeller (konsolda "Refused to..." görürsün).
-- CDN betiklerinde **SRI** (integrity) var: GSAP/Lenis sürümünü değiştirirsen hash'leri de güncellemen gerekir.
-- `Referrer-Policy: strict-origin-when-cross-origin` (meta). HSTS'yi GitHub Pages kendisi gönderiyor.
-- GitHub Pages özel HTTP başlığına izin vermez: `X-Content-Type-Options`, `Permissions-Policy` ve tıklama tuzağı koruması (`frame-ancestors`) meta ile verilemez. Bunları da istersen siteyi Cloudflare gibi bir proxy arkasına alıp başlıkları orada ekleyebilirsin.
-- Kullanıcıdan gelen her metin (defter, skor adı) ekrana `esc()` ile basılır; veritabanında uzunluk/biçim kuralları ve hız sınırları var; yazma izinleri RLS ile korunur. Sitede gizli anahtar yok (`yayinla.ps1` `service_role` anahtarını yakalarsa göndermeyi durdurur).
-- Test kancaları (`?debug`, `__mount`) sadece `localhost`/`127.0.0.1`'de çalışır.
+- **Dışarıdan betik yok.** GSAP, Lenis ve supabase-js `js/vendor/` içinde, sabit sürümle siteden yüklenir. CSP `script-src 'self'`: bir CDN ya da npm paketi ele geçirilse bile siteye kod sızamaz, araya HTML sokulsa bile başka yerden betik yüklenemez.
+  - GSAP/Lenis dosyaları jsDelivr'daki orijinallerin birebir aynısı (SRI hash'leri tutuyor, `index.html`'de `integrity` olarak duruyor). supabase-js npm'deki imzalı paketten (`npm pack`, sha512 doğrulandı) alındı; nasıl güncelleneceği `js/supabase.js`'in başında yazıyor.
+  - `.gitattributes` bu dosyaların satır sonlarını kilitler (Windows `CRLF`'e çevirirse hash bozulur, betik yüklenmez).
+- **Content-Security-Policy** her sayfada `<meta>` olarak var: betikler sadece siteden, bağlantılar sadece Supabase ve GitHub API'ye, ses sadece Spotify'ın önizleme sunucusundan, eklentiler (`object`) kapalı. Yeni bir dış hizmet eklersen `index.html`'deki CSP satırına adresini ekle, yoksa tarayıcı engeller (konsolda "Refused to..." görürsün).
+- **HTTPS her zaman:** `.dev` uzantısı tarayıcıların HSTS ön yükleme listesinde; `starwww.dev` hiçbir tarayıcıda HTTP ile açılamaz. GitHub Pages'te "Enforce HTTPS" açık, sertifika Let's Encrypt.
+- **Tıklama tuzağı (clickjacking):** GitHub Pages `X-Frame-Options` / `frame-ancestors` başlığı gönderemez; `js/head.js` sayfa başka bir sitenin çerçevesinde açılırsa sayfayı gizler ve kendi adresine geçer.
+- **Veritabanı:** yazma izinlerini RLS korur (sadece `admins` tablosundakiler içerik değiştirebilir). `004_guvenlik.sql` ile ziyaretçi rolleri sadece gereken sütunlara ekleme yapabilir; duvar çizgileri (0–1 aralığında nokta), defter notları (görünmez/ters çeviren karakter yok, aynı not tekrar asılamaz) ve linkler (`javascript:` olamaz) veritabanında doğrulanır; kişi başı ve toplam hız sınırı var.
+- **Canlı duvar kanalı** herkese açık olduğu için gelen her mesaj tarayıcıda doğrulanır (renk/boyut listede, noktalar 0–1, çizgi başına 600 nokta, en fazla 24 uzak imleç, saniyede 150 mesaj). Veritabanından gelen çizgiler de aynı kontrolden geçer (`cleanStroke`, `js/spray.js`).
+- **Edge Function'lar** tarayıcıdan sadece `starwww.dev`'den (ve yerelde `localhost:8080`'den) çağrılabilir (CORS); herkese açık önizleme ucu iç hata ayrıntısı döndürmez. Dosyaları değiştirince Supabase'de yeniden **Deploy** etmen gerekir.
+- Kullanıcıdan gelen her metin (defter, skor adı) ekrana `esc()` ile basılır. Sitede gizli anahtar yok: `yayinla.ps1` gönderilecek her dosyada `service_role` / `sb_secret_` anahtarı, özel anahtar ya da GitHub token'ı görürse hiçbir şey göndermez.
+- `/.well-known/security.txt`: güvenlik açığı bildirmek isteyenler için iletişim adresi (yıllık yenilenmeli, `Expires` satırı).
+- `Referrer-Policy: strict-origin-when-cross-origin` (meta). Test kancaları (`?debug`, `__mount`) sadece `localhost`/`127.0.0.1`'de çalışır.
 
 ## SEO ve performans
 
@@ -240,7 +248,7 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 - İşletim sisteminde "hareketi azalt" açıksa (Windows: *Ayarlar → Erişilebilirlik → Görsel efektler → Animasyon efektleri* kapalı) site **FX: AZ** modunda açılır: süs döngüleri ve büyük hareketler durur, tuş geri bildirimleri kalır. İlk açılışta "TAM HAREKET" düğmeli bir bildirim çıkar.
 - Hero'daki **FX** anahtarı, footer'daki **FX** düğmesi ya da terminalde `fx tam` / `fx az` ile değiştirilir; seçim tarayıcıda hatırlanır.
 - Açılış ekranı oturum başına bir kez görünür; tıklayınca ya da bir tuşa basınca atlanır.
-- Kütüphaneler (GSAP, ScrollTrigger, SplitText, Lenis) jsDelivr'dan gelir; yüklenemezlerse site animasyonsuz ama eksiksiz çalışır.
+- Kütüphaneler (GSAP, ScrollTrigger, SplitText, Lenis) `js/vendor/`'dan gelir; yüklenemezlerse site animasyonsuz ama eksiksiz çalışır.
 
 ## Notlar
 

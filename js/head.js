@@ -3,6 +3,13 @@
 // Hareket tercihi (erişilebilirlik) zorunlu sayılır.
 (function () {
   var d = document.documentElement;
+  // Başka bir sitenin çerçevesinde (iframe) açılmasın: görünmez çerçeveyle tıklatma tuzağına (clickjacking) karşı.
+  // GitHub Pages X-Frame-Options / frame-ancestors başlığı gönderemediği için bunu betik yapar.
+  if (window.top !== window.self) {
+    d.style.display = 'none';
+    try { window.top.location.replace(window.self.location.href); } catch (e) { /* sandbox: sayfa gizli kalır */ }
+    return;
+  }
   var get = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
   var consent = null;
   try { consent = JSON.parse(get('star.consent') || 'null'); } catch (e) { consent = null; }
