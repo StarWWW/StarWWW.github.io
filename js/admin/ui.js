@@ -3,8 +3,11 @@
 import { esc, API } from '../util.js';
 import { getLang } from '../i18n.js';
 import { pixelate } from '../pixelate.js';
+import { spriteSVG } from '../sprites.js';
 
 export const L = (tr, en) => (getLang() === 'en' ? en : tr);
+// Sprite bulunamazsa (ör. yayından hemen sonra tarayıcıda eski sprites.js kalmışsa) panel çökmesin, ikon boş kalsın
+export const icon = (name, scale = 2) => { try { return spriteSVG(name, scale); } catch { return ''; } };
 export const sfx = (name, o) => API.sfx?.play(name, o);
 const locale = () => (getLang() === 'en' ? 'en-GB' : 'tr-TR');
 

@@ -2,9 +2,8 @@
 // Değişiklikler birikir; alttaki çubuktan (ya da Ctrl+S) tek seferde kaydedilir.
 import { esc, nameLang } from '../util.js';
 import { t } from '../i18n.js';
-import { spriteSVG } from '../sprites.js';
 import { CATS, rarity } from '../sections/skills.js';
-import { L, sfx, note, fail, ask, softDelete, levelHTML, setLevel } from './ui.js';
+import { icon, L, sfx, note, fail, ask, softDelete, levelHTML, setLevel } from './ui.js';
 
 const ICON = { diller: 'term', web: 'globe', veri: 'db', arac: 'wrench', oyun: 'brush' };
 const catName = (k) => t(CATS.find(([c]) => c === k)?.[1] || k);
@@ -42,7 +41,7 @@ export default {
 
     function chips() {
       const n = (k) => skills.filter((s) => k === 'all' || val(s, 'category') === k).length;
-      $('#sCats').innerHTML = [['all', L('TÜMÜ', 'ALL')], ...CATS.map(([k]) => [k, catName(k)])].map(([k, label]) => `<button type="button" role="tab" aria-selected="${k === cat}" data-cat="${k}">${k === 'all' ? '' : spriteSVG(ICON[k], 2)}${esc(label)} <em>${n(k)}</em></button>`).join('');
+      $('#sCats').innerHTML = [['all', L('TÜMÜ', 'ALL')], ...CATS.map(([k]) => [k, catName(k)])].map(([k, label]) => `<button type="button" role="tab" aria-selected="${k === cat}" data-cat="${k}">${k === 'all' ? '' : icon(ICON[k], 2)}${esc(label)} <em>${n(k)}</em></button>`).join('');
     }
     function dist() {
       const counts = [0, 0, 0, 0, 0, 0];
@@ -62,7 +61,7 @@ export default {
       const groups = CATS.filter(([k]) => cat === 'all' || k === cat).map(([k]) => {
         const items = skills.filter((s) => val(s, 'category') === k && (!q || val(s, 'name').toLocaleLowerCase('tr').includes(q)));
         if (!items.length) return '';
-        return `<h4>${spriteSVG(ICON[k], 2)} ${esc(catName(k))} <small>${items.filter((s) => val(s, 'level') > 0).length}/${items.length}</small></h4>
+        return `<h4>${icon(ICON[k], 2)} ${esc(catName(k))} <small>${items.filter((s) => val(s, 'level') > 0).length}/${items.length}</small></h4>
           ${items.map((s) => {
             const v = val(s, 'level');
             return `<div class="ad-sk-row r${rarity(v)}${dirty.has(s.id) ? ' dirty' : ''}" data-id="${s.id}">

@@ -370,6 +370,8 @@
 .ad-stage small { font-family: var(--f-px); font-size: 8px; text-align: center; color: var(--paper); opacity: .7; }
 .ad-stage-case { --w: 190px; }
 .ad-stage-case .case { --w: 190px; cursor: default; }
+.ad-case-fb { display: grid; place-items: center; width: 190px; height: 285px; border: 4px solid var(--ink); background: var(--c); overflow: hidden; font-family: var(--f-px); font-size: 14px; text-align: center; }
+.ad-case-fb img { width: 100%; height: 100%; object-fit: cover; }
 .ad-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 22px; align-content: start; }
 .ad-form .ad-check { grid-column: 1 / -1; padding: 10px 12px; border: 3px solid var(--ink); background: #fff; }
 .ad-drawer-f { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 14px 18px; border-top: var(--ad-line); background: var(--paper2); }
@@ -416,6 +418,9 @@
 .ad-gate-help p { font-size: 15px; }
 
 /* ---------- dar ekran ---------- */
+@media (max-width: 1320px) {
+  .ad-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 1180px) {
   .ad-dash-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ad-dash-cols > :last-child { grid-column: 1 / -1; }

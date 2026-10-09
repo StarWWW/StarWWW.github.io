@@ -36,8 +36,8 @@ export const SPRITES = {
 };
 
 function rows(name) {
-  const r = SPRITES[name];
-  if (!r) throw new Error(`sprite yok: ${name}`);
+  // bilinmeyen sprite sayfayı çökertmesin (ör. önbellekte eski sürüm): boş 1×1 çizilir
+  const r = SPRITES[name] || (console.warn(`sprite yok: ${name}`), ['.']);
   const w = Math.max(...r.map((x) => x.length));
   return { r: r.map((x) => x.padEnd(w, '.')), w, h: r.length };
 }

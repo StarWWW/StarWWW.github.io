@@ -1,7 +1,6 @@
 // KONTROL ODASI — 00 PANO: sayılar, yapılacaklar, son hareketler, sistem durumu.
 import { esc } from '../util.js';
-import { spriteSVG } from '../sprites.js';
-import { L, sfx, num, ago, ask, note, fail } from './ui.js';
+import { icon, L, sfx, num, ago, ask, note, fail } from './ui.js';
 import { summary, callFn, DAY, OLD_WEEKS } from './data.js';
 
 export default {
@@ -22,8 +21,8 @@ export default {
     let alive = true;
 
     function tiles(s) {
-      const t = (go, icon, n, label, sub, tone = '') => `<button type="button" class="ad-tile ${tone}" data-go="${go}" data-sfx="none">
-        <span class="ad-tile-ico">${spriteSVG(icon, 3)}</span><b${String(n).length > 6 ? ' class="long"' : ''}>${esc(n)}</b><span class="ad-tile-l">${esc(label)}</span><small>${esc(sub)}</small></button>`;
+      const t = (go, ico, n, label, sub, tone = '') => `<button type="button" class="ad-tile ${tone}" data-go="${go}" data-sfx="none">
+        <span class="ad-tile-ico">${icon(ico, 3)}</span><b${String(n).length > 6 ? ' class="long"' : ''}>${esc(n)}</b><span class="ad-tile-l">${esc(label)}</span><small>${esc(sub)}</small></button>`;
       el.querySelector('#dTiles').innerHTML = [
         t('music', 'note', num(s.tracks), L('ŞARKI', 'SONGS'), `${L('ÖNİZLEME', 'PREVIEW')} ${s.previews}/${s.tracks}`, s.previewTodo ? 'warn' : ''),
         t('games', 'pad', num(s.games), L('OYUN', 'GAMES'), s.nowPlaying ? `${L('ŞU AN', 'NOW')}: ${s.nowPlaying}` : L('şu an oynanan yok', 'nothing playing')),
@@ -45,7 +44,7 @@ export default {
       el.querySelector('#dTodoN').textContent = items.length ? String(items.length) : '✓';
       el.querySelector('#dTodo').innerHTML = items.length
         ? items.map((x) => `<li class="${x.tone || ''}"><span>${esc(x.text)}</span><button type="button" class="ad-b sm" ${x.go ? `data-go="${x.go}"` : `data-act="${x.id}"`}>${esc(x.act)} →</button></li>`).join('')
-        : `<li class="ad-ok">${spriteSVG('sparkle', 2)} ${esc(L('Her şey yolunda. Yapılacak bir şey yok.', 'All good. Nothing to do.'))}</li>`;
+        : `<li class="ad-ok">${icon('sparkle', 2)} ${esc(L('Her şey yolunda. Yapılacak bir şey yok.', 'All good. Nothing to do.'))}</li>`;
     }
 
     async function feed() {
@@ -68,7 +67,7 @@ export default {
       ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 12);
       if (!alive) return;
       el.querySelector('#dFeed').innerHTML = items.length
-        ? items.map((x) => `<li><span class="ad-feed-ico">${spriteSVG(x.icon, 2)}</span><span class="ad-feed-t">${x.html}</span><button type="button" class="ad-feed-at" data-go="${x.go}" title="${esc(new Date(x.at).toLocaleString())}">${esc(ago(x.at))}</button></li>`).join('')
+        ? items.map((x) => `<li><span class="ad-feed-ico">${icon(x.icon, 2)}</span><span class="ad-feed-t">${x.html}</span><button type="button" class="ad-feed-at" data-go="${x.go}" title="${esc(new Date(x.at).toLocaleString())}">${esc(ago(x.at))}</button></li>`).join('')
         : `<li class="ad-empty">${esc(L('Bu hafta sessiz geçti.', 'A quiet week.'))}</li>`;
     }
 

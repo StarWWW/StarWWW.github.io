@@ -119,7 +119,14 @@ function initKonami() {
 // ---------- admin ----------
 let adminMod = null;
 async function openAdmin() {
-  adminMod = adminMod || await import('./admin.js');
+  try {
+    adminMod = adminMod || await import('./admin.js');
+  } catch (err) {
+    // genelde yeni yayından hemen sonra önbellekte kalan eski bir dosya
+    console.error('[kontrol odası]', err);
+    toast(document.documentElement.lang === 'en' ? 'Control room failed to load — reload the page with Ctrl+F5.' : 'Kontrol Odası yüklenemedi — sayfayı Ctrl+F5 ile yenile.', 6000);
+    return;
+  }
   adminMod.openAdmin();
 }
 API.openAdmin = openAdmin;

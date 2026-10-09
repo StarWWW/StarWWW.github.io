@@ -4,8 +4,7 @@
 import { getSupabase } from './supabase.js';
 import { esc, toast, store, API } from './util.js';
 import { onLang, getLang, setLang } from './i18n.js';
-import { spriteSVG } from './sprites.js';
-import { L, sfx, setHost, note, ask, trapTab, dialogOpen, hasPending, flushDeletes, num } from './admin/ui.js';
+import { L, sfx, setHost, note, ask, trapTab, dialogOpen, hasPending, flushDeletes, num, icon } from './admin/ui.js';
 import { summary } from './admin/data.js';
 import dash from './admin/dash.js';
 import music from './admin/music.js';
@@ -71,14 +70,16 @@ export async function openAdmin() {
   await loadCSS();
   makeRoot();
   root.innerHTML = `<div class="ad-boot"><span class="ad-spin" aria-hidden="true"></span>${esc(L('KİMLİK KONTROL EDİLİYOR…', 'CHECKING WHO YOU ARE…'))}</div>`;
-  const authError = readAuthError();
-  const { data: { session } } = await sb.auth.getSession();
-  cleanAuthUrl();
-  user = session?.user || null;
-  if (!user) return renderLogin(authError);
-  const { data: adm } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
-  if (!adm) return renderNotAdmin();
-  renderShell();
+  try {
+    const authError = readAuthError();
+    const { data: { session } } = await sb.auth.getSession();
+    cleanAuthUrl();
+    user = session?.user || null;
+    if (!user) { renderLogin(authError); return; }
+    const { data: adm } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    if (!adm) { renderNotAdmin(); return; }
+    renderShell();
+  } catch (err) { renderCrash(err); }
 }
 
 // Yerel test için: sahte bir istemciyle paneli açar
@@ -89,7 +90,7 @@ export async function __mount(client, fakeUser, startTab = 'dash') {
   store.set(TAB_KEY, startTab);
   await loadCSS();
   makeRoot();
-  renderShell();
+  try { renderShell(); } catch (err) { renderCrash(err); }
 }
 
 export async function closeAdmin(force = false) {
@@ -144,11 +145,11 @@ function gate(inner) {
   root.innerHTML = `<div class="ad-gate">
     <button type="button" class="ad-gate-x" data-close data-sfx="none" aria-label="${esc(L('Kapat', 'Close'))}">✕</button>
     <div class="ad-gate-box">
-      <div class="ad-gate-top"><span>${spriteSVG('lock', 4)}</span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></div>
+      <div class="ad-gate-top"><span>${icon('lock', 4)}</span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></div>
       ${inner}
     </div>
   </div><div class="ad-notes" aria-live="polite"></div>`;
-  root.querySelector('[data-close]').addEventListener('click', () => closeAdmin());
+  root.querySelector('[data-close]').addEventListener('click', () => closeAdmin(true));
 }
 
 function renderLogin(authError) {
@@ -168,6 +169,18 @@ function renderLogin(authError) {
   gh.focus();
 }
 
+// Panel çizilemezse boş ekran kalmasın: ne olduğunu ve çaresini göster
+function renderCrash(err) {
+  console.error('[kontrol odası]', err);
+  if (!root) return;
+  inst = null; cur = null;
+  gate(`<h2>${esc(L('BİR ŞEY TERS GİTTİ', 'SOMETHING BROKE'))}</h2>
+    <p>${esc(L('Panel çizilemedi. Yeni bir yayından hemen sonra tarayıcı bazı eski dosyaları önbellekte tutuyor olabilir (GitHub Pages 10 dakika saklar): sayfayı Ctrl+F5 ile yenile.', 'The panel could not be drawn. Right after a new deploy the browser may still hold some old files in its cache (GitHub Pages keeps them for 10 minutes): reload with Ctrl+F5.'))}</p>
+    <code>${esc(err?.message || err)}</code>
+    <button type="button" class="ad-b acc big" data-reload>${esc(L('SAYFAYI YENİLE', 'RELOAD THE PAGE'))} ↻</button>`);
+  root.querySelector('[data-reload]').addEventListener('click', () => location.reload());
+}
+
 function renderNotAdmin() {
   gate(`<h2>${esc(L('YETKİN YOK', 'NO ACCESS'))}</h2>
     <p>${esc(L('Giriş yaptın ama bu hesap yönetici listesinde değil. Sen star isen aşağıdaki satırı Supabase SQL Editor\'da çalıştır, sonra sayfayı yenile:', 'You are signed in, but this account is not an admin. If you are star, run the line below in the Supabase SQL Editor, then reload:'))}</p>
@@ -182,14 +195,14 @@ function renderShell() {
   const name = meta.user_name || meta.preferred_username || user?.email || 'star';
   root.innerHTML = `<div class="ad-shell">
     <aside class="ad-side">
-      <div class="ad-brand"><span class="ad-brand-ico">${spriteSVG('star', 3)}</span><span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></span></div>
+      <div class="ad-brand"><span class="ad-brand-ico">${icon('star', 3)}</span><span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></span></div>
       <nav class="ad-nav" aria-label="${esc(L('Bölümler', 'Sections'))}">
         ${PAGES.map((p, i) => `<button type="button" data-go="${p.key}" data-sfx="none" aria-current="false">
-          <span class="ad-nav-ico">${spriteSVG(p.icon, 2)}</span><span class="ad-nav-n">0${i}</span><span class="ad-nav-l">${esc(p.label())}</span>
+          <span class="ad-nav-ico">${icon(p.icon, 2)}</span><span class="ad-nav-n">0${i}</span><span class="ad-nav-l">${esc(p.label())}</span>
           <em class="ad-badge" data-badge="${p.key}" hidden></em><kbd aria-hidden="true">${i}</kbd></button>`).join('')}
       </nav>
       <div class="ad-me">
-        ${meta.avatar_url ? `<img src="${esc(meta.avatar_url)}" alt="" data-fb="remove">` : `<span class="ad-me-ph">${spriteSVG('cursor', 2)}</span>`}
+        ${meta.avatar_url ? `<img src="${esc(meta.avatar_url)}" alt="" data-fb="remove">` : `<span class="ad-me-ph">${icon('cursor', 2)}</span>`}
         <span class="ad-me-t"><small>${esc(L('GİRİLDİ', 'SIGNED IN'))} · GITHUB</small><b>@${esc(name)}</b></span>
         <span class="ad-me-a"><button type="button" class="ad-me-b" data-adlang data-sfx="select" title="${esc(L('Switch to English', 'Türkçeye geç'))}">${getLang() === 'en' ? 'TR' : 'EN'}</button><button type="button" class="ad-me-b" data-logout data-sfx="none" title="${esc(L('Çıkış yap', 'Log out'))}">${esc(L('ÇIKIŞ', 'LOG OUT'))}</button></span>
       </div>

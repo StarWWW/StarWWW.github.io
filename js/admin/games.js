@@ -4,7 +4,8 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { CONFIG } from '../config.js';
 import { dominantColor, DB32 } from '../pixelate.js';
-import { casePreviewHTML } from '../sections/shelf.js';
+// isim yerine * ile: tarayıcıda eski shelf.js kalmışsa (yayından hemen sonra) panel yine açılsın
+import * as shelf from '../sections/shelf.js';
 import { L, sfx, note, fail, ask, softDelete, dragSort, saveOrder, artImg, hydrateArt, trapTab, isUrl } from './ui.js';
 import { callFn } from './data.js';
 
@@ -15,6 +16,8 @@ const steamId = (g) => g.steam_appid || String(g.store_url || '').match(/\/app\/
 const steamBox = (g) => (steamId(g) ? `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamId(g)}/library_600x900.jpg` : '');
 const boxOf = (g) => g.box_url || steamBox(g);
 const list = (s) => String(s || '').split(',').map((x) => x.trim()).filter(Boolean);
+const casePreview = (g) => (shelf.casePreviewHTML ? shelf.casePreviewHTML(g)
+  : `<span class="ad-case-fb" style="--c:${esc(g.color || '#AC3232')}">${boxOf(g) ? `<img src="${esc(boxOf(g))}" alt="">` : `<b>${esc(g.name)}</b>`}</span>`);
 const migNote = (msg) => (/box_url/.test(String(msg)) ? L(' — önce supabase/migrations/003_kutu_kapak.sql dosyasını SQL Editor\'de çalıştır.', ' — run supabase/migrations/003_kutu_kapak.sql in the SQL Editor first.') : '');
 
 export default {
@@ -222,7 +225,7 @@ export default {
         clearTimeout(rt);
         rt = setTimeout(() => {
           read();
-          wrap.querySelector('#gdCase').innerHTML = casePreviewHTML({ ...draft, name: draft.name || '?' });
+          wrap.querySelector('#gdCase').innerHTML = casePreview({ ...draft, name: draft.name || '?' });
         }, 90);
       };
       wrap.addEventListener('input', paint);
@@ -302,7 +305,7 @@ export default {
       }
 
       drawer = { wrap, dirty: () => { read(); return JSON.stringify(draft) !== initial; } };
-      wrap.querySelector('#gdCase').innerHTML = casePreviewHTML(draft);
+      wrap.querySelector('#gdCase').innerHTML = casePreview(draft);
       wrap.querySelector('[data-cnt]').textContent = `${(draft.note || '').length}/160`;
       sfx('slide');
       requestAnimationFrame(() => wrap.querySelector('[data-f="name"]').focus());
