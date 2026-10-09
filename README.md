@@ -18,7 +18,7 @@ Saf HTML/CSS/JS, derleme adımı yok — GitHub'a push et, yayında.
 | **Defter** | Ziyaretçi notları, gerçek zamanlı. |
 | **Gizli terminal** | <kbd>`</kbd> tuşu (1'in solundaki tuş). `help` yaz. |
 | **Sayfayı Yok Et** | Gizli. Nasıl açıldığı en alttaki "Gizli şeyler" bölümünde — sitede hiçbir yerde yazmıyor. |
-| **Kontrol Odası** | Terminalde `login`. Şarkı/oyun ara-ekle, yetenek puanla, duvar/defter/skor moderasyonu. |
+| **Kontrol Odası** | Terminalde `login` (ya da adrese `#admin`). Yan menülü yönetim paneli: **pano** (sayılar, yapılacaklar, son hareketler, sistem sağlığı), **müzik**, **oyunlar**, **yetenekler**, **duvar**, **defter**, **skorlar**. Sürükle-bırak sıralama, her şeyi düzenleme, 8 sn içinde geri alınabilir silme, canlı güncelleme, klavye kısayolları (<kbd>0</kbd>–<kbd>6</kbd>, <kbd>/</kbd>, <kbd>Ctrl</kbd>+<kbd>S</kbd>, <kbd>?</kbd>), TR/EN. |
 | **Footer** | Veda ekranı: kayan şerit, imlece tepki veren dev BYE, piksel piksel çizilen gece odası (lamba, monitör, hoparlör, pencere, kedi, EXIT kapısı tıklanabilir), site haritası, canlı oda durumu (İstanbul saati, çalan şarkı, oyun, duvar, defter). |
 | **Ses efektleri** | `js/sfx.js`: hepsi Web Audio ile anında sentezlenen sesler, ses dosyası yok. Küçük bir ses motoru: NES pulse dalgaları, FM çanlar, telli pluck, formantlı kedi miyavı, renkli gürültüler ve kick'ler; ortak oda yankısı (üretilmiş impulse response) + kararan bant ekosu, kompresör + limiter (hiçbir ses patlamaz). Sesler **stereo ve konumlu**: tıkladığın / olayın olduğu yerden gelir (soldaki bir düğme soldan duyulur, oyunda mermi sesi oyuncunun olduğu yerden). Üzerine gelme sesleri C-majör pentatonikte, menüde aşağı indikçe nota yükselir; her çalışta minik ton/zaman farkı (robotik tekrar olmasın). DRUG modunda koro + iki kat yankı açılır, bazı sesler sallanır. Aynı anda çok ses birikmesin diye sık tekrarlananlar seyreltilir. Tıklama ve üzerine gelme, hap yutma (REAL↔DRUG), terminal (açılış, tuş, Enter, hata), oyun kutusu (klak, disk, çevirme), duvarda sprey tıssı (hızlı çizince parlaklaşır), defter, kopyalama, bildirimler, footer odası (lamba, monitör, kedi miyavı, kapı gıcırtısı, kayan yıldız, UFO), DRUG sırları ve "sayfayı yok et" oyunu (ateş, kırılma, patlama, rütbe, başarım, boss). Üst bardaki hoparlör düğmesi ya da terminalde `ses aç` / `ses kapat` / `ses 0-10` (ses düzeyi); tercih çerez izniyle saklanır. Bir düğmeye özel ses: `data-sfx="ad"`, sessiz: `data-sfx="none"`. |
 | **Gizlilik + çerezler** | `gizlilik.html` (KVKK aydınlatma metni + gizlilik politikası, TR/EN) ve KVKK/GDPR'a uygun çerez onayı: Tümünü kabul et / Sadece zorunlu / Tercihleri yönet; kategoriler Zorunlu · Fonksiyonel · Analitik · Pazarlama. Footer'daki **Çerez Tercihleri** ile her an değiştirilir. |
@@ -44,7 +44,8 @@ js/fx.js            animasyon sistemi (GSAP + ScrollTrigger + SplitText + Lenis)
 js/vendor/          dış kütüphanelerin sabit sürümlü kopyaları (GSAP, Lenis, supabase-js); siteden yüklenir
 js/sections/*.js    bölümler
 js/game/game.js     Sayfayı Yok Et
-js/admin.js         Kontrol Odası
+js/admin.js         Kontrol Odası: kabuk (menü, kısayollar, canlı bağlantı, giriş ekranı)
+js/admin/*.js       Kontrol Odası sayfaları (pano, müzik, oyunlar, yetenekler, duvar, defter, skorlar) + ortak parçalar (ui.js, data.js)
 data/*.json         Supabase yokken kullanılan içerik
 supabase/           veritabanı şeması, başlangıç verisi, migration'lar, Edge Function'lar
 assets/             avatarlar, UltraTurk logosu, favicon
@@ -184,11 +185,15 @@ Duvar her pazartesi 00:00'da ya da Kontrol Odası'ndan **ŞİMDİ BUFF'LA** dedi
 
 ## İçerik güncelleme
 
-- **Şarkı ekle:** `login` → *Müzik Ekle* → Spotify'da ara (ya da linki yapıştır) → **+ EKLE**. Süre, albüm, parça no, yıl, tür, kapak ve 30 sn önizleme otomatik gelir.
-- **Oyun ekle:** *Oyun Ekle* → ara → **SEÇ** → durumu, notu, kutu rengini seç → **RAFA KOY**. Geliştirici, yayıncı, çıkış tarihi, tür, platform, kapak ve DVD kutu kapağı otomatik gelir.
-- **Oyun düzenle:** raf listesinde **NOT** (kutunun arkasındaki not), **KAPAK** (kutu kapağı resmi; boş = Steam kapağı ya da tasarlanmış kapak), durum ve "ŞU AN".
-- **Yetenek puanla:** *Yetenekler* → kaydırıcılar → **KAYDET**.
-- **Moderasyon:** *Duvar + Defter* → duvarda bir çizgiye tıkla → **SEÇİLİYİ SİL**; not ve skor silme; **ŞİMDİ BUFF'LA**.
+Hepsi **Kontrol Odası**'ndan (terminalde `login`). Sol menüdeki sayılar: turuncu = bakılması gereken (önizlemesi eksik şarkı, şüpheli skor), pembe = son 24 saatte yeni not.
+- **Pano:** her şeyin sayısı, **yapılacaklar** listesi (eksik önizleme, gizlilik politikasının söz verdiği 12 haftadan eski duvar çizgileri → tek tıkla sil, şüpheli skorlar, puansız yetenekler…), son hareketler ve sistem sağlığı (Supabase gecikmesi, canlı bağlantı, `spotify` / `game-search` fonksiyonları yayında mı, Spotify araması anahtarlı mı).
+- **Müzik:** tek kutuya şarkı adı *ya da* Spotify linki yaz → **+ EKLE**. Kitaplıkta ⠿ tutamağından sürükleyerek sırala, ▶ ile 30 sn önizlemeyi dinle (çalarken halka dolar), **?** önizlemeyi getirir, ✎ ile ad/sanatçı/albüm/yıl/tür/kapak düzelt.
+- **Oyunlar:** ara → **SEÇ** → sağdan açılan çekmecede rafta görünecek kutunun **canlı önizlemesiyle** her şeyi düzelt (ad, geliştirici, tür, platform, kutu kapağı, kutu rengi — *kapaktan* otomatik de seçilir —, durum, not, "şu an oynuyorum") → **RAFA KOY**. Raftaki oyunlarda da ✎ aynı çekmeceyi açar; ★ "şu an" rozetini verir (tek oyunda olur), ⠿ sırayı değiştirir.
+- **Yetenekler:** 10 piksel bloğa tıkla ya da bloklara odaklanıp ok tuşları / 0–9 ile puanla (renk = sitedeki nadirlik). Ada tıkla → yeniden adlandır, açılır listeden kategori değiştir. Değişiklikler birikir, alttaki çubuktan ya da <kbd>Ctrl</kbd>+<kbd>S</kbd> ile kaydedilir; kaydetmeden sayfadan çıkarsan sorar.
+- **Duvar:** çizgiye tıkla ya da **KUTU** aracıyla alan seç (Shift = ekle, Delete = sil, Esc = bırak). **Çizenler** listesinden bir kişinin bu dönemdeki tüm çizgilerini tek tıkla seç (vandal temizliği). Zaman çubuğu ve **▶ OYNAT** duvarın nasıl çizildiğini gösterir. **ŞİMDİ BUFF'LA** duvarı herkes için temizler (çizgiler arşivde kalır). Yeni çizgiler canlı düşer.
+- **Defter:** notları ara, kartları seçip topluca sil; yeni notlar canlı düşer.
+- **Skorlar:** ilk 100. Çok kısa sürede ya da saniyede anormal puanla yapılan skorlar ⚠ ile işaretlenir; **ŞÜPHELİLERİ SEÇ** → sil.
+- **Silme** her yerde 8 saniye geri alınabilir (bildirimde **GERİ AL**). Panel kapanınca ya da süre dolunca gerçekten silinir.
 - **Projeler:** kartlar `index.html` içinde (`<!-- 02 PROJELER -->`). 2048 AI LAB kartında "kaynak kodu ve canlı demo yakında" yazıyor — linkler hazır olunca o satırı (`g2048-soon`) gerçek bağlantılarla değiştir. Repo listesinde gizlemek istediklerini `data/projects.json` → `hideRepos`'a yaz.
 
 ## Gizlilik, çerezler ve KVKK

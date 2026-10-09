@@ -41,6 +41,12 @@ const art = (g) => `${coverGen(g)}${boxOf(g) ? `<img class="case-img" src="${esc
 const frontHTML = (g) => `<span class="case-band px"><b>PC</b><span>DVD-ROM</span><i>${spriteSVG('star', 2)}</i></span><span class="case-art">${art(g)}</span><span class="case-gloss" aria-hidden="true"></span>`;
 const spineHTML = (g) => `<span class="sp-band px">PC</span><span class="sp-title brut" lang="${nameLang(g.name)}">${esc(g.name)}</span><span class="sp-logo">${spriteSVG('star', 2)}</span>`;
 
+// Kontrol Odası'ndaki canlı önizleme: raftaki kutunun birebir aynısı (tıklanamaz)
+export const casePreviewHTML = (g) => `<span class="case${isDark(colorOf(g)) ? ' dark' : ''}${g.now_playing ? ' is-now' : ''}" style="--c:${esc(colorOf(g))}" aria-hidden="true">
+  <span class="case-3d"><span class="case-face case-spine">${spineHTML(g)}</span><span class="case-face case-front">${frontHTML(g)}</span></span>
+  <span class="case-shadow"></span>${g.now_playing ? `<span class="case-now px">${esc(t('gm.now'))}!</span>` : ''}<span class="case-tag px">${esc(t(stKey(g)))}</span>
+</span>`;
+
 function barcode(seed) {
   const rnd = mulberry32(hashStr(seed));
   let x = 0; let bars = '';
