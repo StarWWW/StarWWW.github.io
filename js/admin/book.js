@@ -12,16 +12,16 @@ export default {
   sub: () => L('Ziyaretçi notları. Kart seç → topluca sil; ✕ tek notu siler (8 sn içinde geri alınabilir).', 'Visitor notes. Select cards → delete in bulk; ✕ removes one (undo within 8 s).'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<section class="ad-card">
-      <div class="ad-tools wrap">
-        <label class="ad-check"><input type="checkbox" id="bAll"><span>${esc(L('TÜMÜNÜ SEÇ', 'SELECT ALL'))}</span></label>
-        <input class="ad-filter" id="bFilter" type="search" placeholder="${esc(L('notlarda ya da adlarda ara…', 'search notes or names…'))}" aria-label="${esc(L('Notlarda ara', 'Search notes'))}">
-        <span class="ad-hint" id="bInfo"></span>
-        <span class="ad-sp"></span>
-        <button type="button" class="ad-b sm red" id="bDel" disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
+    el.innerHTML = `<section class="ko-card">
+      <div class="ko-tools wrap">
+        <label class="ko-check"><input type="checkbox" id="bAll"><span>${esc(L('TÜMÜNÜ SEÇ', 'SELECT ALL'))}</span></label>
+        <input class="ko-filter" id="bFilter" type="search" placeholder="${esc(L('notlarda ya da adlarda ara…', 'search notes or names…'))}" aria-label="${esc(L('Notlarda ara', 'Search notes'))}">
+        <span class="ko-hint" id="bInfo"></span>
+        <span class="ko-sp"></span>
+        <button type="button" class="ko-b sm red" id="bDel" disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
       </div>
-      <ul class="ad-notegrid" id="bList"><li class="ad-empty">…</li></ul>
-      <div class="ad-more" id="bMoreW" hidden><button type="button" class="ad-b" id="bMore">${esc(L('DAHA FAZLA', 'MORE'))}</button></div>
+      <ul class="ko-notegrid" id="bList"><li class="ko-empty">…</li></ul>
+      <div class="ko-more" id="bMoreW" hidden><button type="button" class="ko-b" id="bMore">${esc(L('DAHA FAZLA', 'MORE'))}</button></div>
     </section>`;
     const $ = (s) => el.querySelector(s);
     let notes = [];
@@ -31,18 +31,18 @@ export default {
 
     const card = (n) => {
       const h = hashStr(String(n.id));
-      return `<li class="ad-gb${sel.has(n.id) ? ' sel' : ''}${fresh.has(n.id) ? ' fresh' : ''}" data-id="${esc(n.id)}" style="--note:${PAPER[h % PAPER.length]};--rot:${((h >> 4) % 5) - 2}deg">
-        <label class="ad-gb-pick"><input type="checkbox" data-pick ${sel.has(n.id) ? 'checked' : ''} aria-label="${esc(L('Seç', 'Select'))}: ${esc(n.message.slice(0, 40))}"></label>
-        ${fresh.has(n.id) ? `<em class="ad-gb-new">${esc(L('YENİ', 'NEW'))}</em>` : ''}
-        <p class="ad-gb-msg">${esc(n.message)}</p>
-        <p class="ad-gb-by">— ${esc(n.name)} · <span title="${esc(when(n.created_at))}">${esc(ago(n.created_at))}</span></p>
-        <button type="button" class="ad-gb-x" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}">✕</button>
+      return `<li class="ko-gb${sel.has(n.id) ? ' sel' : ''}${fresh.has(n.id) ? ' fresh' : ''}" data-id="${esc(n.id)}" style="--note:${PAPER[h % PAPER.length]};--rot:${((h >> 4) % 5) - 2}deg">
+        <label class="ko-gb-pick"><input type="checkbox" data-pick ${sel.has(n.id) ? 'checked' : ''} aria-label="${esc(L('Seç', 'Select'))}: ${esc(n.message.slice(0, 40))}"></label>
+        ${fresh.has(n.id) ? `<em class="ko-gb-new">${esc(L('YENİ', 'NEW'))}</em>` : ''}
+        <p class="ko-gb-msg">${esc(n.message)}</p>
+        <p class="ko-gb-by">— ${esc(n.name)} · <span title="${esc(when(n.created_at))}">${esc(ago(n.created_at))}</span></p>
+        <button type="button" class="ko-gb-x" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}">✕</button>
       </li>`;
     };
     function render() {
       const q = $('#bFilter').value.trim().toLocaleLowerCase('tr');
       const list = q ? notes.filter((n) => `${n.message} ${n.name}`.toLocaleLowerCase('tr').includes(q)) : notes;
-      $('#bList').innerHTML = list.map(card).join('') || `<li class="ad-empty">${esc(notes.length ? L('Eşleşen not yok.', 'No matching notes.') : L('Defter boş.', 'The guestbook is empty.'))}</li>`;
+      $('#bList').innerHTML = list.map(card).join('') || `<li class="ko-empty">${esc(notes.length ? L('Eşleşen not yok.', 'No matching notes.') : L('Defter boş.', 'The guestbook is empty.'))}</li>`;
       $('#bInfo').textContent = `${num(total)} ${L('NOT', 'NOTES')}${q ? ` · ${list.length} ${L('EŞLEŞME', 'MATCHES')}${notes.length < total ? L(' (yüklenenler içinde)', ' (among loaded)') : ''}` : ''}`;
       $('#bMoreW').hidden = notes.length >= total;
       tools();
@@ -56,7 +56,7 @@ export default {
     async function load(more = false) {
       const from = more ? notes.length : 0;
       const { data, count, error } = await sb.from('guestbook').select('id,name,message,created_at', { count: 'exact' }).order('created_at', { ascending: false }).range(from, from + PAGE - 1);
-      if (error) { $('#bList').innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
+      if (error) { $('#bList').innerHTML = `<li class="ko-err">${esc(error.message)}</li>`; return; }
       notes = more ? notes.concat(data || []) : (data || []);
       total = count ?? notes.length;
       render();

@@ -12,17 +12,17 @@ export default {
   sub: () => L('"Sayfayı Yok Et" skor tablosunun ilk 100\'ü. ⚠ işaretliler hile gibi duruyor (çok kısa süre ya da saniyede anormal puan).', 'The top 100 of the "Destroy the Page" leaderboard. ⚠ marks look like cheats (very short runs or abnormal points per second).'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<section class="ad-card">
-      <div class="ad-tools wrap">
-        <label class="ad-check"><input type="checkbox" id="cAll"><span>${esc(L('TÜMÜNÜ SEÇ', 'SELECT ALL'))}</span></label>
-        <label class="ad-check warn"><input type="checkbox" id="cSus"><span id="cSusL"></span></label>
-        <span class="ad-sp"></span>
-        <button type="button" class="ad-b sm" id="cPickSus">${esc(L('ŞÜPHELİLERİ SEÇ', 'SELECT SUSPICIOUS'))}</button>
-        <button type="button" class="ad-b sm red" id="cDel" disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
+    el.innerHTML = `<section class="ko-card">
+      <div class="ko-tools wrap">
+        <label class="ko-check"><input type="checkbox" id="cAll"><span>${esc(L('TÜMÜNÜ SEÇ', 'SELECT ALL'))}</span></label>
+        <label class="ko-check warn"><input type="checkbox" id="cSus"><span id="cSusL"></span></label>
+        <span class="ko-sp"></span>
+        <button type="button" class="ko-b sm" id="cPickSus">${esc(L('ŞÜPHELİLERİ SEÇ', 'SELECT SUSPICIOUS'))}</button>
+        <button type="button" class="ko-b sm red" id="cDel" disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
       </div>
-      <div class="ad-tablewrap"><table class="ad-table">
+      <div class="ko-tablewrap"><table class="ko-table">
         <thead><tr><th></th><th>#</th><th>${esc(L('AD', 'NAME'))}</th><th class="r">${esc(L('SKOR', 'SCORE'))}</th><th>${esc(L('RÜTBE', 'RANK'))}</th><th class="r">${esc(L('YIKIM', 'DESTR.'))}</th><th class="r">${esc(L('KOMBO', 'COMBO'))}</th><th class="r">${esc(L('SÜRE', 'TIME'))}</th><th class="r">${esc(L('PUAN/SN', 'PTS/S'))}</th><th>${esc(L('TARİH', 'DATE'))}</th><th></th></tr></thead>
-        <tbody id="cBody"><tr><td colspan="11" class="ad-empty">…</td></tr></tbody>
+        <tbody id="cBody"><tr><td colspan="11" class="ko-empty">…</td></tr></tbody>
       </table></div>
     </section>`;
     const $ = (s) => el.querySelector(s);
@@ -40,18 +40,18 @@ export default {
         const f = flags.get(r.id);
         return `<tr data-id="${r.id}" class="${sel.has(r.id) ? 'sel' : ''}${f ? ' sus' : ''}">
           <td><input type="checkbox" data-pick ${sel.has(r.id) ? 'checked' : ''} aria-label="${esc(L('Seç', 'Select'))}: ${esc(r.name)}"></td>
-          <td class="ad-n">${i < 3 ? ['①', '②', '③'][i] : i + 1}</td>
-          <td><b class="ad-arc">${esc(r.name)}</b>${f ? ` <span class="ad-flag" title="${esc(f)}">⚠ ${esc(f)}</span>` : ''}</td>
+          <td class="ko-n">${i < 3 ? ['①', '②', '③'][i] : i + 1}</td>
+          <td><b class="ko-arc">${esc(r.name)}</b>${f ? ` <span class="ko-flag" title="${esc(f)}">⚠ ${esc(f)}</span>` : ''}</td>
           <td class="r"><b>${num(r.score)}</b></td>
-          <td><span class="ad-rank r-${esc(String(r.rank).replace(/\W/g, ''))}">${esc(r.rank)}</span></td>
+          <td><span class="ko-rank r-${esc(String(r.rank).replace(/\W/g, ''))}">${esc(r.rank)}</span></td>
           <td class="r">${r.destruction != null ? `${r.destruction}%` : '—'}</td>
           <td class="r">${r.best_combo != null ? `×${r.best_combo}` : '—'}</td>
           <td class="r">${dur(r.duration_s)}</td>
           <td class="r">${r.duration_s > 0 ? num(Math.round(r.score / r.duration_s)) : '—'}</td>
           <td>${esc(when(r.created_at))}</td>
-          <td><button type="button" class="ad-x" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}: ${esc(r.name)}">✕</button></td>
+          <td><button type="button" class="ko-x" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}: ${esc(r.name)}">✕</button></td>
         </tr>`;
-      }).join('') || `<tr><td colspan="11" class="ad-empty">${esc(rows.length ? L('Şüpheli skor yok ✓', 'No suspicious scores ✓') : L('Henüz skor yok.', 'No scores yet.'))}</td></tr>`;
+      }).join('') || `<tr><td colspan="11" class="ko-empty">${esc(rows.length ? L('Şüpheli skor yok ✓', 'No suspicious scores ✓') : L('Henüz skor yok.', 'No scores yet.'))}</td></tr>`;
       tools();
     }
     function tools() {
@@ -62,7 +62,7 @@ export default {
     }
     async function load() {
       const { data, error } = await sb.from('scores').select('id,name,score,rank,destruction,best_combo,duration_s,created_at').order('score', { ascending: false }).limit(100);
-      if (error) { $('#cBody').innerHTML = `<tr><td colspan="11" class="ad-err">${esc(error.message)}</td></tr>`; return; }
+      if (error) { $('#cBody').innerHTML = `<tr><td colspan="11" class="ko-err">${esc(error.message)}</td></tr>`; return; }
       rows = data || [];
       flags = flagScores(rows);
       render();

@@ -17,7 +17,7 @@ const steamBox = (g) => (steamId(g) ? `https://shared.akamai.steamstatic.com/sto
 const boxOf = (g) => g.box_url || steamBox(g);
 const list = (s) => String(s || '').split(',').map((x) => x.trim()).filter(Boolean);
 const casePreview = (g) => (shelf.casePreviewHTML ? shelf.casePreviewHTML(g)
-  : `<span class="ad-case-fb" style="--c:${esc(g.color || '#AC3232')}">${boxOf(g) ? `<img src="${esc(boxOf(g))}" alt="">` : `<b>${esc(g.name)}</b>`}</span>`);
+  : `<span class="ko-case-fb" style="--c:${esc(g.color || '#AC3232')}">${boxOf(g) ? `<img src="${esc(boxOf(g))}" alt="">` : `<b>${esc(g.name)}</b>`}</span>`);
 const migNote = (msg) => (/box_url/.test(String(msg)) ? L(' — önce supabase/migrations/003_kutu_kapak.sql dosyasını SQL Editor\'de çalıştır.', ' — run supabase/migrations/003_kutu_kapak.sql in the SQL Editor first.') : '');
 
 export default {
@@ -27,22 +27,22 @@ export default {
   sub: () => L('Oyun ara ve rafa koy; kutunun rengini, kapağını, durumunu ve notunu canlı önizlemeyle düzenle.', 'Search games and shelve them; edit the case color, cover, status and note with a live preview.'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<div class="ad-cols2">
-      <section class="ad-card">
-        <div class="ad-card-h"><b>${esc(L('OYUN EKLE', 'ADD GAMES'))}</b><span class="ad-chip">RAWG + STEAM</span></div>
-        <form class="ad-searchbar" id="gForm">
+    el.innerHTML = `<div class="ko-cols2">
+      <section class="ko-card">
+        <div class="ko-card-h"><b>${esc(L('OYUN EKLE', 'ADD GAMES'))}</b><span class="ko-chip">RAWG + STEAM</span></div>
+        <form class="ko-searchbar" id="gForm">
           <label class="sr" for="gQ">${esc(L('Oyun ara', 'Search games'))}</label>
           <input id="gQ" placeholder="ultrakill, outer wilds…" autocomplete="off" spellcheck="false">
-          <button class="ad-b acc">${esc(L('ARA', 'SEARCH'))} ↵</button>
+          <button class="ko-b acc">${esc(L('ARA', 'SEARCH'))} ↵</button>
         </form>
-        <p class="ad-hint" id="gHint">${esc(L('Bir sonuca tıkla: geliştirici, yayıncı, tür, platform, kapak ve DVD kutu kapağı kendiliğinden dolar, rafa koymadan önce hepsini düzeltebilirsin.', 'Click a result: developer, publisher, genre, platform, cover and DVD case art fill in automatically; you can fix everything before shelving it.'))}</p>
-        <ul class="ad-list" id="gRes"></ul>
+        <p class="ko-hint" id="gHint">${esc(L('Bir sonuca tıkla: geliştirici, yayıncı, tür, platform, kapak ve DVD kutu kapağı kendiliğinden dolar, rafa koymadan önce hepsini düzeltebilirsin.', 'Click a result: developer, publisher, genre, platform, cover and DVD case art fill in automatically; you can fix everything before shelving it.'))}</p>
+        <ul class="ko-list" id="gRes"></ul>
       </section>
-      <section class="ad-card">
-        <div class="ad-card-h"><b>${esc(L('RAF', 'SHELF'))}</b><span id="gCount"></span></div>
-        <div class="ad-tools"><input class="ad-filter" id="gFilter" type="search" placeholder="${esc(L('rafta süz…', 'filter the shelf…'))}" aria-label="${esc(L('Rafta süz', 'Filter the shelf'))}"></div>
-        <ul class="ad-list tall" id="gLib"><li class="ad-empty">…</li></ul>
-        <div class="ad-foot">${esc(L('⠿ sürükle = raftaki sıra · ★ = "şu an oynuyorum" rozeti (tek oyunda olur) · ✎ = her şeyi düzenle', '⠿ drag = order on the shelf · ★ = "now playing" badge (one game at a time) · ✎ = edit everything'))}</div>
+      <section class="ko-card">
+        <div class="ko-card-h"><b>${esc(L('RAF', 'SHELF'))}</b><span id="gCount"></span></div>
+        <div class="ko-tools"><input class="ko-filter" id="gFilter" type="search" placeholder="${esc(L('rafta süz…', 'filter the shelf…'))}" aria-label="${esc(L('Rafta süz', 'Filter the shelf'))}"></div>
+        <ul class="ko-list tall" id="gLib"><li class="ko-empty">…</li></ul>
+        <div class="ko-foot">${esc(L('⠿ sürükle = raftaki sıra · ★ = "şu an oynuyorum" rozeti (tek oyunda olur) · ✎ = her şeyi düzenle', '⠿ drag = order on the shelf · ★ = "now playing" badge (one game at a time) · ✎ = edit everything'))}</div>
       </section>
     </div>`;
     const $ = (s) => el.querySelector(s);
@@ -53,12 +53,12 @@ export default {
     let drawer = null;
 
     // ---------- raf ----------
-    const rowHTML = (g, i) => `<li class="ad-row gm" data-id="${g.id}">
-      <button type="button" class="ad-grip" data-drag data-sfx="none" aria-label="${esc(L('Sırayı değiştir', 'Reorder'))}: ${esc(g.name)}">⠿</button>
-      <span class="ad-n">${pad(i + 1)}</span>
-      <span class="ad-box" style="--c:${esc(g.color || '#AC3232')}">${boxOf(g) ? `<img src="${esc(boxOf(g))}" alt="" loading="lazy" data-fb="remove">` : `<b>${esc(g.name.charAt(0))}</b>`}</span>
-      <span class="ad-tt"><b>${esc(g.name)}</b><small><span class="ad-st" data-st="${esc(g.status)}">${esc(t(`st.${g.status}`))}</span>${g.now_playing ? ` <span class="ad-now">★ ${esc(L('ŞU AN', 'NOW'))}</span>` : ''}${g.note ? ` <span class="ad-has-note" title="${esc(g.note)}">✎ ${esc(L('not', 'note'))}</span>` : ''} ${esc(String(g.released || '').slice(0, 4))}</small></span>
-      <span class="ad-acts">
+    const rowHTML = (g, i) => `<li class="ko-row gm" data-id="${g.id}">
+      <button type="button" class="ko-grip" data-drag data-sfx="none" aria-label="${esc(L('Sırayı değiştir', 'Reorder'))}: ${esc(g.name)}">⠿</button>
+      <span class="ko-n">${pad(i + 1)}</span>
+      <span class="ko-box" style="--c:${esc(g.color || '#AC3232')}">${boxOf(g) ? `<img src="${esc(boxOf(g))}" alt="" loading="lazy" data-fb="remove">` : `<b>${esc(g.name.charAt(0))}</b>`}</span>
+      <span class="ko-tt"><b>${esc(g.name)}</b><small><span class="ko-st" data-st="${esc(g.status)}">${esc(t(`st.${g.status}`))}</span>${g.now_playing ? ` <span class="ko-now">★ ${esc(L('ŞU AN', 'NOW'))}</span>` : ''}${g.note ? ` <span class="ko-has-note" title="${esc(g.note)}">✎ ${esc(L('not', 'note'))}</span>` : ''} ${esc(String(g.released || '').slice(0, 4))}</small></span>
+      <span class="ko-acts">
         <button type="button" class="${g.now_playing ? 'on' : ''}" data-now aria-pressed="${g.now_playing}" title="${esc(L('"Şu an oynuyorum" rozeti', '"Now playing" badge'))}" aria-label="${esc(L('Şu an oynuyorum', 'Now playing'))}: ${esc(g.name)}">★</button>
         <button type="button" data-edit title="${esc(L('Düzenle', 'Edit'))}" aria-label="${esc(L('Düzenle', 'Edit'))}: ${esc(g.name)}">✎</button>
         <button type="button" class="del" data-del data-sfx="none" title="${esc(L('Raftan kaldır', 'Remove'))}" aria-label="${esc(L('Raftan kaldır', 'Remove'))}: ${esc(g.name)}">✕</button>
@@ -66,12 +66,12 @@ export default {
     </li>`;
     function renderShelf() {
       $('#gCount').textContent = `${shelf.length} ${L('OYUN', 'GAMES')}`;
-      libEl.innerHTML = shelf.length ? shelf.map(rowHTML).join('') : `<li class="ad-empty">${esc(L('Raf boş. Soldan oyun ara ve ekle.', 'The shelf is empty. Search and add games on the left.'))}</li>`;
+      libEl.innerHTML = shelf.length ? shelf.map(rowHTML).join('') : `<li class="ko-empty">${esc(L('Raf boş. Soldan oyun ara ve ekle.', 'The shelf is empty. Search and add games on the left.'))}</li>`;
       applyFilter();
     }
     async function loadShelf() {
       const { data, error } = await sb.from('games').select('*').order('sort', { ascending: true }).order('created_at', { ascending: true });
-      if (error) { libEl.innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
+      if (error) { libEl.innerHTML = `<li class="ko-err">${esc(error.message)}</li>`; return; }
       shelf = data || [];
       renderShelf();
     }
@@ -87,7 +87,7 @@ export default {
 
     dragSort(libEl, async (ids, prev) => {
       shelf = ids.map((id) => shelf.find((g) => String(g.id) === id));
-      libEl.querySelectorAll('.ad-n').forEach((n, i) => { n.textContent = pad(i + 1); });
+      libEl.querySelectorAll('.ko-n').forEach((n, i) => { n.textContent = pad(i + 1); });
       try {
         await saveOrder(sb, 'games', ids.map(Number), prev.map(Number));
         note(L('Raf sırası kaydedildi', 'Shelf order saved'), { type: 'ok' });
@@ -136,36 +136,36 @@ export default {
       const q = $('#gQ').value.trim();
       if (!q) return;
       const hint = $('#gHint');
-      hint.className = 'ad-hint busy'; hint.textContent = L('aranıyor…', 'searching…');
+      hint.className = 'ko-hint busy'; hint.textContent = L('aranıyor…', 'searching…');
       const r = await callFn(sb, CONFIG.gameSearchFn, { q });
       if (!r.ok) {
-        hint.className = 'ad-hint err';
+        hint.className = 'ko-hint err';
         hint.textContent = `${L('Oyun araması çalışmadı ("game-search" + RAWG_KEY — README → Adım 6)', 'Game search failed ("game-search" + RAWG_KEY — README → Step 6)')}: ${r.msg}`;
         sfx('error');
         return;
       }
       results = r.data.results || [];
-      hint.className = 'ad-hint';
+      hint.className = 'ko-hint';
       hint.textContent = L(`${results.length} sonuç — birine tıkla`, `${results.length} results — click one`);
       const owned = new Set(shelf.map((g) => g.rawg_id).filter(Boolean));
-      resEl.innerHTML = results.map((x, i) => `<li class="ad-row res" data-i="${i}">
+      resEl.innerHTML = results.map((x, i) => `<li class="ko-row res" data-i="${i}">
         ${artImg(x.cover, true)}
-        <span class="ad-tt"><b>${esc(x.name)}</b><small>${esc([String(x.released || '').slice(0, 4), (x.platforms || []).slice(0, 3).join(', ')].filter(Boolean).join(' · '))}</small></span>
-        <span class="ad-acts">${owned.has(x.id) ? `<button type="button" class="ok" disabled>✓ ${esc(L('RAFTA', 'SHELVED'))}</button>` : `<button type="button" class="add" data-pick>${esc(L('SEÇ', 'PICK'))} →</button>`}</span>
-      </li>`).join('') || `<li class="ad-empty">${esc(L('Sonuç yok.', 'No results.'))}</li>`;
+        <span class="ko-tt"><b>${esc(x.name)}</b><small>${esc([String(x.released || '').slice(0, 4), (x.platforms || []).slice(0, 3).join(', ')].filter(Boolean).join(' · '))}</small></span>
+        <span class="ko-acts">${owned.has(x.id) ? `<button type="button" class="ok" disabled>✓ ${esc(L('RAFTA', 'SHELVED'))}</button>` : `<button type="button" class="add" data-pick>${esc(L('SEÇ', 'PICK'))} →</button>`}</span>
+      </li>`).join('') || `<li class="ko-empty">${esc(L('Sonuç yok.', 'No results.'))}</li>`;
       hydrateArt(resEl);
     });
     resEl.addEventListener('click', async (e) => {
       const li = e.target.closest('[data-i]');
       if (!li || li.querySelector('.ok')) return;
       const x = results[Number(li.dataset.i)];
-      resEl.querySelectorAll('.ad-row').forEach((r) => r.classList.toggle('sel', r === li));
+      resEl.querySelectorAll('.ko-row').forEach((r) => r.classList.toggle('sel', r === li));
       const hint = $('#gHint');
-      hint.className = 'ad-hint busy'; hint.textContent = L(`${x.name}: detaylar çekiliyor…`, `${x.name}: fetching details…`);
+      hint.className = 'ko-hint busy'; hint.textContent = L(`${x.name}: detaylar çekiliyor…`, `${x.name}: fetching details…`);
       const r = await callFn(sb, CONFIG.gameSearchFn, { id: x.id });
-      if (!r.ok) { hint.className = 'ad-hint err'; hint.textContent = r.msg; sfx('error'); return; }
+      if (!r.ok) { hint.className = 'ko-hint err'; hint.textContent = r.msg; sfx('error'); return; }
       const d = r.data;
-      hint.className = 'ad-hint'; hint.textContent = L('Çekmecede düzelt, sonra RAFA KOY.', 'Fix it in the drawer, then PUT ON SHELF.');
+      hint.className = 'ko-hint'; hint.textContent = L('Çekmecede düzelt, sonra RAFA KOY.', 'Fix it in the drawer, then PUT ON SHELF.');
       const auto = await dominantColor(d.cover_url, '#AC3232');
       openDrawer({
         ...d, id: null, color: CART_COLORS.includes(auto) || DB32.includes(auto) ? auto : '#AC3232',
@@ -179,13 +179,13 @@ export default {
       const draft = { ...g };
       const initial = JSON.stringify(draft);
       const wrap = document.createElement('div');
-      wrap.className = 'ad-drawer';
-      const field = (k, label, val, o = {}) => `<label class="ad-fld${o.full ? ' full' : ''}"><span>${esc(label)}</span><input data-f="${k}" value="${esc(val ?? '')}" ${o.type ? `type="${o.type}"` : ''} ${o.ph ? `placeholder="${esc(o.ph)}"` : ''} autocomplete="off" spellcheck="false"></label>`;
-      wrap.innerHTML = `<div class="ad-drawer-box" role="dialog" aria-modal="true" aria-labelledby="gdT">
-        <div class="ad-drawer-h"><b id="gdT">${esc(mode === 'new' ? L('RAFA YENİ OYUN', 'NEW GAME') : L('OYUNU DÜZENLE', 'EDIT GAME'))}</b><button type="button" class="ad-dlg-x" data-x data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>
-        <div class="ad-drawer-b">
-          <div class="ad-stage"><div class="ad-stage-case" id="gdCase"></div><small>${esc(L('RAFTA BÖYLE GÖRÜNECEK · ÜSTÜNE GEL', 'THIS IS HOW IT LOOKS ON THE SHELF · HOVER IT'))}</small></div>
-          <div class="ad-form">
+      wrap.className = 'ko-drawer';
+      const field = (k, label, val, o = {}) => `<label class="ko-fld${o.full ? ' full' : ''}"><span>${esc(label)}</span><input data-f="${k}" value="${esc(val ?? '')}" ${o.type ? `type="${o.type}"` : ''} ${o.ph ? `placeholder="${esc(o.ph)}"` : ''} autocomplete="off" spellcheck="false"></label>`;
+      wrap.innerHTML = `<div class="ko-drawer-box" role="dialog" aria-modal="true" aria-labelledby="gdT">
+        <div class="ko-drawer-h"><b id="gdT">${esc(mode === 'new' ? L('RAFA YENİ OYUN', 'NEW GAME') : L('OYUNU DÜZENLE', 'EDIT GAME'))}</b><button type="button" class="ko-dlg-x" data-x data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>
+        <div class="ko-drawer-b">
+          <div class="ko-stage"><div class="ko-stage-case" id="gdCase"></div><small>${esc(L('RAFTA BÖYLE GÖRÜNECEK · ÜSTÜNE GEL', 'THIS IS HOW IT LOOKS ON THE SHELF · HOVER IT'))}</small></div>
+          <div class="ko-form">
             ${field('name', L('AD', 'NAME'), draft.name, { full: true })}
             ${field('developers', L('GELİŞTİRİCİ', 'DEVELOPER'), (draft.developers || []).join(', '), { ph: L('virgülle ayır', 'comma separated') })}
             ${field('publishers', L('YAYINCI', 'PUBLISHER'), (draft.publishers || []).join(', '), { ph: L('virgülle ayır', 'comma separated') })}
@@ -193,22 +193,22 @@ export default {
             ${field('metacritic', 'METACRITIC', draft.metacritic ?? '', { type: 'number' })}
             ${field('genres', L('TÜR', 'GENRE'), (draft.genres || []).join(', '), { full: true, ph: L('virgülle ayır', 'comma separated') })}
             ${field('platforms', 'PLATFORM', (draft.platforms || []).join(', '), { full: true, ph: 'PC, PlayStation…' })}
-            <label class="ad-fld full"><span>${esc(L('KUTU KAPAĞI (DİKEY RESİM)', 'CASE COVER (PORTRAIT IMAGE)'))}</span>
-              <span class="ad-inline"><input data-f="box_url" value="${esc(draft.box_url || '')}" placeholder="https://…" autocomplete="off" spellcheck="false">
-              ${steamBox(draft) ? `<button type="button" class="ad-b sm" data-steam>STEAM</button>` : ''}<button type="button" class="ad-b sm" data-nobox title="${esc(L('Boş bırakır: Steam kapağı varsa o, yoksa tasarlanmış kapak görünür', 'Clears it: the Steam cover if there is one, otherwise a designed cover'))}">${esc(L('VARSAYILAN', 'DEFAULT'))}</button></span></label>
+            <label class="ko-fld full"><span>${esc(L('KUTU KAPAĞI (DİKEY RESİM)', 'CASE COVER (PORTRAIT IMAGE)'))}</span>
+              <span class="ko-inline"><input data-f="box_url" value="${esc(draft.box_url || '')}" placeholder="https://…" autocomplete="off" spellcheck="false">
+              ${steamBox(draft) ? `<button type="button" class="ko-b sm" data-steam>STEAM</button>` : ''}<button type="button" class="ko-b sm" data-nobox title="${esc(L('Boş bırakır: Steam kapağı varsa o, yoksa tasarlanmış kapak görünür', 'Clears it: the Steam cover if there is one, otherwise a designed cover'))}">${esc(L('VARSAYILAN', 'DEFAULT'))}</button></span></label>
             ${field('cover_url', L('GENİŞ KAPAK (KUTUNUN ARKASI)', 'WIDE COVER (BACK OF THE CASE)'), draft.cover_url || '', { full: true, ph: 'https://…' })}
             ${field('store_url', L('MAĞAZA LİNKİ', 'STORE LINK'), draft.store_url || '', { full: true, ph: 'https://store.steampowered.com/app/…' })}
-            <div class="ad-fld full"><span>${esc(L('DURUM', 'STATUS'))}</span><div class="ad-seg" role="radiogroup" aria-label="${esc(L('Durum', 'Status'))}">${STATUSES.map((s) => `<button type="button" role="radio" aria-checked="${s === draft.status}" data-st="${s}">${esc(t(`st.${s}`))}</button>`).join('')}</div></div>
-            <div class="ad-fld full"><span>${esc(L('KUTU RENGİ', 'CASE COLOR'))}</span><div class="ad-sw" role="radiogroup" aria-label="${esc(L('Kutu rengi', 'Case color'))}">${[...new Set([...CART_COLORS, draft.color])].map((c) => `<button type="button" role="radio" aria-checked="${c === draft.color}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}<button type="button" class="ad-b sm" data-auto title="${esc(L('Kapak resminden renk seç', 'Pick the color from the cover'))}">${esc(L('KAPAKTAN', 'FROM COVER'))}</button></div></div>
-            <label class="ad-check full"><input type="checkbox" data-f="now_playing" ${draft.now_playing ? 'checked' : ''}><span>★ ${esc(L('"ŞU AN OYNUYORUM" ROZETİ (diğer oyundan kalkar)', '"NOW PLAYING" BADGE (removed from the other game)'))}</span></label>
-            <label class="ad-fld full"><span>${esc(L('NOTUN (KUTUNUN ARKASINDA)', 'YOUR NOTE (BACK OF THE CASE)'))} <em data-cnt></em></span><textarea data-f="note" rows="3" maxlength="160" placeholder="${esc(L('isteğe bağlı', 'optional'))}">${esc(draft.note || '')}</textarea></label>
+            <div class="ko-fld full"><span>${esc(L('DURUM', 'STATUS'))}</span><div class="ko-seg" role="radiogroup" aria-label="${esc(L('Durum', 'Status'))}">${STATUSES.map((s) => `<button type="button" role="radio" aria-checked="${s === draft.status}" data-st="${s}">${esc(t(`st.${s}`))}</button>`).join('')}</div></div>
+            <div class="ko-fld full"><span>${esc(L('KUTU RENGİ', 'CASE COLOR'))}</span><div class="ko-sw" role="radiogroup" aria-label="${esc(L('Kutu rengi', 'Case color'))}">${[...new Set([...CART_COLORS, draft.color])].map((c) => `<button type="button" role="radio" aria-checked="${c === draft.color}" data-c="${c}" style="--sw:${c}" aria-label="${c}"></button>`).join('')}<button type="button" class="ko-b sm" data-auto title="${esc(L('Kapak resminden renk seç', 'Pick the color from the cover'))}">${esc(L('KAPAKTAN', 'FROM COVER'))}</button></div></div>
+            <label class="ko-check full"><input type="checkbox" data-f="now_playing" ${draft.now_playing ? 'checked' : ''}><span>★ ${esc(L('"ŞU AN OYNUYORUM" ROZETİ (diğer oyundan kalkar)', '"NOW PLAYING" BADGE (removed from the other game)'))}</span></label>
+            <label class="ko-fld full"><span>${esc(L('NOTUN (KUTUNUN ARKASINDA)', 'YOUR NOTE (BACK OF THE CASE)'))} <em data-cnt></em></span><textarea data-f="note" rows="3" maxlength="160" placeholder="${esc(L('isteğe bağlı', 'optional'))}">${esc(draft.note || '')}</textarea></label>
           </div>
         </div>
-        <div class="ad-drawer-f"><span class="ad-hint err" id="gdErr"></span><button type="button" class="ad-b" data-x data-sfx="close">${esc(L('VAZGEÇ', 'CANCEL'))}</button><button type="button" class="ad-b acc" data-save data-sfx="none">${esc(mode === 'new' ? L('RAFA KOY', 'PUT ON SHELF') : L('KAYDET', 'SAVE'))} ↘</button></div>
+        <div class="ko-drawer-f"><span class="ko-hint err" id="gdErr"></span><button type="button" class="ko-b" data-x data-sfx="close">${esc(L('VAZGEÇ', 'CANCEL'))}</button><button type="button" class="ko-b acc" data-save data-sfx="none">${esc(mode === 'new' ? L('RAFA KOY', 'PUT ON SHELF') : L('KAYDET', 'SAVE'))} ↘</button></div>
       </div>`;
       // panelin köküne: sayfanın giriş animasyonu sabit konumlu çekmeceyi içine hapsetmesin
-      (el.closest('.ad') || el).append(wrap);
-      const box = wrap.querySelector('.ad-drawer-box');
+      (el.closest('.ko') || el).append(wrap);
+      const box = wrap.querySelector('.ko-drawer-box');
       const read = () => {
         const f = (k) => wrap.querySelector(`[data-f="${k}"]`);
         Object.assign(draft, {
@@ -281,7 +281,7 @@ export default {
             shelf.forEach((x) => { if (draft.now_playing) x.now_playing = false; });
             shelf.push(data);
             note(L(`Rafa kondu: ${draft.name}`, `On the shelf: ${draft.name}`), { type: 'ok' });
-            resEl.querySelector('.sel .ad-acts')?.replaceChildren(Object.assign(document.createElement('button'), { className: 'ok', disabled: true, textContent: `✓ ${L('RAFTA', 'SHELVED')}` }));
+            resEl.querySelector('.sel .ko-acts')?.replaceChildren(Object.assign(document.createElement('button'), { className: 'ok', disabled: true, textContent: `✓ ${L('RAFTA', 'SHELVED')}` }));
           } else {
             const { error } = await sb.from('games').update({ ...row, now_playing: draft.now_playing }).eq('id', g.id);
             if (error) throw error;

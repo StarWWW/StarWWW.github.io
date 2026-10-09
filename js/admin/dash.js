@@ -10,19 +10,19 @@ export default {
   sub: () => L('Odanın genel durumu: sayılar, yapılacaklar, son hareketler.', 'The state of the room: numbers, to-dos, latest activity.'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<div class="ad-dash">
-      <section class="ad-tiles" id="dTiles">${Array.from({ length: 6 }, () => '<div class="ad-tile sk"></div>').join('')}</section>
-      <div class="ad-dash-cols">
-        <section class="ad-card"><div class="ad-card-h"><b>${esc(L('YAPILACAKLAR', 'TO-DO'))}</b><span id="dTodoN"></span></div><ul class="ad-todo" id="dTodo"><li class="ad-empty">…</li></ul></section>
-        <section class="ad-card"><div class="ad-card-h"><b>${esc(L('SON HAREKETLER', 'LATEST ACTIVITY'))}</b><span>${esc(L('SON 7 GÜN', 'LAST 7 DAYS'))}</span></div><ul class="ad-feed" id="dFeed"><li class="ad-empty">…</li></ul></section>
-        <section class="ad-card"><div class="ad-card-h"><b>${esc(L('SİSTEM', 'SYSTEM'))}</b><button type="button" class="ad-b sm" id="dRecheck">${esc(L('YENİDEN KONTROL', 'RECHECK'))} ↻</button></div><ul class="ad-sys" id="dSys"></ul></section>
+    el.innerHTML = `<div class="ko-dash">
+      <section class="ko-tiles" id="dTiles">${Array.from({ length: 6 }, () => '<div class="ko-tile sk"></div>').join('')}</section>
+      <div class="ko-dash-cols">
+        <section class="ko-card"><div class="ko-card-h"><b>${esc(L('YAPILACAKLAR', 'TO-DO'))}</b><span id="dTodoN"></span></div><ul class="ko-todo" id="dTodo"><li class="ko-empty">…</li></ul></section>
+        <section class="ko-card"><div class="ko-card-h"><b>${esc(L('SON HAREKETLER', 'LATEST ACTIVITY'))}</b><span>${esc(L('SON 7 GÜN', 'LAST 7 DAYS'))}</span></div><ul class="ko-feed" id="dFeed"><li class="ko-empty">…</li></ul></section>
+        <section class="ko-card"><div class="ko-card-h"><b>${esc(L('SİSTEM', 'SYSTEM'))}</b><button type="button" class="ko-b sm" id="dRecheck">${esc(L('YENİDEN KONTROL', 'RECHECK'))} ↻</button></div><ul class="ko-sys" id="dSys"></ul></section>
       </div>
     </div>`;
     let alive = true;
 
     function tiles(s) {
-      const t = (go, ico, n, label, sub, tone = '') => `<button type="button" class="ad-tile ${tone}" data-go="${go}" data-sfx="none">
-        <span class="ad-tile-ico">${icon(ico, 3)}</span><b${String(n).length > 6 ? ' class="long"' : ''}>${esc(n)}</b><span class="ad-tile-l">${esc(label)}</span><small>${esc(sub)}</small></button>`;
+      const t = (go, ico, n, label, sub, tone = '') => `<button type="button" class="ko-tile ${tone}" data-go="${go}" data-sfx="none">
+        <span class="ko-tile-ico">${icon(ico, 3)}</span><b${String(n).length > 6 ? ' class="long"' : ''}>${esc(n)}</b><span class="ko-tile-l">${esc(label)}</span><small>${esc(sub)}</small></button>`;
       el.querySelector('#dTiles').innerHTML = [
         t('music', 'note', num(s.tracks), L('ŞARKI', 'SONGS'), `${L('ÖNİZLEME', 'PREVIEW')} ${s.previews}/${s.tracks}`, s.previewTodo ? 'warn' : ''),
         t('games', 'pad', num(s.games), L('OYUN', 'GAMES'), s.nowPlaying ? `${L('ŞU AN', 'NOW')}: ${s.nowPlaying}` : L('şu an oynanan yok', 'nothing playing')),
@@ -43,8 +43,8 @@ export default {
       if (!s.nowPlaying && s.games) items.push({ go: 'games', text: L('"Şu an oynuyorum" rozeti hiçbir oyunda yok', 'No game has the "now playing" badge'), act: L('SEÇ', 'PICK') });
       el.querySelector('#dTodoN').textContent = items.length ? String(items.length) : '✓';
       el.querySelector('#dTodo').innerHTML = items.length
-        ? items.map((x) => `<li class="${x.tone || ''}"><span>${esc(x.text)}</span><button type="button" class="ad-b sm" ${x.go ? `data-go="${x.go}"` : `data-act="${x.id}"`}>${esc(x.act)} →</button></li>`).join('')
-        : `<li class="ad-ok">${icon('sparkle', 2)} ${esc(L('Her şey yolunda. Yapılacak bir şey yok.', 'All good. Nothing to do.'))}</li>`;
+        ? items.map((x) => `<li class="${x.tone || ''}"><span>${esc(x.text)}</span><button type="button" class="ko-b sm" ${x.go ? `data-go="${x.go}"` : `data-act="${x.id}"`}>${esc(x.act)} →</button></li>`).join('')
+        : `<li class="ko-ok">${icon('sparkle', 2)} ${esc(L('Her şey yolunda. Yapılacak bir şey yok.', 'All good. Nothing to do.'))}</li>`;
     }
 
     async function feed() {
@@ -67,8 +67,8 @@ export default {
       ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 12);
       if (!alive) return;
       el.querySelector('#dFeed').innerHTML = items.length
-        ? items.map((x) => `<li><span class="ad-feed-ico">${icon(x.icon, 2)}</span><span class="ad-feed-t">${x.html}</span><button type="button" class="ad-feed-at" data-go="${x.go}" title="${esc(new Date(x.at).toLocaleString())}">${esc(ago(x.at))}</button></li>`).join('')
-        : `<li class="ad-empty">${esc(L('Bu hafta sessiz geçti.', 'A quiet week.'))}</li>`;
+        ? items.map((x) => `<li><span class="ko-feed-ico">${icon(x.icon, 2)}</span><span class="ko-feed-t">${x.html}</span><button type="button" class="ko-feed-at" data-go="${x.go}" title="${esc(new Date(x.at).toLocaleString())}">${esc(ago(x.at))}</button></li>`).join('')
+        : `<li class="ko-empty">${esc(L('Bu hafta sessiz geçti.', 'A quiet week.'))}</li>`;
     }
 
     // Sağlık: veritabanı, canlı bağlantı, Edge Function'lar (boş istek: yayındaysa "eksik parametre" der)
@@ -95,7 +95,7 @@ export default {
         fnRow(sp, 'spotify'),
         fnRow(gs, 'game-search'),
       ].join('')
-        + `<li class="ad-sys-x"><button type="button" class="ad-b sm" id="dSpTest">${esc(L('SPOTIFY ARAMASINI DENE', 'TEST SPOTIFY SEARCH'))}</button><span id="dSpRes"></span></li>`;
+        + `<li class="ko-sys-x"><button type="button" class="ko-b sm" id="dSpTest">${esc(L('SPOTIFY ARAMASINI DENE', 'TEST SPOTIFY SEARCH'))}</button><span id="dSpRes"></span></li>`;
     }
 
     function fill(s) {
@@ -127,7 +127,7 @@ export default {
       }
     });
 
-    fill(ctx.summary() || await summary(sb).catch((err) => { el.querySelector('#dTiles').innerHTML = `<div class="ad-err">${esc(err.message || err)}</div>`; return null; }));
+    fill(ctx.summary() || await summary(sb).catch((err) => { el.querySelector('#dTiles').innerHTML = `<div class="ko-err">${esc(err.message || err)}</div>`; return null; }));
     feed();
     system();
     return {

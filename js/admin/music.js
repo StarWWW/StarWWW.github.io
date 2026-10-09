@@ -14,27 +14,27 @@ export default {
   sub: () => L('Spotify\'dan şarkı ekle, sürükleyerek sırala, bilgileri düzelt; 30 sn önizlemeleri yönet.', 'Add songs from Spotify, drag to reorder, fix details, manage the 30-sec previews.'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<div class="ad-cols2">
-      <section class="ad-card">
-        <div class="ad-card-h"><b>${esc(L('ŞARKI EKLE', 'ADD SONGS'))}</b><span class="ad-chip sp">SPOTIFY</span></div>
-        <form class="ad-searchbar" id="mForm">
+    el.innerHTML = `<div class="ko-cols2">
+      <section class="ko-card">
+        <div class="ko-card-h"><b>${esc(L('ŞARKI EKLE', 'ADD SONGS'))}</b><span class="ko-chip sp">SPOTIFY</span></div>
+        <form class="ko-searchbar" id="mForm">
           <label class="sr" for="mQ">${esc(L('Şarkı adı ya da Spotify linki', 'Song name or Spotify link'))}</label>
           <input id="mQ" placeholder="${esc(L('şarkı adı ya da Spotify linki…', 'song name or Spotify link…'))}" autocomplete="off" spellcheck="false">
-          <button class="ad-b acc">${esc(L('BUL', 'FIND'))} ↵</button>
+          <button class="ko-b acc">${esc(L('BUL', 'FIND'))} ↵</button>
         </form>
-        <p class="ad-hint" id="mHint">${esc(L('İpucu: Spotify\'da şarkı → Paylaş → Şarkı bağlantısını kopyala, buraya yapıştır. Albüm, yıl, tür, kapak ve önizleme kendiliğinden gelir.', 'Tip: in Spotify, song → Share → Copy song link, paste it here. Album, year, genre, cover and preview come automatically.'))}</p>
+        <p class="ko-hint" id="mHint">${esc(L('İpucu: Spotify\'da şarkı → Paylaş → Şarkı bağlantısını kopyala, buraya yapıştır. Albüm, yıl, tür, kapak ve önizleme kendiliğinden gelir.', 'Tip: in Spotify, song → Share → Copy song link, paste it here. Album, year, genre, cover and preview come automatically.'))}</p>
         <div id="mEmbed"></div>
-        <ul class="ad-list" id="mRes"></ul>
+        <ul class="ko-list" id="mRes"></ul>
       </section>
-      <section class="ad-card">
-        <div class="ad-card-h"><b>${esc(L('KİTAPLIK', 'LIBRARY'))}</b><span id="mCount"></span></div>
-        <div class="ad-tools">
-          <input class="ad-filter" id="mFilter" type="search" placeholder="${esc(L('kitaplıkta süz…', 'filter the library…'))}" aria-label="${esc(L('Kitaplıkta süz', 'Filter the library'))}">
-          <span class="ad-meter" id="mMeter"><i></i><span></span></span>
-          <button type="button" class="ad-b sm" id="mPvAll">${esc(L('EKSİK ÖNİZLEMELERİ GETİR', 'FETCH MISSING PREVIEWS'))}</button>
+      <section class="ko-card">
+        <div class="ko-card-h"><b>${esc(L('KİTAPLIK', 'LIBRARY'))}</b><span id="mCount"></span></div>
+        <div class="ko-tools">
+          <input class="ko-filter" id="mFilter" type="search" placeholder="${esc(L('kitaplıkta süz…', 'filter the library…'))}" aria-label="${esc(L('Kitaplıkta süz', 'Filter the library'))}">
+          <span class="ko-meter" id="mMeter"><i></i><span></span></span>
+          <button type="button" class="ko-b sm" id="mPvAll">${esc(L('EKSİK ÖNİZLEMELERİ GETİR', 'FETCH MISSING PREVIEWS'))}</button>
         </div>
-        <ul class="ad-list tall" id="mLib"><li class="ad-empty">…</li></ul>
-        <div class="ad-foot">${esc(L('⠿ tutamağından sürükle (ya da tutamağa odaklanıp ↑/↓) — sitedeki sıra budur. ▶ önizlemeyi dinle, ✎ bilgileri düzelt.', 'Drag the ⠿ handle (or focus it and press ↑/↓) — this is the order on the site. ▶ plays the preview, ✎ edits details.'))}</div>
+        <ul class="ko-list tall" id="mLib"><li class="ko-empty">…</li></ul>
+        <div class="ko-foot">${esc(L('⠿ tutamağından sürükle (ya da tutamağa odaklanıp ↑/↓) — sitedeki sıra budur. ▶ önizlemeyi dinle, ✎ bilgileri düzelt.', 'Drag the ⠿ handle (or focus it and press ↑/↓) — this is the order on the site. ▶ plays the preview, ✎ edits details.'))}</div>
       </section>
     </div>`;
     const $ = (s) => el.querySelector(s);
@@ -65,14 +65,14 @@ export default {
     })[st];
     const rowHTML = (x, i) => {
       const st = pvState(x);
-      return `<li class="ad-row" data-id="${x.id}">
-        <button type="button" class="ad-grip" data-drag data-sfx="none" aria-label="${esc(L('Sırayı değiştir', 'Reorder'))}: ${esc(x.title)}">⠿</button>
-        <span class="ad-n">${pad(i + 1)}</span>
+      return `<li class="ko-row" data-id="${x.id}">
+        <button type="button" class="ko-grip" data-drag data-sfx="none" aria-label="${esc(L('Sırayı değiştir', 'Reorder'))}: ${esc(x.title)}">⠿</button>
+        <span class="ko-n">${pad(i + 1)}</span>
         ${artImg(x.artwork_url)}
-        <span class="ad-tt"><b>${esc(x.title)}${x.explicit ? ' <i class="ad-e" title="explicit">E</i>' : ''}</b><small>${esc([x.artist, x.album, x.year].filter(Boolean).join(' · '))}</small></span>
-        <span class="ad-d">${fmtDur(x.duration_ms)}</span>
-        <span class="ad-acts">
-          <button type="button" class="ad-pv ${st}" data-pv data-sfx="none" title="${esc(pvTitle(st))}" aria-label="${esc(pvTitle(st))}">${st === 'has' ? '▶' : st === 'none' ? '✕' : '?'}</button>
+        <span class="ko-tt"><b>${esc(x.title)}${x.explicit ? ' <i class="ko-e" title="explicit">E</i>' : ''}</b><small>${esc([x.artist, x.album, x.year].filter(Boolean).join(' · '))}</small></span>
+        <span class="ko-d">${fmtDur(x.duration_ms)}</span>
+        <span class="ko-acts">
+          <button type="button" class="ko-pv ${st}" data-pv data-sfx="none" title="${esc(pvTitle(st))}" aria-label="${esc(pvTitle(st))}">${st === 'has' ? '▶' : st === 'none' ? '✕' : '?'}</button>
           <button type="button" data-edit title="${esc(L('Bilgileri düzelt', 'Edit details'))}" aria-label="${esc(L('Düzenle', 'Edit'))}: ${esc(x.title)}">✎</button>
           <button type="button" class="del" data-del data-sfx="none" title="${esc(L('Sil', 'Delete'))}" aria-label="${esc(L('Sil', 'Delete'))}: ${esc(x.title)}">✕</button>
         </span>
@@ -87,14 +87,14 @@ export default {
       meter.querySelector('span').textContent = `${L('ÖNİZLEME', 'PREVIEW')} ${has}/${lib.length}`;
       meter.title = todo ? L(`${todo} şarkının önizlemesi bekliyor`, `${todo} previews pending`) : '';
       $('#mPvAll').disabled = !todo;
-      libEl.innerHTML = lib.length ? lib.map(rowHTML).join('') : `<li class="ad-empty">${esc(L('Kitaplık boş. Soldan şarkı bul ve ekle.', 'The library is empty. Find songs on the left and add them.'))}</li>`;
+      libEl.innerHTML = lib.length ? lib.map(rowHTML).join('') : `<li class="ko-empty">${esc(L('Kitaplık boş. Soldan şarkı bul ve ekle.', 'The library is empty. Find songs on the left and add them.'))}</li>`;
       hydrateArt(libEl);
       applyFilter();
       if (playing) markPlaying();
     }
     async function loadLib() {
       const { data, error } = await sb.from('tracks').select('*').order('sort', { ascending: true }).order('created_at', { ascending: true });
-      if (error) { libEl.innerHTML = `<li class="ad-err">${esc(error.message)}</li>`; return; }
+      if (error) { libEl.innerHTML = `<li class="ko-err">${esc(error.message)}</li>`; return; }
       lib = data || [];
       renderLib();
     }
@@ -110,7 +110,7 @@ export default {
 
     dragSort(libEl, async (ids, prev) => {
       lib = ids.map((id) => lib.find((x) => String(x.id) === id));
-      libEl.querySelectorAll('.ad-n').forEach((n, i) => { n.textContent = pad(i + 1); });
+      libEl.querySelectorAll('.ko-n').forEach((n, i) => { n.textContent = pad(i + 1); });
       try {
         const n = await saveOrder(sb, 'tracks', ids.map(Number), prev.map(Number));
         note(L(`Sıra kaydedildi (${n} şarkı yer değiştirdi)`, `Order saved (${n} songs moved)`), { type: 'ok' });
@@ -119,12 +119,12 @@ export default {
 
     // önizleme çalar
     function markPlaying() {
-      libEl.querySelectorAll('.ad-pv.playing').forEach((b) => { b.classList.remove('playing'); b.textContent = '▶'; b.style.removeProperty('--p'); });
-      const b = playing && libEl.querySelector(`[data-id="${playing}"] .ad-pv`);
+      libEl.querySelectorAll('.ko-pv.playing').forEach((b) => { b.classList.remove('playing'); b.textContent = '▶'; b.style.removeProperty('--p'); });
+      const b = playing && libEl.querySelector(`[data-id="${playing}"] .ko-pv`);
       if (b && !audio.paused) { b.classList.add('playing'); b.textContent = '❚❚'; }
     }
     audio.addEventListener('timeupdate', () => {
-      const b = playing && libEl.querySelector(`[data-id="${playing}"] .ad-pv`);
+      const b = playing && libEl.querySelector(`[data-id="${playing}"] .ko-pv`);
       if (b && audio.duration) b.style.setProperty('--p', audio.currentTime / audio.duration);
     });
     audio.addEventListener('ended', () => { playing = null; markPlaying(); });
@@ -227,27 +227,27 @@ export default {
     const have = () => new Set(lib.map((x) => x.spotify_id).filter(Boolean));
     function renderResults() {
       const ids = have();
-      resEl.innerHTML = (results.map((r, i) => `<li class="ad-row res" data-i="${i}">
+      resEl.innerHTML = (results.map((r, i) => `<li class="ko-row res" data-i="${i}">
         ${artImg(r.artwork_url)}
-        <span class="ad-tt"><b>${esc(r.title)}${r.explicit ? ' <i class="ad-e">E</i>' : ''}</b><small>${esc([r.artist, r.album, r.year].filter(Boolean).join(' · '))}</small></span>
-        <span class="ad-d">${fmtDur(r.duration_ms)}</span>
-        <span class="ad-acts"><button type="button" data-listen title="${esc(L('Dinle', 'Listen'))}" aria-label="${esc(L('Dinle', 'Listen'))}: ${esc(r.title)}">▶</button>${ids.has(r.spotify_id) ? `<button type="button" class="ok" disabled>✓ ${esc(L('EKLİ', 'ADDED'))}</button>` : `<button type="button" class="add" data-add data-sfx="none">+ ${esc(L('EKLE', 'ADD'))}</button>`}</span>
-      </li>`).join('') || (lastQ ? `<li class="ad-empty">${esc(L('Sonuç yok.', 'No results.'))}</li>` : ''))
-        + (lastQ && results.length < total ? `<li class="ad-more"><button type="button" class="ad-b" data-more>${esc(L('DAHA FAZLA', 'MORE'))} (${results.length}/${total})</button></li>` : '');
+        <span class="ko-tt"><b>${esc(r.title)}${r.explicit ? ' <i class="ko-e">E</i>' : ''}</b><small>${esc([r.artist, r.album, r.year].filter(Boolean).join(' · '))}</small></span>
+        <span class="ko-d">${fmtDur(r.duration_ms)}</span>
+        <span class="ko-acts"><button type="button" data-listen title="${esc(L('Dinle', 'Listen'))}" aria-label="${esc(L('Dinle', 'Listen'))}: ${esc(r.title)}">▶</button>${ids.has(r.spotify_id) ? `<button type="button" class="ok" disabled>✓ ${esc(L('EKLİ', 'ADDED'))}</button>` : `<button type="button" class="add" data-add data-sfx="none">+ ${esc(L('EKLE', 'ADD'))}</button>`}</span>
+      </li>`).join('') || (lastQ ? `<li class="ko-empty">${esc(L('Sonuç yok.', 'No results.'))}</li>` : ''))
+        + (lastQ && results.length < total ? `<li class="ko-more"><button type="button" class="ko-b" data-more>${esc(L('DAHA FAZLA', 'MORE'))} (${results.length}/${total})</button></li>` : '');
       hydrateArt(resEl);
     }
     function embed(r) {
       if (isSpPreview(r.preview_url)) { playing = null; audio.src = r.preview_url; audio.play().catch(() => {}); return; }
-      $('#mEmbed').innerHTML = `<div class="ad-embed"><iframe title="Spotify: ${esc(r.title)}" src="https://open.spotify.com/embed/track/${esc(r.spotify_id)}?utm_source=star" width="100%" height="80" allow="autoplay; clipboard-write; encrypted-media" loading="lazy"></iframe><button type="button" class="ad-embed-x" data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>`;
+      $('#mEmbed').innerHTML = `<div class="ko-embed"><iframe title="Spotify: ${esc(r.title)}" src="https://open.spotify.com/embed/track/${esc(r.spotify_id)}?utm_source=star" width="100%" height="80" allow="autoplay; clipboard-write; encrypted-media" loading="lazy"></iframe><button type="button" class="ko-embed-x" data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>`;
     }
-    $('#mEmbed').addEventListener('click', (e) => { if (e.target.closest('.ad-embed-x')) $('#mEmbed').innerHTML = ''; });
+    $('#mEmbed').addEventListener('click', (e) => { if (e.target.closest('.ko-embed-x')) $('#mEmbed').innerHTML = ''; });
 
     async function find(more = false) {
       const q = $('#mQ').value.trim();
       if (!q) return;
       const hint = $('#mHint');
       const id = q.match(SP_ID)?.[1] || (/^[A-Za-z0-9]{22}$/.test(q) ? q : null);
-      hint.className = 'ad-hint busy';
+      hint.className = 'ko-hint busy';
       try {
         if (id) {
           hint.textContent = L('Spotify\'dan bilgiler çekiliyor…', 'Fetching from Spotify…');
@@ -272,9 +272,9 @@ export default {
           renderResults();
           if (more) resEl.scrollTop = resEl.scrollHeight;
         }
-        hint.className = 'ad-hint';
+        hint.className = 'ko-hint';
       } catch (err) {
-        hint.className = 'ad-hint err';
+        hint.className = 'ko-hint err';
         hint.textContent = `${L('Spotify fonksiyonu çalışmadı (README → Adım 7)', 'The Spotify function failed (README → Step 7)')}: ${err.message || err}`;
         sfx('error');
       }

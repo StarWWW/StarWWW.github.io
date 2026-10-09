@@ -15,23 +15,23 @@ export default {
   sub: () => L('Bloklara tıkla ya da ok tuşlarıyla puanla. Puanı 0 olan sitede görünmez.', 'Click the blocks or use the arrow keys to rate. Items rated 0 are hidden on the site.'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<section class="ad-card">
-      <div class="ad-tools wrap">
-        <div class="ad-chips" id="sCats" role="tablist" aria-label="${esc(L('Kategori', 'Category'))}"></div>
-        <input class="ad-filter" id="sFilter" type="search" placeholder="${esc(L('yetenek ara…', 'find a skill…'))}" aria-label="${esc(L('Yetenek ara', 'Find a skill'))}">
+    el.innerHTML = `<section class="ko-card">
+      <div class="ko-tools wrap">
+        <div class="ko-chips" id="sCats" role="tablist" aria-label="${esc(L('Kategori', 'Category'))}"></div>
+        <input class="ko-filter" id="sFilter" type="search" placeholder="${esc(L('yetenek ara…', 'find a skill…'))}" aria-label="${esc(L('Yetenek ara', 'Find a skill'))}">
       </div>
-      <div class="ad-dist" id="sDist" aria-hidden="true"></div>
-      <div class="ad-sk" id="sList"><p class="ad-empty">…</p></div>
-      <form class="ad-sk-add" id="sAdd">
+      <div class="ko-dist" id="sDist" aria-hidden="true"></div>
+      <div class="ko-sk" id="sList"><p class="ko-empty">…</p></div>
+      <form class="ko-sk-add" id="sAdd">
         <label class="sr" for="sName">${esc(L('Yeni yetenek', 'New skill'))}</label><input id="sName" placeholder="${esc(L('yeni yetenek adı', 'new skill name'))}" maxlength="40" autocomplete="off">
         <label class="sr" for="sCat">${esc(L('Kategori', 'Category'))}</label><select id="sCat">${CATS.map(([k]) => `<option value="${k}">${esc(catName(k))}</option>`).join('')}</select>
-        <button class="ad-b">+ ${esc(L('EKLE', 'ADD'))}</button>
+        <button class="ko-b">+ ${esc(L('EKLE', 'ADD'))}</button>
       </form>
     </section>
-    <div class="ad-savebar" id="sBar" hidden>
+    <div class="ko-savebar" id="sBar" hidden>
       <span id="sBarT"></span>
-      <button type="button" class="ad-b" id="sUndo">${esc(L('VAZGEÇ', 'DISCARD'))}</button>
-      <button type="button" class="ad-b acc" id="sSave" data-sfx="none">${esc(L('KAYDET', 'SAVE'))} <kbd>CTRL+S</kbd></button>
+      <button type="button" class="ko-b" id="sUndo">${esc(L('VAZGEÇ', 'DISCARD'))}</button>
+      <button type="button" class="ko-b acc" id="sSave" data-sfx="none">${esc(L('KAYDET', 'SAVE'))} <kbd>CTRL+S</kbd></button>
     </div>`;
     const $ = (s) => el.querySelector(s);
     let skills = [];
@@ -64,20 +64,20 @@ export default {
         return `<h4>${icon(ICON[k], 2)} ${esc(catName(k))} <small>${items.filter((s) => val(s, 'level') > 0).length}/${items.length}</small></h4>
           ${items.map((s) => {
             const v = val(s, 'level');
-            return `<div class="ad-sk-row r${rarity(v)}${dirty.has(s.id) ? ' dirty' : ''}" data-id="${s.id}">
-              <button type="button" class="ad-sk-name" lang="${nameLang(val(s, 'name'))}" data-rename title="${esc(L('Adını değiştir', 'Rename'))}">${esc(val(s, 'name'))}</button>
+            return `<div class="ko-sk-row r${rarity(v)}${dirty.has(s.id) ? ' dirty' : ''}" data-id="${s.id}">
+              <button type="button" class="ko-sk-name" lang="${nameLang(val(s, 'name'))}" data-rename title="${esc(L('Adını değiştir', 'Rename'))}">${esc(val(s, 'name'))}</button>
               ${levelHTML(v, val(s, 'name'))}
               <output>${v ? `LV ${v}` : L('GİZLİ', 'HIDDEN')}</output>
               <select data-move aria-label="${esc(L('Kategori', 'Category'))}: ${esc(val(s, 'name'))}">${CATS.map(([c]) => `<option value="${c}"${c === val(s, 'category') ? ' selected' : ''}>${esc(catName(c))}</option>`).join('')}</select>
-              <button type="button" class="ad-sk-del" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}: ${esc(val(s, 'name'))}">✕</button>
+              <button type="button" class="ko-sk-del" data-del data-sfx="none" aria-label="${esc(L('Sil', 'Delete'))}: ${esc(val(s, 'name'))}">✕</button>
             </div>`;
           }).join('')}`;
       }).join('');
-      $('#sList').innerHTML = groups || `<p class="ad-empty">${esc(skills.length ? L('Eşleşen yetenek yok.', 'No matching skills.') : L('Tablo boş.', 'The table is empty.'))}${skills.length ? '' : ` <button type="button" class="ad-b sm" id="sSeed">${esc(L('HAZIR LİSTEYİ YÜKLE', 'LOAD THE STARTER LIST'))}</button>`}</p>`;
+      $('#sList').innerHTML = groups || `<p class="ko-empty">${esc(skills.length ? L('Eşleşen yetenek yok.', 'No matching skills.') : L('Tablo boş.', 'The table is empty.'))}${skills.length ? '' : ` <button type="button" class="ko-b sm" id="sSeed">${esc(L('HAZIR LİSTEYİ YÜKLE', 'LOAD THE STARTER LIST'))}</button>`}</p>`;
     }
     async function load() {
       const { data, error } = await sb.from('skills').select('*').order('sort', { ascending: true }).order('name', { ascending: true });
-      if (error) { $('#sList').innerHTML = `<div class="ad-err">${esc(error.message)}</div>`; return; }
+      if (error) { $('#sList').innerHTML = `<div class="ko-err">${esc(error.message)}</div>`; return; }
       skills = data || [];
       render();
     }
@@ -91,9 +91,9 @@ export default {
       v = Math.max(0, Math.min(10, v));
       if (v === val(s, 'level')) return;
       change(s, { level: v });
-      setLevel(row.querySelector('.ad-lv'), v);
+      setLevel(row.querySelector('.ko-lv'), v);
       row.querySelector('output').textContent = v ? `LV ${v}` : L('GİZLİ', 'HIDDEN');
-      row.className = `ad-sk-row r${rarity(v)}${dirty.has(s.id) ? ' dirty' : ''}`;
+      row.className = `ko-sk-row r${rarity(v)}${dirty.has(s.id) ? ' dirty' : ''}`;
       sfx('hover', { k: v });
       dist(); bar();
     }
@@ -101,8 +101,8 @@ export default {
     el.addEventListener('click', async (e) => {
       const c = e.target.closest('[data-cat]');
       if (c) { cat = c.dataset.cat; render(); return; }
-      const row = e.target.closest('.ad-sk-row');
-      const cell = e.target.closest('.ad-lv i');
+      const row = e.target.closest('.ko-sk-row');
+      const cell = e.target.closest('.ko-lv i');
       if (row && cell) {
         const k = Number(cell.dataset.k);
         const s = skills.find((x) => String(x.id) === row.dataset.id);
@@ -142,14 +142,14 @@ export default {
     el.addEventListener('change', (e) => {
       const sel = e.target.closest('[data-move]');
       if (!sel) return;
-      const s = skills.find((x) => String(x.id) === sel.closest('.ad-sk-row').dataset.id);
+      const s = skills.find((x) => String(x.id) === sel.closest('.ko-sk-row').dataset.id);
       change(s, { category: sel.value });
       render();
     });
     el.addEventListener('keydown', (e) => {
-      const lv = e.target.closest('.ad-lv');
+      const lv = e.target.closest('.ko-lv');
       if (!lv) return;
-      const row = lv.closest('.ad-sk-row');
+      const row = lv.closest('.ko-sk-row');
       const v = Number(lv.dataset.lv);
       const next = { ArrowRight: v + 1, ArrowUp: v + 1, ArrowLeft: v - 1, ArrowDown: v - 1, Home: 0, End: 10, PageUp: v + 3, PageDown: v - 3 }[e.key]
         ?? (/^[0-9]$/.test(e.key) ? Number(e.key) : null);
@@ -169,10 +169,10 @@ export default {
       $('#sName').value = '';
       cat = data.category;
       render();
-      const row = el.querySelector(`.ad-sk-row[data-id="${data.id}"]`);
+      const row = el.querySelector(`.ko-sk-row[data-id="${data.id}"]`);
       row?.classList.add('flash');
       row?.scrollIntoView({ block: 'nearest' });
-      row?.querySelector('.ad-lv')?.focus();
+      row?.querySelector('.ko-lv')?.focus();
       note(L(`Eklendi: ${name} — şimdi puanla`, `Added: ${name} — now rate it`), { type: 'ok' });
       ctx.refreshBadges();
     });

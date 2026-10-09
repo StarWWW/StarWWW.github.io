@@ -17,32 +17,32 @@ export default {
   sub: () => L('Bu dönemin çizgileri. Tıkla ya da kutu çiz → seç → sil. Bir kişinin tüm çizgilerini "çizenler"den seç.', 'Strokes of the current period. Click or drag a box → select → delete. Select everything one person drew from "artists".'),
   async mount(el, ctx) {
     const { sb } = ctx;
-    el.innerHTML = `<section class="ad-card ad-wallcard">
-      <div class="ad-tools wrap">
-        <div class="ad-seg tools" role="radiogroup" aria-label="${esc(L('Araç', 'Tool'))}">
+    el.innerHTML = `<section class="ko-card ko-wallcard">
+      <div class="ko-tools wrap">
+        <div class="ko-seg tools" role="radiogroup" aria-label="${esc(L('Araç', 'Tool'))}">
           <button type="button" role="radio" aria-checked="true" data-tool="pick">☝ ${esc(L('TIKLA', 'CLICK'))}</button>
           <button type="button" role="radio" aria-checked="false" data-tool="box">⬚ ${esc(L('KUTU', 'BOX'))}</button>
         </div>
-        <span class="ad-hint" id="wSince"></span>
-        <span class="ad-sp"></span>
-        <button type="button" class="ad-b sm" data-last>${esc(L('SON 10\'U SEÇ', 'SELECT LAST 10'))}</button>
-        <button type="button" class="ad-b sm" data-clear disabled>${esc(L('SEÇİMİ BIRAK', 'CLEAR'))}</button>
-        <button type="button" class="ad-b sm red" data-del disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
-        <button type="button" class="ad-b sm stripe" data-buff>${esc(L('ŞİMDİ BUFF\'LA', 'BUFF NOW'))}</button>
+        <span class="ko-hint" id="wSince"></span>
+        <span class="ko-sp"></span>
+        <button type="button" class="ko-b sm" data-last>${esc(L('SON 10\'U SEÇ', 'SELECT LAST 10'))}</button>
+        <button type="button" class="ko-b sm" data-clear disabled>${esc(L('SEÇİMİ BIRAK', 'CLEAR'))}</button>
+        <button type="button" class="ko-b sm red" data-del disabled data-sfx="none">${esc(L('SEÇİLİLERİ SİL', 'DELETE SELECTED'))}</button>
+        <button type="button" class="ko-b sm stripe" data-buff>${esc(L('ŞİMDİ BUFF\'LA', 'BUFF NOW'))}</button>
       </div>
-      <div class="ad-wallcv" id="wStage">
+      <div class="ko-wallcv" id="wStage">
         <canvas id="wBase" width="${W}" height="${H}"></canvas>
         <canvas id="wTop" width="${W}" height="${H}" tabindex="0" aria-label="${esc(L('Duvar — çizgi seçmek için tıkla, Delete ile sil', 'Wall — click to select strokes, Delete to remove'))}"></canvas>
       </div>
-      <div class="ad-time">
-        <button type="button" class="ad-b sm" data-play>▶ ${esc(L('OYNAT', 'PLAY'))}</button>
+      <div class="ko-time">
+        <button type="button" class="ko-b sm" data-play>▶ ${esc(L('OYNAT', 'PLAY'))}</button>
         <input type="range" id="wTime" min="0" max="1000" value="1000" aria-label="${esc(L('Zaman', 'Time'))}">
         <output id="wTimeL"></output>
       </div>
     </section>
-    <div class="ad-cols2">
-      <section class="ad-card"><div class="ad-card-h"><b>${esc(L('SEÇİM', 'SELECTION'))}</b><span id="wSelN">0</span></div><div class="ad-winfo" id="wInfo"></div></section>
-      <section class="ad-card"><div class="ad-card-h"><b>${esc(L('ÇİZENLER', 'ARTISTS'))}</b><span id="wPeopleN"></span></div><ul class="ad-list" id="wPeople"></ul></section>
+    <div class="ko-cols2">
+      <section class="ko-card"><div class="ko-card-h"><b>${esc(L('SEÇİM', 'SELECTION'))}</b><span id="wSelN">0</span></div><div class="ko-winfo" id="wInfo"></div></section>
+      <section class="ko-card"><div class="ko-card-h"><b>${esc(L('ÇİZENLER', 'ARTISTS'))}</b><span id="wPeopleN"></span></div><ul class="ko-list" id="wPeople"></ul></section>
     </div>`;
     const $ = (s) => el.querySelector(s);
     const base = $('#wBase').getContext('2d');
@@ -170,24 +170,24 @@ export default {
       $('[data-clear]').disabled = !n;
       const box2 = $('#wInfo');
       if (!n) {
-        box2.innerHTML = `<p class="ad-empty">${esc(L('Duvarda bir çizgiye tıkla ya da KUTU aracıyla alan seç. Shift basılıyken seçime ekler. Seçiliyken Delete tuşu siler.', 'Click a stroke on the wall or drag an area with the BOX tool. Hold Shift to add. Press Delete to remove the selection.'))}</p>`;
+        box2.innerHTML = `<p class="ko-empty">${esc(L('Duvarda bir çizgiye tıkla ya da KUTU aracıyla alan seç. Shift basılıyken seçime ekler. Seçiliyken Delete tuşu siler.', 'Click a stroke on the wall or drag an area with the BOX tool. Hold Shift to add. Press Delete to remove the selection.'))}</p>`;
         return;
       }
       const list = strokes.filter((s) => sel.has(s.id));
       if (n === 1) {
         const s = list[0];
         const mine = strokes.filter((x) => x.client_id === s.client_id).length;
-        box2.innerHTML = `<dl class="ad-dl">
-          <dt>${esc(L('RENK', 'COLOR'))}</dt><dd><i class="ad-dot" style="--c:${esc(s.color)}"></i> ${esc(s.color)} · ${esc(L('nozul', 'nozzle'))} ${esc(s.size)}</dd>
+        box2.innerHTML = `<dl class="ko-dl">
+          <dt>${esc(L('RENK', 'COLOR'))}</dt><dd><i class="ko-dot" style="--c:${esc(s.color)}"></i> ${esc(s.color)} · ${esc(L('nozul', 'nozzle'))} ${esc(s.size)}</dd>
           <dt>${esc(L('NOKTA', 'POINTS'))}</dt><dd>${s.points.length}${s.drips.length ? ` · ${s.drips.length} ${esc(L('damla', 'drips'))}` : ''}</dd>
           <dt>${esc(L('ZAMAN', 'TIME'))}</dt><dd>${esc(when(s.created_at))} · ${esc(ago(s.created_at))}</dd>
           <dt>${esc(L('ÇİZEN', 'ARTIST'))}</dt><dd><code>${esc(short(s.client_id))}</code> · ${esc(L(`bu dönem ${mine} çizgi`, `${mine} strokes this period`))}</dd>
-        </dl>${mine > 1 ? `<button type="button" class="ad-b sm" data-cid="${esc(s.client_id)}">${esc(L(`${short(s.client_id)}'NIN TÜM ÇİZGİLERİNİ SEÇ (${mine})`, `SELECT ALL ${mine} BY ${short(s.client_id)}`))}</button>` : ''}`;
+        </dl>${mine > 1 ? `<button type="button" class="ko-b sm" data-cid="${esc(s.client_id)}">${esc(L(`${short(s.client_id)}'NIN TÜM ÇİZGİLERİNİ SEÇ (${mine})`, `SELECT ALL ${mine} BY ${short(s.client_id)}`))}</button>` : ''}`;
         return;
       }
       const who = new Set(list.map((s) => s.client_id));
       const ts = list.map((s) => s.t);
-      box2.innerHTML = `<dl class="ad-dl">
+      box2.innerHTML = `<dl class="ko-dl">
         <dt>${esc(L('ÇİZGİ', 'STROKES'))}</dt><dd>${num(n)}</dd>
         <dt>${esc(L('KİŞİ', 'PEOPLE'))}</dt><dd>${who.size}</dd>
         <dt>${esc(L('ARALIK', 'RANGE'))}</dt><dd>${esc(when(new Date(Math.min(...ts)).toISOString()))} → ${esc(when(new Date(Math.max(...ts)).toISOString()))}</dd>
@@ -202,12 +202,12 @@ export default {
       });
       const ps = [...m.values()].sort((a, b) => b.n - a.n);
       $('#wPeopleN').textContent = L(`${ps.length} kişi · ${num(strokes.length)} çizgi`, `${ps.length} people · ${num(strokes.length)} strokes`);
-      $('#wPeople').innerHTML = ps.map((p) => `<li class="ad-row person">
+      $('#wPeople').innerHTML = ps.map((p) => `<li class="ko-row person">
         <code>${esc(short(p.cid))}</code>
-        <span class="ad-tt"><b>${num(p.n)} ${esc(L('çizgi', 'strokes'))}</b><small>${[...p.colors].map((c) => `<i class="ad-dot" style="--c:${esc(c)}"></i>`).join('')} ${esc(ago(new Date(p.last).toISOString()))}</small></span>
-        <span class="ad-bar" style="--v:${p.n / (ps[0]?.n || 1)}"><i></i></span>
-        <span class="ad-acts"><button type="button" data-cid="${esc(p.cid)}">${esc(L('SEÇ', 'SELECT'))}</button></span>
-      </li>`).join('') || `<li class="ad-empty">${esc(L('Bu dönem duvar boş.', 'The wall is empty this period.'))}</li>`;
+        <span class="ko-tt"><b>${num(p.n)} ${esc(L('çizgi', 'strokes'))}</b><small>${[...p.colors].map((c) => `<i class="ko-dot" style="--c:${esc(c)}"></i>`).join('')} ${esc(ago(new Date(p.last).toISOString()))}</small></span>
+        <span class="ko-bar" style="--v:${p.n / (ps[0]?.n || 1)}"><i></i></span>
+        <span class="ko-acts"><button type="button" data-cid="${esc(p.cid)}">${esc(L('SEÇ', 'SELECT'))}</button></span>
+      </li>`).join('') || `<li class="ko-empty">${esc(L('Bu dönem duvar boş.', 'The wall is empty this period.'))}</li>`;
     }
 
     function removeSel() {

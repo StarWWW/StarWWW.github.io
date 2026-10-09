@@ -365,7 +365,7 @@ function initCursor() {
   window.addEventListener('pointermove', (e) => {
     if (e.pointerType !== 'mouse') return;
     mx = e.clientX; my = e.clientY;
-    const off = Boolean(e.target.closest?.('.g-root, .ad, .terminal, .boot')) || (API.wall?.isSpraying() && e.target.closest?.('.wall'));
+    const off = Boolean(e.target.closest?.('.g-root, .ko, .terminal, .boot')) || (API.wall?.isSpraying() && e.target.closest?.('.wall'));
     c.classList.toggle('off', off);
     const el = off ? null : e.target.closest?.(CUR_SEL);
     if (el !== target) {

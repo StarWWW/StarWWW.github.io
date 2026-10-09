@@ -63,7 +63,7 @@ function watch() {
     problems.push(`panel kaydı (${root.scrollLeft}, ${root.scrollTop}) — sıfırlandı`);
     root.scrollTop = 0; root.scrollLeft = 0;
   }
-  const shell = root.querySelector('.ad-shell, .ad-gate, .ad-boot');
+  const shell = root.querySelector('.ko-shell, .ko-gate, .ko-boot');
   if (!shell) problems.push(`panelin içi boşaldı (${root.children.length} öğe: ${[...root.children].map(describe).join(', ') || 'yok'})`);
   else {
     const b = shell.getBoundingClientRect();
@@ -78,7 +78,9 @@ function watch() {
   if (!fresh.length) return;
   fresh.forEach((x) => trace(`SORUN: ${x}`));
   console.warn('[kontrol odası] teşhis', problems, `\n${TRACE.join('\n')}`);
-  showDiag(problems);
+  // kendiliğinden düzeltilenler (söküldü → geri takıldı, kaydı → sıfırlandı) sadece günlüğe yazılır
+  const serious = problems.filter((x) => !/geri takıldı|sıfırlandı/.test(x));
+  if (serious.length) showDiag(serious);
 }
 function startWatch() {
   clearInterval(watchTimer);
@@ -91,7 +93,7 @@ function showDiag(problems) {
   if (diagShown || !root) return;
   diagShown = true;
   const box = document.createElement('div');
-  box.className = 'ad-diag';
+  box.className = 'ko-diag';
   box.innerHTML = `<b>${esc(L('TEŞHİS — panelde beklenmedik bir şey oldu', 'DIAGNOSIS — something unexpected happened to the panel'))}</b>
     <p>${esc(L('Bunun ekran görüntüsünü Claude\'a gönder:', 'Send a screenshot of this to Claude:'))}</p>
     <ul>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
@@ -105,7 +107,7 @@ function showDiag(problems) {
 // kırık görseller (CSP satır içi onerror'a izin vermez)
 document.addEventListener('error', (e) => {
   const im = e.target;
-  if (im?.tagName !== 'IMG' || !im.closest?.('.ad')) return;
+  if (im?.tagName !== 'IMG' || !im.closest?.('.ko')) return;
   if (im.dataset.fb === 'remove') im.remove(); else im.removeAttribute('src');
 }, true);
 
@@ -123,7 +125,7 @@ function makeRoot() {
   if (root) return;
   lastFocus = document.activeElement;
   root = document.createElement('div');
-  root.className = 'ad';
+  root.className = 'ko';
   root.setAttribute('role', 'dialog');
   root.setAttribute('aria-modal', 'true');
   root.setAttribute('aria-label', L('Kontrol odası', 'Control room'));
@@ -147,7 +149,7 @@ function makeRoot() {
 export function openAdmin() {
   // aynı anda iki kez çağrılırsa (ör. adres + terminal) tek açılış olsun; açık panel silinip baştan çizilmesin
   if (opening) { trace('ikinci açma çağrısı — bekleyen açılış kullanıldı'); return opening; }
-  if (root?.querySelector('.ad-shell')) { trace('panel zaten açık'); return Promise.resolve(); }
+  if (root?.querySelector('.ko-shell')) { trace('panel zaten açık'); return Promise.resolve(); }
   opening = doOpen().finally(() => { opening = null; });
   return opening;
 }
@@ -157,7 +159,7 @@ async function doOpen() {
   if (!sb) { toast(L('Supabase ayarlanmamış — js/config.js', 'Supabase is not configured — js/config.js')); return; }
   await loadCSS();
   makeRoot();
-  root.innerHTML = `<div class="ad-boot"><span class="ad-spin" aria-hidden="true"></span>${esc(L('KİMLİK KONTROL EDİLİYOR…', 'CHECKING WHO YOU ARE…'))}</div>`;
+  root.innerHTML = `<div class="ko-boot"><span class="ko-spin" aria-hidden="true"></span>${esc(L('KİMLİK KONTROL EDİLİYOR…', 'CHECKING WHO YOU ARE…'))}</div>`;
   try {
     const authError = readAuthError();
     const { data: { session } } = await sb.auth.getSession();
@@ -241,13 +243,13 @@ function cleanAuthUrl() {
 
 // ---------- giriş ekranları ----------
 function gate(inner) {
-  root.innerHTML = `<div class="ad-gate">
-    <button type="button" class="ad-gate-x" data-close data-sfx="none" aria-label="${esc(L('Kapat', 'Close'))}">✕</button>
-    <div class="ad-gate-box">
-      <div class="ad-gate-top"><span>${icon('lock', 4)}</span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></div>
+  root.innerHTML = `<div class="ko-gate">
+    <button type="button" class="ko-gate-x" data-close data-sfx="none" aria-label="${esc(L('Kapat', 'Close'))}">✕</button>
+    <div class="ko-gate-box">
+      <div class="ko-gate-top"><span>${icon('lock', 4)}</span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></div>
       ${inner}
     </div>
-  </div><div class="ad-notes" aria-live="polite"></div>`;
+  </div><div class="ko-notes" aria-live="polite"></div>`;
   root.querySelector('[data-close]').addEventListener('click', () => closeAdmin(true));
 }
 
@@ -255,9 +257,9 @@ function renderLogin(authError) {
   const back = `${location.origin}${location.pathname}`;
   gate(`<h2>${esc(L('KİMSİN?', 'WHO ARE YOU?'))}</h2>
     <p>${esc(L('Bu oda sadece star\'a açık. GitHub hesabınla giriş yap.', 'This room is star-only. Sign in with your GitHub account.'))}</p>
-    ${authError ? `<p class="ad-gate-err">${esc(L('Giriş tamamlanamadı', 'Sign-in failed'))}: ${esc(authError)}</p>` : ''}
-    <button type="button" class="ad-b acc big" data-gh>${esc(L('GITHUB İLE GİR', 'SIGN IN WITH GITHUB'))} ↗</button>
-    <details class="ad-gate-help"><summary>${esc(L('GitHub\'dan sonra yanlış adrese mi düşüyorsun?', 'Landing on the wrong address after GitHub?'))}</summary>
+    ${authError ? `<p class="ko-gate-err">${esc(L('Giriş tamamlanamadı', 'Sign-in failed'))}: ${esc(authError)}</p>` : ''}
+    <button type="button" class="ko-b acc big" data-gh>${esc(L('GITHUB İLE GİR', 'SIGN IN WITH GITHUB'))} ↗</button>
+    <details class="ko-gate-help"><summary>${esc(L('GitHub\'dan sonra yanlış adrese mi düşüyorsun?', 'Landing on the wrong address after GitHub?'))}</summary>
       <p>${esc(L('Supabase → Authentication → URL Configuration → Redirect URLs listesine şunu ekle:', 'Add this to Supabase → Authentication → URL Configuration → Redirect URLs:'))}</p><code>${esc(back)}**</code></details>`);
   const gh = root.querySelector('[data-gh]');
   gh.addEventListener('click', async () => {
@@ -277,7 +279,7 @@ function renderCrash(err) {
   gate(`<h2>${esc(L('BİR ŞEY TERS GİTTİ', 'SOMETHING BROKE'))}</h2>
     <p>${esc(L('Panel çizilemedi. Yeni bir yayından hemen sonra tarayıcı bazı eski dosyaları önbellekte tutuyor olabilir (GitHub Pages 10 dakika saklar): sayfayı Ctrl+F5 ile yenile.', 'The panel could not be drawn. Right after a new deploy the browser may still hold some old files in its cache (GitHub Pages keeps them for 10 minutes): reload with Ctrl+F5.'))}</p>
     <code>${esc(err?.message || err)}</code>
-    <button type="button" class="ad-b acc big" data-reload>${esc(L('SAYFAYI YENİLE', 'RELOAD THE PAGE'))} ↻</button>`);
+    <button type="button" class="ko-b acc big" data-reload>${esc(L('SAYFAYI YENİLE', 'RELOAD THE PAGE'))} ↻</button>`);
   root.querySelector('[data-reload]').addEventListener('click', () => location.reload());
 }
 
@@ -285,7 +287,7 @@ function renderNotAdmin() {
   gate(`<h2>${esc(L('YETKİN YOK', 'NO ACCESS'))}</h2>
     <p>${esc(L('Giriş yaptın ama bu hesap yönetici listesinde değil. Sen star isen aşağıdaki satırı Supabase SQL Editor\'da çalıştır, sonra sayfayı yenile:', 'You are signed in, but this account is not an admin. If you are star, run the line below in the Supabase SQL Editor, then reload:'))}</p>
     <code>insert into public.admins (user_id) values ('${esc(user.id)}');</code>
-    <button type="button" class="ad-b" data-out>${esc(L('ÇIKIŞ YAP', 'LOG OUT'))}</button>`);
+    <button type="button" class="ko-b" data-out>${esc(L('ÇIKIŞ YAP', 'LOG OUT'))}</button>`);
   root.querySelector('[data-out]').addEventListener('click', logout);
 }
 
@@ -294,38 +296,38 @@ function renderShell() {
   trace('panel çiziliyor');
   const meta = user?.user_metadata || {};
   const name = meta.user_name || meta.preferred_username || user?.email || 'star';
-  root.innerHTML = `<div class="ad-shell">
-    <aside class="ad-side">
-      <div class="ad-brand"><span class="ad-brand-ico">${icon('star', 3)}</span><span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></span></div>
-      <nav class="ad-nav" aria-label="${esc(L('Bölümler', 'Sections'))}">
+  root.innerHTML = `<div class="ko-shell">
+    <aside class="ko-side">
+      <div class="ko-brand"><span class="ko-brand-ico">${icon('star', 3)}</span><span><b>${esc(L('KONTROL ODASI', 'CONTROL ROOM'))}</b><small>// ${esc(L('SADECE STAR', 'STAR ONLY'))}</small></span></div>
+      <nav class="ko-nav" aria-label="${esc(L('Bölümler', 'Sections'))}">
         ${PAGES.map((p, i) => `<button type="button" data-go="${p.key}" data-sfx="none" aria-current="false">
-          <span class="ad-nav-ico">${icon(p.icon, 2)}</span><span class="ad-nav-n">0${i}</span><span class="ad-nav-l">${esc(p.label())}</span>
-          <em class="ad-badge" data-badge="${p.key}" hidden></em><kbd aria-hidden="true">${i}</kbd></button>`).join('')}
+          <span class="ko-nav-ico">${icon(p.icon, 2)}</span><span class="ko-nav-n">0${i}</span><span class="ko-nav-l">${esc(p.label())}</span>
+          <em class="ko-badge" data-badge="${p.key}" hidden></em><kbd aria-hidden="true">${i}</kbd></button>`).join('')}
       </nav>
-      <div class="ad-me">
-        ${meta.avatar_url ? `<img src="${esc(meta.avatar_url)}" alt="" data-fb="remove">` : `<span class="ad-me-ph">${icon('cursor', 2)}</span>`}
-        <span class="ad-me-t"><small>${esc(L('GİRİLDİ', 'SIGNED IN'))} · GITHUB</small><b>@${esc(name)}</b></span>
-        <span class="ad-me-a"><button type="button" class="ad-me-b" data-adlang data-sfx="select" title="${esc(L('Switch to English', 'Türkçeye geç'))}">${getLang() === 'en' ? 'TR' : 'EN'}</button><button type="button" class="ad-me-b" data-logout data-sfx="none" title="${esc(L('Çıkış yap', 'Log out'))}">${esc(L('ÇIKIŞ', 'LOG OUT'))}</button></span>
+      <div class="ko-me">
+        ${meta.avatar_url ? `<img src="${esc(meta.avatar_url)}" alt="" data-fb="remove">` : `<span class="ko-me-ph">${icon('cursor', 2)}</span>`}
+        <span class="ko-me-t"><small>${esc(L('GİRİLDİ', 'SIGNED IN'))} · GITHUB</small><b>@${esc(name)}</b></span>
+        <span class="ko-me-a"><button type="button" class="ko-me-b" data-adlang data-sfx="select" title="${esc(L('Switch to English', 'Türkçeye geç'))}">${getLang() === 'en' ? 'TR' : 'EN'}</button><button type="button" class="ko-me-b" data-logout data-sfx="none" title="${esc(L('Çıkış yap', 'Log out'))}">${esc(L('ÇIKIŞ', 'LOG OUT'))}</button></span>
       </div>
     </aside>
-    <main class="ad-main">
-      <header class="ad-head">
-        <div class="ad-head-t"><span class="ad-head-n" id="adNum"></span><div><h2 id="adTitle"></h2><p id="adSub"></p></div></div>
-        <div class="ad-head-a">
-          <button type="button" class="ad-b ghost" data-keys data-sfx="none" title="${esc(L('Klavye kısayolları', 'Keyboard shortcuts'))}">?</button>
-          <button type="button" class="ad-b ghost" data-close data-sfx="none">${esc(L('SİTEYE DÖN', 'BACK TO SITE'))} ✕</button>
+    <main class="ko-main">
+      <header class="ko-head">
+        <div class="ko-head-t"><span class="ko-head-n" id="koNum"></span><div><h2 id="koTitle"></h2><p id="koSub"></p></div></div>
+        <div class="ko-head-a">
+          <button type="button" class="ko-b ghost" data-keys data-sfx="none" title="${esc(L('Klavye kısayolları', 'Keyboard shortcuts'))}">?</button>
+          <button type="button" class="ko-b ghost" data-close data-sfx="none">${esc(L('SİTEYE DÖN', 'BACK TO SITE'))} ✕</button>
         </div>
       </header>
-      <div class="ad-page" id="adPage"></div>
+      <div class="ko-page" id="koPage"></div>
     </main>
-    <footer class="ad-status" aria-live="off">
+    <footer class="ko-status" aria-live="off">
       <span data-live><i></i>${esc(L('BAĞLANIYOR', 'CONNECTING'))}</span>
       <span data-ping></span>
-      <span class="ad-status-r">${esc(L('KISAYOLLAR', 'SHORTCUTS'))}: <kbd>0</kbd>–<kbd>6</kbd> ${esc(L('SAYFA', 'PAGE'))} · <kbd>/</kbd> ${esc(L('ARA', 'SEARCH'))} · <kbd>?</kbd> ${esc(L('YARDIM', 'HELP'))} · <kbd>ESC</kbd> ${esc(L('KAPAT', 'CLOSE'))}</span>
+      <span class="ko-status-r">${esc(L('KISAYOLLAR', 'SHORTCUTS'))}: <kbd>0</kbd>–<kbd>6</kbd> ${esc(L('SAYFA', 'PAGE'))} · <kbd>/</kbd> ${esc(L('ARA', 'SEARCH'))} · <kbd>?</kbd> ${esc(L('YARDIM', 'HELP'))} · <kbd>ESC</kbd> ${esc(L('KAPAT', 'CLOSE'))}</span>
     </footer>
   </div>
-  <div class="ad-notes" aria-live="polite"></div>`;
-  root.querySelector('.ad-nav').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
+  <div class="ko-notes" aria-live="polite"></div>`;
+  root.querySelector('.ko-nav').addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (b) go(b.dataset.go); });
   root.querySelector('[data-logout]').addEventListener('click', logout);
   root.querySelector('[data-adlang]').addEventListener('click', () => setLang(getLang() === 'en' ? 'tr' : 'en'));
   root.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => closeAdmin()));
@@ -350,15 +352,15 @@ async function go(key, force = false) {
   store.set(TAB_KEY, key);
   const i = PAGES.indexOf(page);
   root.querySelectorAll('[data-go]').forEach((b) => b.setAttribute('aria-current', b.dataset.go === key ? 'page' : 'false'));
-  root.querySelector('#adNum').textContent = `0${i}`;
-  root.querySelector('#adTitle').textContent = page.label();
-  root.querySelector('#adSub').textContent = page.sub();
+  root.querySelector('#koNum').textContent = `0${i}`;
+  root.querySelector('#koTitle').textContent = page.label();
+  root.querySelector('#koSub').textContent = page.sub();
   // her sayfa yeni bir kutuda açılır: eski sayfanın dinleyicileri onunla birlikte gider
-  const holder = root.querySelector('#adPage');
-  holder.className = `ad-page ad-p-${key}`;
+  const holder = root.querySelector('#koPage');
+  holder.className = `ko-page ko-p-${key}`;
   holder.scrollTop = 0;
   const el = document.createElement('div');
-  el.className = 'ad-pagein';
+  el.className = 'ko-pagein';
   holder.replaceChildren(el);
   if (!force) sfx('slide');
   trace(`sayfa: ${key}`);
@@ -368,7 +370,7 @@ async function go(key, force = false) {
     trace(`sayfa hazır: ${key}`);
   } catch (err) {
     trace(`sayfa hatası (${key}): ${err?.message || err}`);
-    el.innerHTML = `<div class="ad-err">${esc(L('Sayfa yüklenemedi', 'Could not load the page'))}: ${esc(err?.message || err)}</div>`;
+    el.innerHTML = `<div class="ko-err">${esc(L('Sayfa yüklenemedi', 'Could not load the page'))}: ${esc(err?.message || err)}</div>`;
   }
 }
 
@@ -402,7 +404,7 @@ async function refreshBadges() {
     if (!b) return;
     b.hidden = !n;
     b.textContent = n > 99 ? '99+' : String(n);
-    b.className = `ad-badge ${tone}`;
+    b.className = `ko-badge ${tone}`;
   };
   set('music', sum.previewTodo, 'warn');
   set('skills', sum.skills - sum.rated);
@@ -461,7 +463,7 @@ function onKey(e) {
     closeAdmin();
     return;
   }
-  if (typing || e.ctrlKey || e.metaKey || e.altKey || !user || !root.querySelector('.ad-shell')) return;
+  if (typing || e.ctrlKey || e.metaKey || e.altKey || !user || !root.querySelector('.ko-shell')) return;
   if (/^[0-6]$/.test(e.key)) { e.preventDefault(); go(PAGES[Number(e.key)].key); return; }
   if (e.key === '/') { e.preventDefault(); inst?.focusSearch?.(); return; }
   if (e.key === '?') { e.preventDefault(); showKeys(); }
@@ -469,7 +471,7 @@ function onKey(e) {
 
 // dil değişince açık sayfa yeni dille baştan çizilir
 onLang(() => {
-  if (!root || !root.querySelector('.ad-shell') || inst?.dirty?.()) return;
+  if (!root || !root.querySelector('.ko-shell') || inst?.dirty?.()) return;
   inst?.unmount?.();
   inst = null;
   if (live) { sb?.removeChannel?.(live); live = null; liveOn = false; }

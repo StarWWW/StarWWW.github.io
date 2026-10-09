@@ -26,7 +26,7 @@ export const isSpPreview = (u) => /^https:\/\/p\.scdn\.co\//.test(String(u || ''
 export const isUrl = (u) => !u || /^https?:\/\/\S+$/i.test(String(u).trim());
 
 // ---------- kapak küçük resimleri (piksel) ----------
-export const artImg = (url, wide = false) => `<span class="ad-art${wide ? ' wide' : ''}"><img alt="" data-px="${esc(url || '')}"${wide ? ' data-wide="1"' : ''}></span>`;
+export const artImg = (url, wide = false) => `<span class="ko-art${wide ? ' wide' : ''}"><img alt="" data-px="${esc(url || '')}"${wide ? ' data-wide="1"' : ''}></span>`;
 export function hydrateArt(scope) {
   scope.querySelectorAll('img[data-px]').forEach((im) => {
     const url = im.dataset.px;
@@ -39,29 +39,29 @@ export function hydrateArt(scope) {
 // ---------- katman ----------
 let host = null;
 export const setHost = (el) => { host = el; };
-export const dialogOpen = () => Boolean(host?.querySelector('.ad-dlg'));
+export const dialogOpen = () => Boolean(host?.querySelector('.ko-dlg'));
 
 // ---------- bildirimler (sağ alt) ----------
 export function note(msg, { type = 'info', action = null, ms = 3400, onTimeout = null, sound = true } = {}) {
-  const box = host?.querySelector('.ad-notes');
+  const box = host?.querySelector('.ko-notes');
   if (!box) return { close() {} };
   const el = document.createElement('div');
-  el.className = `ad-note ${type}`;
+  el.className = `ko-note ${type}`;
   el.setAttribute('role', type === 'err' ? 'alert' : 'status');
-  el.innerHTML = `<span class="ad-note-ico" aria-hidden="true">${type === 'ok' ? '✓' : type === 'err' ? '!' : '›'}</span>
-    <span class="ad-note-msg"></span>
-    ${action ? '<button type="button" class="ad-note-act" data-sfx="none"></button>' : ''}
-    <button type="button" class="ad-note-x" data-sfx="none" aria-label="${esc(L('Kapat', 'Dismiss'))}">✕</button>
-    <i class="ad-note-bar" style="animation-duration:${ms}ms" aria-hidden="true"></i>`;
-  el.querySelector('.ad-note-msg').textContent = msg;
+  el.innerHTML = `<span class="ko-note-ico" aria-hidden="true">${type === 'ok' ? '✓' : type === 'err' ? '!' : '›'}</span>
+    <span class="ko-note-msg"></span>
+    ${action ? '<button type="button" class="ko-note-act" data-sfx="none"></button>' : ''}
+    <button type="button" class="ko-note-x" data-sfx="none" aria-label="${esc(L('Kapat', 'Dismiss'))}">✕</button>
+    <i class="ko-note-bar" style="animation-duration:${ms}ms" aria-hidden="true"></i>`;
+  el.querySelector('.ko-note-msg').textContent = msg;
   let timer = 0;
   const close = () => { clearTimeout(timer); el.classList.add('out'); setTimeout(() => el.remove(), 220); };
   if (action) {
-    const b = el.querySelector('.ad-note-act');
+    const b = el.querySelector('.ko-note-act');
     b.textContent = action.label;
     b.addEventListener('click', () => { clearTimeout(timer); action.fn(); close(); });
   }
-  el.querySelector('.ad-note-x').addEventListener('click', () => { if (onTimeout) onTimeout(); close(); });
+  el.querySelector('.ko-note-x').addEventListener('click', () => { if (onTimeout) onTimeout(); close(); });
   timer = setTimeout(() => { if (onTimeout) onTimeout(); close(); }, ms);
   box.append(el);
   while (box.children.length > 4) box.firstElementChild.remove();
@@ -77,7 +77,7 @@ export function ask({ title, text = '', ok = L('TAMAM', 'OK'), cancel = L('VAZGE
     if (!host) { resolve(fields ? null : false); return; }
     const prevFocus = document.activeElement;
     const wrap = document.createElement('div');
-    wrap.className = 'ad-dlg';
+    wrap.className = 'ko-dlg';
     const id = `dlg${Date.now()}`;
     const field = (f) => {
       const common = `id="${id}-${f.key}" name="${esc(f.key)}"${f.max ? ` maxlength="${f.max}"` : ''}${f.placeholder ? ` placeholder="${esc(f.placeholder)}"` : ''}${f.required ? ' required' : ''}`;
@@ -85,14 +85,14 @@ export function ask({ title, text = '', ok = L('TAMAM', 'OK'), cancel = L('VAZGE
       if (f.type === 'textarea') input = `<textarea ${common} rows="${f.rows || 3}">${esc(f.value ?? '')}</textarea>`;
       else if (f.type === 'select') input = `<select ${common}>${f.options.map(([v, lb]) => `<option value="${esc(v)}"${String(v) === String(f.value) ? ' selected' : ''}>${esc(lb)}</option>`).join('')}</select>`;
       else input = `<input ${common} type="${f.type === 'number' ? 'number' : f.type === 'url' ? 'url' : 'text'}" value="${esc(f.value ?? '')}"${f.type === 'number' ? ` step="${f.step || 1}"${f.min != null ? ` min="${f.min}"` : ''}${f.maxv != null ? ` max="${f.maxv}"` : ''}` : ''} autocomplete="off" spellcheck="false">`;
-      return `<label class="ad-fld${f.full ? ' full' : ''}" for="${id}-${f.key}"><span>${esc(f.label)}${f.max ? ` <em data-cnt="${esc(f.key)}"></em>` : ''}</span>${input}${f.hint ? `<small>${esc(f.hint)}</small>` : ''}</label>`;
+      return `<label class="ko-fld${f.full ? ' full' : ''}" for="${id}-${f.key}"><span>${esc(f.label)}${f.max ? ` <em data-cnt="${esc(f.key)}"></em>` : ''}</span>${input}${f.hint ? `<small>${esc(f.hint)}</small>` : ''}</label>`;
     };
-    wrap.innerHTML = `<form class="ad-dlg-box${danger ? ' danger' : ''}${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="${id}-t" novalidate>
-      <div class="ad-dlg-h"><b id="${id}-t">${esc(title)}</b><button type="button" class="ad-dlg-x" data-cancel data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>
-      ${text ? `<p class="ad-dlg-p">${esc(text)}</p>` : ''}
-      ${fields ? `<div class="ad-dlg-f">${fields.map(field).join('')}</div>` : ''}
-      <p class="ad-dlg-err" hidden></p>
-      <div class="ad-dlg-a"><button type="button" class="ad-b" data-cancel data-sfx="close">${esc(cancel)}</button><button type="submit" class="ad-b ${danger ? 'red' : 'acc'}" data-sfx="none">${esc(ok)}</button></div>
+    wrap.innerHTML = `<form class="ko-dlg-box${danger ? ' danger' : ''}${wide ? ' wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="${id}-t" novalidate>
+      <div class="ko-dlg-h"><b id="${id}-t">${esc(title)}</b><button type="button" class="ko-dlg-x" data-cancel data-sfx="close" aria-label="${esc(L('Kapat', 'Close'))}">✕</button></div>
+      ${text ? `<p class="ko-dlg-p">${esc(text)}</p>` : ''}
+      ${fields ? `<div class="ko-dlg-f">${fields.map(field).join('')}</div>` : ''}
+      <p class="ko-dlg-err" hidden></p>
+      <div class="ko-dlg-a"><button type="button" class="ko-b" data-cancel data-sfx="close">${esc(cancel)}</button><button type="submit" class="ko-b ${danger ? 'red' : 'acc'}" data-sfx="none">${esc(ok)}</button></div>
     </form>`;
     host.append(wrap);
     const form = wrap.querySelector('form');
@@ -124,7 +124,7 @@ export function ask({ title, text = '', ok = L('TAMAM', 'OK'), cancel = L('VAZGE
           : (f.type === 'url' && !isUrl(v)) ? L('Geçerli bir https:// adresi yaz', 'Enter a valid https:// address')
             : (f.validate ? f.validate(v) : '');
         if (bad) {
-          const err = form.querySelector('.ad-dlg-err');
+          const err = form.querySelector('.ko-dlg-err');
           err.hidden = false; err.textContent = `${f.label}: ${bad}`;
           form.elements[f.key].focus();
           sfx('error');
@@ -250,7 +250,7 @@ export async function saveOrder(sb, table, ids, prev) {
 }
 
 // ---------- seviye blokları (0–10) ----------
-export const levelHTML = (v, label) => `<span class="ad-lv" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${v}" aria-label="${esc(label)}" data-lv="${v}">${Array.from({ length: 10 }, (_, i) => `<i data-k="${i + 1}"${i < v ? ' class="on"' : ''}></i>`).join('')}</span>`;
+export const levelHTML = (v, label) => `<span class="ko-lv" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="10" aria-valuenow="${v}" aria-label="${esc(label)}" data-lv="${v}">${Array.from({ length: 10 }, (_, i) => `<i data-k="${i + 1}"${i < v ? ' class="on"' : ''}></i>`).join('')}</span>`;
 export function setLevel(el, v) {
   el.dataset.lv = v;
   el.setAttribute('aria-valuenow', v);
