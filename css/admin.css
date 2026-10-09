@@ -6,7 +6,7 @@
   --ad-line: 4px solid var(--ink);
   --ad-sh: 6px 6px 0 var(--ink);
   --ad-dash: 2px dashed rgba(34, 32, 52, .18);
-  position: fixed; inset: 0; z-index: 96; overflow: hidden;
+  position: fixed; inset: 0; z-index: 150; overflow: hidden;
   background-color: var(--paper);
   background-image: linear-gradient(rgba(34, 32, 52, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(34, 32, 52, .06) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -483,3 +483,12 @@
   .ad, .ad *, .ad *::before { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 html[data-motion="reduce"] .ad, html[data-motion="reduce"] .ad * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+
+/* teşhis kutusu (js/admin.js → showDiag) */
+.ad-diag { position: absolute; left: 50%; top: 50%; z-index: 50; translate: -50% -50%; width: min(720px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 4px solid var(--red); background: #fff; box-shadow: 10px 10px 0 var(--ink); font-family: var(--f-px); font-size: 10px; line-height: 1.6; user-select: text; }
+.ad-diag b { color: var(--red); font-size: 12px; }
+.ad-diag p, .ad-diag ul { margin: 0; }
+.ad-diag ul { padding-left: 18px; font-family: var(--f-brut); font-size: 14px; font-weight: 700; }
+.ad-diag pre { margin: 0; padding: 10px; max-height: 300px; overflow: auto; background: var(--ink); color: var(--acid); font-family: var(--f-term); font-size: 16px; line-height: 1.1; white-space: pre-wrap; }
+.ad-diag span { display: flex; gap: 8px; justify-content: flex-end; }
+.ad-diag button { min-height: 36px; padding: 0 12px; border: 3px solid var(--ink); background: #fff; font-family: var(--f-px); font-size: 10px; }

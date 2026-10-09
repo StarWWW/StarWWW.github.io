@@ -27,6 +27,80 @@ let liveOn = false;
 let lastFocus = null;
 let sum = null;
 let badgeTimer = 0;
+let opening = null;
+
+// ---------- teşhis ----------
+// Panel beklenmedik şekilde kaybolursa (söküldü, gizlendi, kaydı, üstü örtüldü…) ne olduğunu ekranda gösterir.
+// Son olaylar API.adminTrace() ile de okunabilir.
+const TRACE = [];
+const T0 = performance.now();
+function trace(msg) {
+  TRACE.push(`${String(Math.round(performance.now() - T0)).padStart(7)} ms  ${msg}`);
+  if (TRACE.length > 80) TRACE.shift();
+}
+API.adminTrace = () => TRACE.join('\n');
+const describe = (el) => (el ? `${el.tagName.toLowerCase()}${el.id ? `#${el.id}` : ''}${typeof el.className === 'string' && el.className.trim() ? `.${el.className.trim().split(/\s+/).slice(0, 3).join('.')}` : ''}` : '—');
+const onWinErr = (e) => trace(`HATA: ${e.message || e.error || e} @ ${String(e.filename || '').split('/').pop()}:${e.lineno || ''}`);
+const onWinRej = (e) => trace(`HATA (promise): ${e.reason?.message || e.reason}`);
+const onFocusIn = (e) => { if (root && !root.contains(e.target)) trace(`odak panelin dışına gitti: ${describe(e.target)}`); };
+const onVis = () => trace(`sekme ${document.visibilityState}`);
+let watchTimer = 0;
+let watchSince = 0;
+let diagShown = false;
+const seen = new Set();
+function watch() {
+  if (!root) { clearInterval(watchTimer); return; }
+  if (document.visibilityState !== 'visible') return;
+  const problems = [];
+  if (!document.body.contains(root)) {
+    problems.push('panel sayfadan söküldü — geri takıldı');
+    document.body.append(root);
+  }
+  const cs = getComputedStyle(root);
+  if (cs.display === 'none' || cs.visibility !== 'visible') problems.push(`panel gizlendi (display: ${cs.display}, visibility: ${cs.visibility})`);
+  if (performance.now() - watchSince > 2000 && Number(cs.opacity) < 0.05) problems.push(`panel saydam kaldı (opacity ${cs.opacity})`);
+  if (root.scrollTop || root.scrollLeft) {
+    problems.push(`panel kaydı (${root.scrollLeft}, ${root.scrollTop}) — sıfırlandı`);
+    root.scrollTop = 0; root.scrollLeft = 0;
+  }
+  const shell = root.querySelector('.ad-shell, .ad-gate, .ad-boot');
+  if (!shell) problems.push(`panelin içi boşaldı (${root.children.length} öğe: ${[...root.children].map(describe).join(', ') || 'yok'})`);
+  else {
+    const b = shell.getBoundingClientRect();
+    if (b.width < 40 || b.height < 40 || b.bottom < 0 || b.right < 0 || b.top > innerHeight || b.left > innerWidth) problems.push(`panel ekranın dışında (${Math.round(b.left)}, ${Math.round(b.top)}, ${Math.round(b.width)}×${Math.round(b.height)})`);
+    if (performance.now() - watchSince > 2000 && Number(getComputedStyle(shell).opacity) < 0.05) problems.push('panel içeriği saydam kaldı');
+  }
+  const hit = document.elementFromPoint(innerWidth / 2, innerHeight / 2);
+  if (hit && !root.contains(hit) && !hit.closest('.boot, .pxswap')) problems.push(`panelin üstünde başka bir şey var: ${describe(hit)} (z-index ${getComputedStyle(hit).zIndex})`);
+  if (!problems.length) return;
+  // aynı sorun her yarım saniyede bir yazılmasın
+  const fresh = problems.filter((x) => { const k = x.replace(/[\d.,-]+/g, '#'); if (seen.has(k)) return false; seen.add(k); return true; });
+  if (!fresh.length) return;
+  fresh.forEach((x) => trace(`SORUN: ${x}`));
+  console.warn('[kontrol odası] teşhis', problems, `\n${TRACE.join('\n')}`);
+  showDiag(problems);
+}
+function startWatch() {
+  clearInterval(watchTimer);
+  watchSince = performance.now();
+  diagShown = false;
+  seen.clear();
+  watchTimer = setInterval(watch, 500);
+}
+function showDiag(problems) {
+  if (diagShown || !root) return;
+  diagShown = true;
+  const box = document.createElement('div');
+  box.className = 'ad-diag';
+  box.innerHTML = `<b>${esc(L('TEŞHİS — panelde beklenmedik bir şey oldu', 'DIAGNOSIS — something unexpected happened to the panel'))}</b>
+    <p>${esc(L('Bunun ekran görüntüsünü Claude\'a gönder:', 'Send a screenshot of this to Claude:'))}</p>
+    <ul>${problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+    <pre>${esc(TRACE.slice(-30).join('\n'))}</pre>
+    <span><button type="button" data-copy>${esc(L('KOPYALA', 'COPY'))}</button><button type="button" data-x>${esc(L('KAPAT', 'CLOSE'))}</button></span>`;
+  box.querySelector('[data-copy]').addEventListener('click', () => navigator.clipboard?.writeText(`${problems.join('\n')}\n\n${TRACE.join('\n')}`));
+  box.querySelector('[data-x]').addEventListener('click', () => box.remove());
+  root.append(box);
+}
 
 // kırık görseller (CSP satır içi onerror'a izin vermez)
 document.addEventListener('error', (e) => {
@@ -56,6 +130,12 @@ function makeRoot() {
   root.setAttribute('data-lenis-prevent', '');
   document.body.append(root);
   setHost(root);
+  trace('panel açıldı');
+  window.addEventListener('error', onWinErr);
+  window.addEventListener('unhandledrejection', onWinRej);
+  document.addEventListener('focusin', onFocusIn);
+  document.addEventListener('visibilitychange', onVis);
+  startWatch();
   API.fx?.stopScroll();
   document.documentElement.style.overflow = 'hidden';
   root.addEventListener('keydown', onKey);
@@ -64,7 +144,15 @@ function makeRoot() {
   sfx('open');
 }
 
-export async function openAdmin() {
+export function openAdmin() {
+  // aynı anda iki kez çağrılırsa (ör. adres + terminal) tek açılış olsun; açık panel silinip baştan çizilmesin
+  if (opening) { trace('ikinci açma çağrısı — bekleyen açılış kullanıldı'); return opening; }
+  if (root?.querySelector('.ad-shell')) { trace('panel zaten açık'); return Promise.resolve(); }
+  opening = doOpen().finally(() => { opening = null; });
+  return opening;
+}
+async function doOpen() {
+  trace('açılıyor');
   sb = await getSupabase();
   if (!sb) { toast(L('Supabase ayarlanmamış — js/config.js', 'Supabase is not configured — js/config.js')); return; }
   await loadCSS();
@@ -75,8 +163,12 @@ export async function openAdmin() {
     const { data: { session } } = await sb.auth.getSession();
     cleanAuthUrl();
     user = session?.user || null;
+    trace(`oturum: ${user ? 'var' : 'yok'}`);
+    if (!root) return;
     if (!user) { renderLogin(authError); return; }
-    const { data: adm } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    const { data: adm, error: admErr } = await sb.from('admins').select('user_id').eq('user_id', user.id).maybeSingle();
+    trace(`yönetici kontrolü: ${adm ? 'evet' : 'hayır'}${admErr ? ` (${admErr.message})` : ''}`);
+    if (!root) return;
     if (!adm) { renderNotAdmin(); return; }
     renderShell();
   } catch (err) { renderCrash(err); }
@@ -95,6 +187,7 @@ export async function __mount(client, fakeUser, startTab = 'dash') {
 
 export async function closeAdmin(force = false) {
   if (!root) return true;
+  trace(`kapatma istendi${force ? ' (zorla)' : ''} ← ${(new Error().stack || '').split('\n').slice(2, 5).map((x) => x.trim().replace(/^at /, '').replace(location.origin, '')).join(' ← ')}`);
   if (!force && inst?.dirty?.() && !(await ask({ title: L('KAYDEDİLMEMİŞ DEĞİŞİKLİK', 'UNSAVED CHANGES'), text: L('Kaydetmediğin değişiklikler var. Yine de kapatılsın mı?', 'You have unsaved changes. Close anyway?'), ok: L('KAPAT', 'CLOSE'), danger: true }))) return false;
   await flushDeletes();
   inst?.unmount?.();
@@ -103,6 +196,12 @@ export async function closeAdmin(force = false) {
   clearTimeout(badgeTimer);
   window.removeEventListener('keydown', onStrayKey, true);
   window.removeEventListener('beforeunload', guardUnload);
+  window.removeEventListener('error', onWinErr);
+  window.removeEventListener('unhandledrejection', onWinRej);
+  document.removeEventListener('focusin', onFocusIn);
+  document.removeEventListener('visibilitychange', onVis);
+  clearInterval(watchTimer);
+  trace('panel kapandı');
   sfx('close');
   root.remove();
   root = null;
@@ -172,6 +271,7 @@ function renderLogin(authError) {
 // Panel çizilemezse boş ekran kalmasın: ne olduğunu ve çaresini göster
 function renderCrash(err) {
   console.error('[kontrol odası]', err);
+  trace(`ÇÖKTÜ: ${err?.message || err}`);
   if (!root) return;
   inst = null; cur = null;
   gate(`<h2>${esc(L('BİR ŞEY TERS GİTTİ', 'SOMETHING BROKE'))}</h2>
@@ -191,6 +291,7 @@ function renderNotAdmin() {
 
 // ---------- kabuk ----------
 function renderShell() {
+  trace('panel çiziliyor');
   const meta = user?.user_metadata || {};
   const name = meta.user_name || meta.preferred_username || user?.email || 'star';
   root.innerHTML = `<div class="ad-shell">
@@ -260,10 +361,13 @@ async function go(key, force = false) {
   el.className = 'ad-pagein';
   holder.replaceChildren(el);
   if (!force) sfx('slide');
+  trace(`sayfa: ${key}`);
   try {
     const made = await page.mount(el, ctx());
     if (cur === key) inst = made || null; else made?.unmount?.();
+    trace(`sayfa hazır: ${key}`);
   } catch (err) {
+    trace(`sayfa hatası (${key}): ${err?.message || err}`);
     el.innerHTML = `<div class="ad-err">${esc(L('Sayfa yüklenemedi', 'Could not load the page'))}: ${esc(err?.message || err)}</div>`;
   }
 }
@@ -281,6 +385,7 @@ function connectLive() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'wall_strokes' }, onChange('wall_strokes'))
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wall_buffs' }, onChange('wall_buffs'))
     .subscribe((status) => {
+      trace(`canlı bağlantı: ${status}`);
       liveOn = status === 'SUBSCRIBED';
       const el = root?.querySelector('[data-live]');
       if (!el) return;
@@ -350,6 +455,7 @@ function onKey(e) {
     return;
   }
   if (e.key === 'Escape') {
+    trace(`Esc (${describe(e.target)})`);
     if (inst?.escape?.()) return; // sayfa önce kendi açık parçasını kapatır (çekmece vb.)
     if (typing && e.target.value) { e.target.value = ''; e.target.dispatchEvent(new Event('input', { bubbles: true })); return; }
     closeAdmin();
