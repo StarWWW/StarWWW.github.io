@@ -9,6 +9,7 @@ Disallow: /*?code=
 
 # Kaynak / yayın dosyaları (repo zaten herkese açık; arama sonuçlarında çıkmasın)
 Disallow: /supabase/
+Disallow: /2048/model/
 Disallow: /yayinla.ps1
 Disallow: /yayinla.bat
 

@@ -16,7 +16,7 @@ export const CONFIG = {
 
   // Sitedeki yaş (hero, karakter kartı, LVL çıkartması, şerit, terminal) buradan hesaplanır: 'YYYY-AA-GG'.
   // Boşsa ageFallback kullanılır.
-  birthDate: '',
+  birthDate: '2005-07-24',
   ageFallback: 21,
 };
 

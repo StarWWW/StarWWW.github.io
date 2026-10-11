@@ -1,2 +1,4 @@
 # Kütüphaneler SRI (integrity) hash'iyle yüklenir: satır sonları asla değişmesin
 js/vendor/** -text
+# 2048 modeli: sıkıştırılmış ikili parçalar, satır sonu dönüşümü ya da fark gösterimi olmasın
+2048/model/*.gz binary

@@ -36,7 +36,7 @@ function JsKontrol {
     return $true
   }
   $hatali = @()
-  Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'js') -Recurse -File -Filter '*.js' |
+  Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'js'), (Join-Path $PSScriptRoot '2048') -Recurse -File -Filter '*.js' |
     Where-Object { $_.FullName -notmatch '[\\/]vendor[\\/]' } |
     ForEach-Object {
       $cikti = (& node --check $_.FullName 2>&1 | ForEach-Object { "$_" } |
@@ -63,7 +63,7 @@ function Ozet([string]$yol) {
 }
 function Damgala([bool]$yaz) {
   $ozet = @{}
-  Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'js'), (Join-Path $PSScriptRoot 'css') -Recurse -File |
+  Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot 'js'), (Join-Path $PSScriptRoot 'css'), (Join-Path $PSScriptRoot '2048/js'), (Join-Path $PSScriptRoot '2048/css') -Recurse -File |
     Where-Object { $_.Extension -eq '.js' -or $_.Extension -eq '.css' } |
     ForEach-Object {
       $rel = $_.FullName.Substring($PSScriptRoot.Length + 1).Replace('\', '/')
@@ -80,9 +80,9 @@ function Damgala([bool]$yaz) {
     return $m.Value
   }.GetNewClosure()
   $degisen = @()
-  foreach ($sayfa in @('index.html', 'gizlilik.html', '404.html')) {
+  foreach ($sayfa in @('index.html', 'gizlilik.html', '404.html', '2048/index.html')) {
     $eski = Oku $sayfa
-    $yeni = [regex]::Replace($eski, '(\s(?:src|href)=")(/?)((?:js|css)/[^"?#]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', $adres)
+    $yeni = [regex]::Replace($eski, '(\s(?:src|href)=")(/?)((?:2048/)?(?:js|css)/[^"?#]+\.(?:js|css))(?:\?v=[0-9a-f]+)?"', $adres)
     if ($yeni -match '<script type="importmap">') {
       $yeni = [regex]::Replace($yeni, '<script type="importmap">[^<]*</script>', { param($m) '<script type="importmap">' + $harita + '</script>' }.GetNewClosure())
       $yeni = [regex]::Replace($yeni, "script-src 'self'( 'sha256-[A-Za-z0-9+/=]+')?", { param($m) "script-src 'self' $iz" }.GetNewClosure())
@@ -98,7 +98,7 @@ function Damgala([bool]$yaz) {
 # ---------- sitemap tarihi ----------
 # Değişen sayfanın <lastmod>'u bugünün tarihi olur
 function SitemapGuncelle([bool]$yaz) {
-  $sayfalar = @{ "$SITE/" = 'index.html'; "$SITE/gizlilik.html" = 'gizlilik.html' }
+  $sayfalar = @{ "$SITE/" = 'index.html'; "$SITE/gizlilik.html" = 'gizlilik.html'; "$SITE/2048/" = '2048/index.html' }
   $degisenler = @(git -c core.quotepath=off diff --name-only HEAD 2>$null)
   $bugun = Get-Date -Format 'yyyy-MM-dd'
   $eski = Oku 'sitemap.xml'

@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="tr" data-boot="off">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-cQoA4zPOEALXS89DRO+AmKaACKP9o6Y1UHd2eNRdABk='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <script type="importmap">{"imports":{"/2048/css/lab.css":"/2048/css/lab.css?v=21bc5808","/2048/js/ai.js":"/2048/js/ai.js?v=e12edc52","/2048/js/ai-worker.js":"/2048/js/ai-worker.js?v=4137763a","/2048/js/app.js":"/2048/js/app.js?v=82108e42","/2048/js/bitboard.js":"/2048/js/bitboard.js?v=903ccb21","/2048/js/charts.js":"/2048/js/charts.js?v=b35f87ba","/2048/js/coi.js":"/2048/js/coi.js?v=90e453c1","/2048/js/game.js":"/2048/js/game.js?v=1c708cb8","/2048/js/site.js":"/2048/js/site.js?v=e3894179","/2048/js/view.js":"/2048/js/view.js?v=2281d01d","/css/admin.css":"/css/admin.css?v=03cbe785","/css/game.css":"/css/game.css?v=d0d94142","/css/style.css":"/css/style.css?v=506029b4","/js/admin.js":"/js/admin.js?v=1fff47d7","/js/admin/book.js":"/js/admin/book.js?v=82acb5eb","/js/admin/dash.js":"/js/admin/dash.js?v=98eab316","/js/admin/data.js":"/js/admin/data.js?v=97c8a170","/js/admin/games.js":"/js/admin/games.js?v=e75f2e9d","/js/admin/music.js":"/js/admin/music.js?v=3fda1813","/js/admin/scores.js":"/js/admin/scores.js?v=0b7849d5","/js/admin/skills.js":"/js/admin/skills.js?v=49aad064","/js/admin/ui.js":"/js/admin/ui.js?v=2dcf052a","/js/admin/wall.js":"/js/admin/wall.js?v=b478a493","/js/config.js":"/js/config.js?v=824b1906","/js/consent.js":"/js/consent.js?v=58a1c40c","/js/data.js":"/js/data.js?v=3a155577","/js/drug.js":"/js/drug.js?v=6c86a48f","/js/fx.js":"/js/fx.js?v=d128f725","/js/game/game.js":"/js/game/game.js?v=6c2322fe","/js/i18n.js":"/js/i18n.js?v=e0653a9b","/js/legal.js":"/js/legal.js?v=24d6fac4","/js/main.js":"/js/main.js?v=89118882","/js/melt.js":"/js/melt.js?v=6ab542f2","/js/pixelate.js":"/js/pixelate.js?v=e4030509","/js/sections/footer.js":"/js/sections/footer.js?v=1332ccf0","/js/sections/guestbook.js":"/js/sections/guestbook.js?v=d9a3f5c8","/js/sections/music.js":"/js/sections/music.js?v=68532308","/js/sections/projects.js":"/js/sections/projects.js?v=edc82dba","/js/sections/room.js":"/js/sections/room.js?v=d82e05d1","/js/sections/shelf.js":"/js/sections/shelf.js?v=c71488f1","/js/sections/skills.js":"/js/sections/skills.js?v=8555e977","/js/sections/visualizer.js":"/js/sections/visualizer.js?v=b4a84c50","/js/sections/wall.js":"/js/sections/wall.js?v=c41f6e2c","/js/sfx.js":"/js/sfx.js?v=18bddc38","/js/snap.js":"/js/snap.js?v=65ee0a49","/js/spray.js":"/js/spray.js?v=724098a2","/js/sprites.js":"/js/sprites.js?v=6c4006f6","/js/supabase.js":"/js/supabase.js?v=35627d0e","/js/terminal.js":"/js/terminal.js?v=2678ec2e","/js/util.js":"/js/util.js?v=7335a998","/js/vendor/supabase.esm.js":"/js/vendor/supabase.esm.js?v=bf8da80e"}}</script>
+  <title>2048 AI Laboratuvarı — STAR</title>
+  <meta name="description" content="star'ın 2048 yapay zekâsı: 8,8 milyon oyunla eğitilmiş N-Tuple ağı ve tarayıcıda Expectimax arama. Her kararını canlı izle, istersen sen oyna.">
+  <meta name="theme-color" content="#222034">
+  <link rel="canonical" href="https://starwww.dev/2048/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://starwww.dev/2048/">
+  <meta property="og:title" content="2048 AI Laboratuvarı — STAR">
+  <meta property="og:description" content="Kendi kendine oynamayı öğrenen 2048 yapay zekâsı. Her kararını canlı izle.">
+  <meta property="og:image" content="https://starwww.dev/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/assets/fonts/silkscreen-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/2048/css/lab.css?v=21bc5808">
+  <script src="/js/head.js?v=2ea813dc"></script>
+  <script src="/2048/js/coi.js?v=90e453c1"></script>
+</head>
+<body>
+  <!-- İkon seti: tek görsel dil (2 px çizgi, yuvarlak uçlar) -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4.5" width="4" height="15" rx="1"/><rect x="14" y="4.5" width="4" height="15" rx="1"/></symbol>
+    <symbol id="i-step" viewBox="0 0 24 24"><path d="M5 4.5v15l11-7.5z"/><path d="M19.5 5v14"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M3.5 3.5V8H8"/></symbol>
+    <symbol id="i-live" viewBox="0 0 24 24"><path d="M3 12h4l3-8 4 16 3-8h4"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-balance" viewBox="0 0 24 24"><path d="M12 4v16M8 20h8M5 8h14"/><path d="M5 8l-2.5 6h5zM19 8l-2.5 6h5z"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4.5M16 6h3a3 3 0 0 1-3 4.5M12 13v4M8.5 20.5h7M10 17h4v3.5h-4z"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M8 14h8"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3.5 3.5v17h17"/><path d="m7 15 4-5 3 3 5-6"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></symbol>
+    <symbol id="i-bars" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></symbol>
+    <symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4.5 17a8.5 8.5 0 1 1 15 0"/><path d="m12 13 3.5-4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></symbol>
+  </svg>
+
+  <a class="skip-link" href="#main">İçeriğe geç</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <a class="back-link" href="/#projeler">← Oda</a>
+      <a class="brand" href="#canli">
+        <span class="brand-mark" aria-hidden="true">2048</span>
+        <span class="brand-text">
+          <span class="brand-title">AI Laboratuvarı</span>
+          <span class="brand-sub">star // proje_02</span>
+        </span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Ana gezinme">
+        <a class="nav-link" href="#canli" data-route="canli" aria-current="page">
+          <svg class="icon" aria-hidden="true"><use href="#i-live"/></svg><span>Canlı oyun</span>
+        </a>
+        <a class="nav-link" href="#model" data-route="model">
+          <svg class="icon" aria-hidden="true"><use href="#i-cpu"/></svg><span>Model <span class="hide-sm">&amp; eğitim</span></span>
+        </a>
+        <a class="nav-link" href="#nasil" data-route="nasil">
+          <svg class="icon" aria-hidden="true"><use href="#i-book"/></svg><span>Nasıl<span class="hide-sm"> çalışır</span>?</span>
+        </a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="btn btn-primary btn-sm" id="btnPlayMini" type="button" hidden>
+          <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>AI'ı başlat</span>
+        </button>
+        <button class="btn btn-sm btn-model" type="button" data-load-model title="16 bitlik eğitilmiş ağ: 4 parça, toplam ~53 MB. Bir kez iner, tarayıcı önbelleğinde kalır."><span>Tam modeli yükle · 53 MB</span></button>
+        <div class="status-chip" id="status" data-state="loading" role="status">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="statusText">AI hazırlanıyor…</span>
+        </div>
+      </div>
+    </div>
+    <div class="load-bar" id="loadBar" role="progressbar" aria-label="Model yükleme ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <i id="loadBarFill"></i>
+    </div>
+  </header>
+
+  <!-- Ekran okuyucu duyuruları: yalnızca önemli olaylar -->
+  <div class="sr-only" id="announcer" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <main id="main" tabindex="-1">
+
+    <!-- ===================== CANLI OYUN ===================== -->
+    <section class="view" id="view-canli" data-view="canli" aria-labelledby="h-canli">
+      <h1 class="sr-only" id="h-canli">Canlı oyun</h1>
+
+      <div class="live-grid">
+
+        <!-- Sahne: skor, tahta, kontroller -->
+        <section class="stage" aria-label="Oyun">
+          <dl class="kpi-strip">
+            <div class="kpi">
+              <dt class="kpi-label">Skor</dt>
+              <dd class="kpi-value num" id="score">0</dd>
+              <dd class="kpi-delta num" id="scoreDelta" aria-hidden="true"></dd>
+            </div>
+            <div class="kpi">
+              <dt class="kpi-label">En iyi</dt>
+              <dd class="kpi-value num" id="best">0</dd>
+            </div>
+            <div class="kpi">
+              <dt class="kpi-label">Hamle</dt>
+              <dd class="kpi-value num" id="moves">0</dd>
+            </div>
+            <div class="kpi">
+              <dt class="kpi-label">En büyük taş</dt>
+              <dd class="kpi-value num kpi-tile"><span class="swatch t-1" id="maxTileSwatch" aria-hidden="true"></span><span id="maxTile">2</span></dd>
+            </div>
+          </dl>
+
+          <div class="board-wrap" id="boardWrap">
+            <div id="board" tabindex="0" role="group" aria-roledescription="oyun tahtası"
+                 aria-label="2048 tahtası. Ok tuşlarıyla oyna." aria-describedby="boardDesc"></div>
+            <p class="sr-only" id="boardDesc"></p>
+            <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+            <div class="board-overlay" id="overlay" hidden>
+              <div class="overlay-card">
+                <p class="overlay-title" id="overlayTitle">Oyun bitti</p>
+                <p class="overlay-sub" id="overlaySub"></p>
+                <button class="btn btn-primary" id="overlayNew" type="button">
+                  <svg class="icon" aria-hidden="true"><use href="#i-restart"/></svg><span>Yeni oyun</span>
+                </button>
+              </div>
+            </div>
+            <div class="replay-banner" id="replayBanner" hidden>
+              <p>Geçmiş · hamle <b class="num" id="replayIdx">1</b> öncesi
+                <span class="replay-keys"><kbd>←</kbd><kbd>→</kbd> gez · <kbd>Esc</kbd> çık</span></p>
+              <button class="btn btn-secondary btn-sm" id="btnLive" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-back"/></svg><span>Canlıya dön</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="game-controls" id="gameControls" aria-label="Oyun kontrolleri">
+            <button class="btn btn-primary btn-lg" id="btnPlay" type="button" disabled>
+              <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>AI'ı başlat</span>
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btnStep" type="button" disabled aria-keyshortcuts="S">
+              <svg class="icon" aria-hidden="true"><use href="#i-step"/></svg><span>Tek hamle</span>
+            </button>
+            <button class="btn btn-secondary btn-lg" id="btnNew" type="button" aria-keyshortcuts="N">
+              <svg class="icon" aria-hidden="true"><use href="#i-restart"/></svg><span>Yeni oyun</span>
+            </button>
+          </div>
+          <p class="key-hint">
+            <svg class="icon" aria-hidden="true"><use href="#i-keyboard"/></svg>
+            <span><kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd> sen oyna</span>
+            <span><kbd>Boşluk</kbd> başlat/durdur</span>
+            <span><kbd>S</kbd> tek hamle</span>
+            <span><kbd>N</kbd> yeni oyun</span>
+          </p>
+          <ul class="milestones" id="milestones" aria-label="Bu oyunda ulaşılan büyük taşlar"></ul>
+        </section>
+
+        <!-- Karar analizi -->
+        <section class="panel decision" id="decisionCard" aria-labelledby="h-decision">
+          <header class="panel-head">
+            <h2 class="panel-title" id="h-decision">
+              <svg class="icon" aria-hidden="true"><use href="#i-target"/></svg>Karar analizi
+            </h2>
+            <div class="panel-meta">
+              <span class="pill" id="decState" data-tone="idle">Beklemede</span>
+              <span class="badge" id="decMode">—</span>
+            </div>
+          </header>
+
+          <div class="decision-hero">
+            <div class="move-tile" id="bigArrow" aria-hidden="true">·</div>
+            <div class="decision-text">
+              <p class="dec-title" id="decTitle">AI hazırlanıyor</p>
+              <p class="dec-sub" id="decSub">Model yüklenince başlatabilirsin.</p>
+            </div>
+            <div class="prediction" id="predBox">
+              <span class="kpi-label">Tahmini final</span>
+              <span class="prediction-value num" id="predFinal">—</span>
+            </div>
+          </div>
+
+          <ol class="dir-list" id="dirList" aria-label="Dört yönün değerlendirmesi"></ol>
+
+          <div class="decision-foot">
+            <section class="risk" id="riskBox" aria-labelledby="h-risk" hidden>
+              <div class="risk-board" id="riskBoard" aria-hidden="true"></div>
+              <div class="risk-info">
+                <h3 class="subhead" id="h-risk">Rastgele taş riski</h3>
+                <p class="risk-text" id="riskText"></p>
+                <ul class="risk-legend">
+                  <li><i class="lg-bad" aria-hidden="true"></i>− beklentiyi düşürür</li>
+                  <li><i class="lg-mid" aria-hidden="true"></i>nötr</li>
+                  <li><i class="lg-good" aria-hidden="true"></i>+ yükseltir</li>
+                </ul>
+              </div>
+            </section>
+            <dl class="metrics">
+              <div><dt>Derinlik</dt><dd class="num" id="mDepth">—</dd></div>
+              <div><dt>İncelenen konum</dt><dd class="num" id="mEvals">—</dd></div>
+              <div><dt>Düşünme</dt><dd class="num" id="mTime">—</dd></div>
+              <div><dt>Konum / sn</dt><dd class="num" id="mRate">—</dd></div>
+              <div><dt>Önbellek isabeti</dt><dd class="num" id="mHits">—</dd></div>
+              <div><dt>Oyun hızı</dt><dd class="num" id="mSpeed">—</dd></div>
+            </dl>
+          </div>
+        </section>
+
+        <!-- Ayarlar rayı -->
+        <aside class="rail" aria-label="Ayarlar">
+          <section class="panel" aria-labelledby="h-mode">
+            <header class="panel-head">
+              <h2 class="panel-title" id="h-mode">
+                <svg class="icon" aria-hidden="true"><use href="#i-gauge"/></svg>Oyun modu
+              </h2>
+              <span class="pill" id="presetCustom" data-tone="muted" hidden>Özel ayar</span>
+            </header>
+            <fieldset class="mode-list" id="segPreset">
+              <legend class="sr-only">Hazır profil seç</legend>
+              <label class="mode-card">
+                <input type="radio" name="preset" value="watch">
+                <span class="mode-icon" aria-hidden="true"><svg class="icon"><use href="#i-eye"/></svg></span>
+                <span class="mode-body">
+                  <span class="mode-name">İzleme</span>
+                  <span class="mode-desc">Her hamle yavaşça · 50 ms düşünme</span>
+                </span>
+              </label>
+              <label class="mode-card">
+                <input type="radio" name="preset" value="balanced">
+                <span class="mode-icon" aria-hidden="true"><svg class="icon"><use href="#i-balance"/></svg></span>
+                <span class="mode-body">
+                  <span class="mode-name">Dengeli</span>
+                  <span class="mode-desc">Normal hız · 100 ms · derinlik 5</span>
+                </span>
+              </label>
+              <label class="mode-card">
+                <input type="radio" name="preset" value="strong">
+                <span class="mode-icon" aria-hidden="true"><svg class="icon"><use href="#i-trophy"/></svg></span>
+                <span class="mode-body">
+                  <span class="mode-name">En güçlü</span>
+                  <span class="mode-desc">1 sn düşünme · derinlik 9'a kadar</span>
+                </span>
+              </label>
+              <label class="mode-card">
+                <input type="radio" name="preset" value="turbo">
+                <span class="mode-icon" aria-hidden="true"><svg class="icon"><use href="#i-zap"/></svg></span>
+                <span class="mode-body">
+                  <span class="mode-name">Turbo</span>
+                  <span class="mode-desc">İşçilerde toplu oyun · ~1.700 hamle/sn</span>
+                </span>
+              </label>
+            </fieldset>
+          </section>
+
+          <details class="panel advanced" id="advanced">
+            <summary class="panel-head">
+              <span class="panel-title">
+                <svg class="icon" aria-hidden="true"><use href="#i-sliders"/></svg>Gelişmiş ayarlar
+              </span>
+              <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron-down"/></svg>
+            </summary>
+            <div class="advanced-body">
+              <fieldset class="field">
+                <legend class="field-label">Değerlendirme fonksiyonu</legend>
+                <div class="segmented" id="segMode">
+                  <label><input type="radio" name="evalMode" value="ntuple"><span>N-Tuple model</span></label>
+                  <label><input type="radio" name="evalMode" value="heuristic"><span>Heuristik</span></label>
+                </div>
+              </fieldset>
+
+              <div class="field">
+                <div class="field-row">
+                  <label class="field-label" for="rngTime">Hamle başına düşünme</label>
+                  <output class="field-value num" id="outTime" for="rngTime">100 ms</output>
+                </div>
+                <input type="range" id="rngTime" min="0" max="12" step="1" value="4" aria-describedby="helpTime">
+                <p class="field-help" id="helpTime">“Sabit” seçilirse süre sınırı olmaz, arama her hamlede seçilen derinliğe iner.</p>
+              </div>
+
+              <div class="field">
+                <div class="field-row">
+                  <label class="field-label" for="rngDepth">En fazla arama derinliği</label>
+                  <output class="field-value num" id="outDepth" for="rngDepth">5</output>
+                </div>
+                <input type="range" id="rngDepth" min="0" max="9" step="1" value="5">
+              </div>
+
+              <div class="field">
+                <div class="field-row">
+                  <label class="field-label" for="rngSpeed">Oyun hızı</label>
+                  <output class="field-value" id="outSpeed" for="rngSpeed">Normal</output>
+                </div>
+                <input type="range" id="rngSpeed" min="0" max="5" step="1" value="1" aria-describedby="speedHint">
+                <p class="field-help" id="speedHint" hidden></p>
+              </div>
+
+              <label class="switch">
+                <input type="checkbox" role="switch" id="chkAuto" checked>
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-label">Oyun bitince otomatik yeni oyun</span>
+              </label>
+              <label class="switch">
+                <input type="checkbox" role="switch" id="chkHint" checked>
+                <span class="switch-track" aria-hidden="true"></span>
+                <span class="switch-label">Ben oynarken AI önerisini canlı göster</span>
+              </label>
+            </div>
+          </details>
+        </aside>
+
+        <!-- İçgörüler -->
+        <section class="panel insights" aria-labelledby="h-insights">
+          <header class="panel-head insights-head">
+            <h2 class="panel-title" id="h-insights">
+              <svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Oyun içgörüleri
+            </h2>
+            <div class="tabs" role="tablist" aria-label="İçgörü görünümü" id="insightTabs">
+              <button class="tab" role="tab" type="button" id="tab-chart" aria-controls="pane-chart" aria-selected="true">
+                <svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Seyir
+              </button>
+              <button class="tab" role="tab" type="button" id="tab-history" aria-controls="pane-history" aria-selected="false" tabindex="-1">
+                <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>Geçmiş<span class="count num" id="histCount">0</span>
+              </button>
+              <button class="tab" role="tab" type="button" id="tab-stats" aria-controls="pane-stats" aria-selected="false" tabindex="-1">
+                <svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg>İstatistik
+              </button>
+            </div>
+          </header>
+
+          <div class="tab-pane" role="tabpanel" id="pane-chart" aria-labelledby="tab-chart" tabindex="0">
+            <div class="chart-toolbar">
+              <fieldset class="segmented segmented-sm" id="segChart">
+                <legend class="sr-only">Grafik serisi</legend>
+                <label><input type="radio" name="chartMode" value="score" checked><span>Skor</span></label>
+                <label><input type="radio" name="chartMode" value="value"><span>Beklenti</span></label>
+                <label><input type="radio" name="chartMode" value="think"><span>Süre</span></label>
+                <label><input type="radio" name="chartMode" value="depth"><span>Derinlik</span></label>
+              </fieldset>
+              <ul class="legend" id="gameLegend" aria-label="Lejant"></ul>
+            </div>
+            <div class="chart-box"><canvas id="chartGame" role="img" aria-describedby="chartSummary"></canvas></div>
+            <p class="chart-summary" id="chartSummary">Oyun başladığında grafik burada çizilir.</p>
+          </div>
+
+          <div class="tab-pane" role="tabpanel" id="pane-history" aria-labelledby="tab-history" tabindex="0" hidden>
+            <div class="scrubber">
+              <button class="btn btn-secondary btn-icon" id="btnPrev" type="button" aria-label="Önceki hamle">
+                <svg class="icon" aria-hidden="true"><use href="#i-chevron-left"/></svg>
+              </button>
+              <input type="range" id="rngHist" min="0" max="0" value="0" aria-label="Hamle geçmişinde gez">
+              <button class="btn btn-secondary btn-icon" id="btnNext" type="button" aria-label="Sonraki hamle">
+                <svg class="icon" aria-hidden="true"><use href="#i-chevron-right"/></svg>
+              </button>
+            </div>
+            <p class="empty-state" id="histEmpty">
+              <svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>
+              Henüz hamle yok. AI'ı başlat ya da ok tuşlarıyla oyna; her karar burada listelenir ve tıklayınca o ana dönersin.
+            </p>
+            <div class="table-wrap" id="histWrap" hidden>
+              <table class="data-table">
+                <caption class="sr-only">Hamle geçmişi, en yeni hamle en üstte. Satıra tıklayınca o hamle öncesine dönülür.</caption>
+                <thead>
+                  <tr><th scope="col">#</th><th scope="col">Yön</th><th scope="col" class="r">Puan</th><th scope="col" class="r">Skor</th>
+                    <th scope="col" class="r">Derinlik</th><th scope="col" class="r">Süre</th>
+                    <th scope="col" class="r" title="En iyi hamle ile ikinci en iyi hamle arasındaki beklenen skor farkı">Fark</th></tr>
+                </thead>
+                <tbody id="histBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-pane" role="tabpanel" id="pane-stats" aria-labelledby="tab-stats" tabindex="0" hidden>
+            <div class="stats-head">
+              <p class="muted">Yalnızca tamamen AI tarafından oynanan oyunlar sayılır. Veriler bu tarayıcıda saklanır.</p>
+              <button class="btn btn-danger-ghost btn-sm" id="btnResetStats" type="button">
+                <svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg><span>Sıfırla</span>
+              </button>
+            </div>
+            <dl class="kpi-grid">
+              <div class="kpi"><dt class="kpi-label">Oyun</dt><dd class="kpi-value num" id="sGames">0</dd></div>
+              <div class="kpi"><dt class="kpi-label">Ortalama skor</dt><dd class="kpi-value num" id="sAvg">—</dd></div>
+              <div class="kpi"><dt class="kpi-label">En yüksek skor</dt><dd class="kpi-value num" id="sBest">—</dd></div>
+              <div class="kpi"><dt class="kpi-label">Ortalama hamle</dt><dd class="kpi-value num" id="sMoves">—</dd></div>
+            </dl>
+            <p class="empty-state" id="statsEmpty">
+              <svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg>
+              Henüz tamamlanmış AI oyunu yok. Turbo modunda dakikada yüzlerce oyun biter; oranlar burada birikir.
+            </p>
+            <div class="stats-body" id="statsBody" hidden>
+              <h3 class="subhead">Taşa ulaşma oranı</h3>
+              <ul class="reach" id="reachBars"></ul>
+              <h3 class="subhead">Son oyunlar</h3>
+              <ol class="recent" id="recentGames"></ol>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ===================== MODEL & EĞİTİM ===================== -->
+    <section class="view" id="view-model" data-view="model" aria-labelledby="h-model" hidden>
+      <header class="view-head">
+        <h1 class="view-title" id="h-model" tabindex="-1">Model ve eğitim</h1>
+        <p class="view-lead">Yüklü modelin yapısı, eğitim sürecinin eğrileri ve kıyaslama sonuçları.</p>
+      </header>
+
+      <div class="model-grid">
+        <section class="panel" aria-labelledby="h-model-info">
+          <header class="panel-head">
+            <h2 class="panel-title" id="h-model-info"><svg class="icon" aria-hidden="true"><use href="#i-cpu"/></svg>Model</h2>
+            <span class="badge" id="modelBadge">—</span>
+          </header>
+          <dl class="kpi-grid" id="modelKpis"></dl>
+          <p class="model-cta">
+            <button class="btn btn-primary" type="button" data-load-model><span>Tam modeli yükle · 53 MB</span></button>
+            <span class="muted body-sm">Sayfa açılınca AI elle yazılmış kurallarla (heuristik) oynar. Tam model 16 bitlik eğitilmiş ağdır:
+              4 parça hâlinde bir kez iner ve tarayıcı önbelleğinde kalır.</span>
+          </p>
+          <p class="muted body-sm">Ağ, tahtadaki 4 farklı 6 hücrelik deseni 8 simetrisiyle (döndürme + ayna) okur.
+            Her desenin 16<sup>6</sup> = 16.777.216 olası durumu için öğrenilmiş bir ağırlık vardır;
+            bir konumun değeri 32 ağırlığın toplamıdır.</p>
+          <ul class="patterns" id="patterns" aria-label="Desenler"></ul>
+        </section>
+
+        <section class="panel" aria-labelledby="h-bench">
+          <header class="panel-head">
+            <h2 class="panel-title" id="h-bench"><svg class="icon" aria-hidden="true"><use href="#i-bars"/></svg>Kıyaslama sonuçları</h2>
+            <span class="muted body-sm">Rust kıyaslama aracı</span>
+          </header>
+          <div id="benchBox" class="bench"></div>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="h-train-score">
+        <header class="panel-head">
+          <h2 class="panel-title" id="h-train-score"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Eğitim eğrisi: ortalama skor</h2>
+          <span class="pill" id="trainLive" data-tone="live" hidden>Eğitim devam ediyor</span>
+        </header>
+        <p class="muted body-sm">Eğitim sırasında AI arama yapmadan, yalnızca bir hamle ileri bakarak oynar. Tarayıcıdaki arama bu değerleri belirgin şekilde artırır.</p>
+        <div class="chart-box chart-tall"><canvas id="chartTrainScore" role="img" aria-label="Eğitim boyunca ortalama skor"></canvas></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-train-reach">
+        <header class="panel-head">
+          <h2 class="panel-title" id="h-train-reach"><svg class="icon" aria-hidden="true"><use href="#i-chart"/></svg>Eğitim eğrisi: taşa ulaşma oranları</h2>
+        </header>
+        <ul class="legend" id="reachLegend" aria-label="Lejant"></ul>
+        <div class="chart-box chart-tall"><canvas id="chartTrainReach" role="img" aria-label="Eğitim boyunca büyük taşlara ulaşma oranları"></canvas></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-log">
+        <header class="panel-head">
+          <h2 class="panel-title" id="h-log"><svg class="icon" aria-hidden="true"><use href="#i-list"/></svg>Eğitim günlüğü</h2>
+          <span class="muted body-sm num" id="logInfo"></span>
+        </header>
+        <div class="table-wrap table-tall">
+          <table class="data-table">
+            <caption class="sr-only">Eğitim günlüğü, en yeni kayıt en üstte</caption>
+            <thead><tr><th scope="col">Faz</th><th scope="col" class="r">Oyun</th><th scope="col" class="r">Süre</th><th scope="col" class="r">Ort. skor</th>
+              <th scope="col" class="r">En yüksek</th><th scope="col" class="r">2048</th><th scope="col" class="r">8192</th><th scope="col" class="r">16384</th>
+              <th scope="col" class="r">32768</th><th scope="col" class="r">Hamle/sn</th></tr></thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================== NASIL ÇALIŞIR ===================== -->
+    <section class="view" id="view-nasil" data-view="nasil" aria-labelledby="h-nasil" hidden>
+      <article class="prose">
+        <header class="view-head">
+          <h1 class="view-title" id="h-nasil" tabindex="-1">Bu yapay zekâ nasıl oynuyor?</h1>
+          <p class="view-lead">Sistem iki parçadan oluşur: oyunu deneyimle öğrenmiş bir <b>değer modeli</b> ve bu modeli kullanarak
+            birkaç hamle ilerisini hesaplayan bir <b>arama algoritması</b>. Model, bir tahtaya bakıp “bu konumdan oyun sonuna kadar
+            ortalama kaç puan daha kazanılır?” sorusunu cevaplar; arama ise olası hamleleri ve rastgele gelen taşları deneyerek
+            beklenen değeri en yüksek hamleyi seçer.</p>
+        </header>
+
+        <h2>1. Model: N-Tuple ağı</h2>
+        <p>Derin sinir ağı yerine 2048 için en başarılı yöntem olan <b>N-Tuple ağı</b> kullanılır. Tahtadan 6 hücrelik
+          4 desen seçilir ve her desen 8 simetrisiyle (4 döndürme × ayna) okunur, yani toplam 32 okuma yapılır. Her okuma, o 6 hücrenin
+          değerlerinden bir indeks üretir ve devasa bir tablodan (desen başına 16.777.216 ağırlık) bir sayı alır.
+          Bu 32 sayının toplamı konumun değeridir. Toplam 67 milyon ağırlık vardır; değerlendirme çok hızlıdır ve
+          saniyede milyonlarca konum incelemeyi mümkün kılar.</p>
+        <p>Eğitim 32 bitlik ondalık sayılarla yapıldı (256 MB). Bu sitede ağırlıklar 16 bitlik tam sayıya çevrildi
+          (en büyük yuvarlama hatası ~2 puan): indirme 53 MB'a iniyor, güç değişmiyor. Rust kıyaslamasında derinlik 2 ile
+          16384 oranı %96,7'ye karşı %96,0 çıktı, fark ölçüm gürültüsü içinde. 8 bitlik denemeler modeli belirgin şekilde zayıflattı.</p>
+
+        <h2>2. Öğrenme: Temporal Difference (TD)</h2>
+        <p>Model kendi kendine milyonlarca oyun oynayarak öğrenir (Rust ile yazılmış eğitim programı, işlemcinin tüm çekirdeklerinde).
+          Her hamleden sonra oluşan “afterstate” için şu kural uygulanır:</p>
+        <pre><code>V(s) ← V(s) + α · ( ödül + V(s′) − V(s) )</code></pre>
+        <p>Bir konumun değeri, bir sonraki hamlede kazanılan puan artı sonraki konumun değerine doğru yavaşça kaydırılır.
+          Oyun bittiğinde güncellemeler sondan başa doğru yapılır, böylece “bu hamle 500 hamle sonra oyunu kaybettirdi”
+          bilgisi hızla geriye yayılır. Eğitim işlemcinin tüm çekirdeklerinde paralel (Hogwild) çalışır.</p>
+        <ul>
+          <li><b>Temporal Coherence (TC):</b> her ağırlık kendi öğrenme hızını ayarlar. Karşılaştırma deneyinde aynı sürede klasik TD'ye göre %37 daha yüksek skor verdi.</li>
+          <li><b>NLMS normalizasyonu:</b> boş tahtalarda aynı ağırlık birden çok simetride görünür; adım boyu buna göre küçültülerek paralel eğitim kararlı tutulur.</li>
+          <li><b>Plato:</b> öğrenme ~3 milyon oyundan sonra neredeyse durur; 7,25 saatlik eğitimin ölçümü Model sayfasında.</li>
+        </ul>
+
+        <h2>3. Karar: Expectimax arama</h2>
+        <figure class="diagram">
+          <svg viewBox="0 0 640 210" role="img" aria-labelledby="dgTitle">
+            <title id="dgTitle">Expectimax ağacı: kökte en iyi hamle seçilir, her hamleden sonra rastgele taş olasılıkları ortalanır, derinlik kadar tekrarlanır</title>
+            <g class="dg-edges">
+              <line x1="320" y1="34" x2="110" y2="92"/><line x1="320" y1="34" x2="250" y2="92"/>
+              <line x1="320" y1="34" x2="390" y2="92"/><line x1="320" y1="34" x2="530" y2="92"/>
+              <line x1="110" y1="112" x2="60" y2="170"/><line x1="110" y1="112" x2="110" y2="170"/><line x1="110" y1="112" x2="160" y2="170"/>
+              <line x1="530" y1="112" x2="480" y2="170"/><line x1="530" y1="112" x2="530" y2="170"/><line x1="530" y1="112" x2="580" y2="170"/>
+            </g>
+            <g class="dg-max"><rect x="290" y="14" width="60" height="30" rx="6"/><text x="320" y="34">MAX</text></g>
+            <g class="dg-chance">
+              <circle cx="110" cy="102" r="16"/><text x="110" y="107">↑</text>
+              <circle cx="250" cy="102" r="16"/><text x="250" y="107">→</text>
+              <circle cx="390" cy="102" r="16"/><text x="390" y="107">↓</text>
+              <circle cx="530" cy="102" r="16"/><text x="530" y="107">←</text>
+            </g>
+            <g class="dg-leaf">
+              <rect x="44" y="166" width="32" height="24" rx="4"/><rect x="94" y="166" width="32" height="24" rx="4"/><rect x="144" y="166" width="32" height="24" rx="4"/>
+              <rect x="464" y="166" width="32" height="24" rx="4"/><rect x="514" y="166" width="32" height="24" rx="4"/><rect x="564" y="166" width="32" height="24" rx="4"/>
+            </g>
+            <g class="dg-labels">
+              <text x="600" y="34">hamle seçimi (en iyisi)</text>
+              <text x="600" y="126">rastgele taş (%90 “2”, %10 “4”)</text>
+              <text x="320" y="182">… derinlik kadar tekrar, sonra model değerlendirir</text>
+            </g>
+          </svg>
+          <figcaption>Kökte dört hamle denenir, her hamleden sonra olası taşların ağırlıklı ortalaması alınır.</figcaption>
+        </figure>
+        <p>AI her konumda 4 hamleyi dener. Her hamleden sonra oyunun koyabileceği tüm taşları (%90 ihtimalle 2, %10 ihtimalle 4, her boş hücreye)
+          ağırlıklı ortalamayla hesaba katar, sonra yine en iyi hamleyi seçer. Bu “derinlik” kadar tekrarlanır ve en uçtaki konumlar
+          modelle değerlendirilir. Hızlandırmak için:</p>
+        <ul>
+          <li><b>İteratif derinleştirme:</b> önce derinlik 0, sonra 1, 2… Süre bütçesi bitmeden en derin tamamlanan sonuç kullanılır.</li>
+          <li><b>Paralel işçiler:</b> kök hamle × boş hücre alt problemleri çekirdeklere dağıtılır; model belleği paylaşılır (SharedArrayBuffer).
+            Bunun için sayfanın “cross-origin isolated” olması gerekir; GitHub Pages bu başlıkları gönderemediği için küçük bir service worker ekler.
+            Tarayıcın izin vermezse AI tek çekirdekte çalışır.</li>
+          <li><b>Önbellekler:</b> transposition table aynı konumu tekrar hesaplamaz; L2'ye sığan yaprak önbelleği tekrar eden değerlendirmeleri yakalar.</li>
+          <li><b>Olasılık budaması:</b> gerçekleşme ihtimali %0,01'in altındaki dallar derinleştirilmez.</li>
+        </ul>
+
+        <h2>4. Turbo modu</h2>
+        <p>Normal modda her hamle için sayfa ile işçiler arasında onlarca mesaj gidip gelir ve tahta her hamlede çizilir. Turboda:</p>
+        <ul>
+          <li><b>Lider işçi oyunu kendisi oynar:</b> hamleler ~12 ms'lik paketler hâlinde gelir; ekran kare başına bir kez çizilir.</li>
+          <li><b>Mesajsız paralellik:</b> derin aramalarda işler paylaşımlı bellekteki bir kuyruğa yazılır; yardımcı işçiler kilitsiz kapar.</li>
+          <li><b>Bellek darboğazı:</b> bir değerlendirme 256 MB'lık tabloya 32 rastgele erişimdir; 3-4 işçiden fazlası hız kazandırmaz.</li>
+        </ul>
+        <div class="table-wrap">
+          <table class="data-table">
+            <caption>Bu makinede ölçülen turbo hızları (süre “Sabit”)</caption>
+            <thead><tr><th scope="col">Derinlik</th><th scope="col" class="r">Hamle / sn</th><th scope="col">Tam oyun</th></tr></thead>
+            <tbody>
+              <tr><td>0</td><td class="r num">~146.000</td><td>dakikada ~930</td></tr>
+              <tr><td>1</td><td class="r num">~25.000</td><td>dakikada ~127</td></tr>
+              <tr><td>2</td><td class="r num">~1.700</td><td>oyun başına ~8 sn</td></tr>
+              <tr><td>3</td><td class="r num">~120</td><td>oyun başına ~2 dk</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>5. Ekranda gördüklerin</h2>
+        <dl class="glossary">
+          <div><dt>Karar analizi</dt><dd>Dört yönün her biri için hamle sonrası tahta, kazanılacak puan ve beklenen gelecek skor. Çubuk ne kadar uzunsa hamle o kadar iyidir; en iyi hamle “En iyi” etiketi taşır.</dd></div>
+          <div><dt>Tahmini final</dt><dd>Şu anki skor + modelin beklediği ek puan: AI'ın oyunun nasıl biteceğine dair tahmini.</dd></div>
+          <div><dt>Rastgele taş riski</dt><dd>Seçilen hamleden sonra taş hangi hücreye düşerse beklentinin ne kadar değişeceği. Eksi işaretli kırmızı hücreler AI'ın korktuğu yerlerdir.</dd></div>
+          <div><dt>İçgörüler</dt><dd>Skor, beklenti, düşünme süresi ve derinliğin hamle hamle seyri; tıklanabilir hamle geçmişi ve oturum istatistikleri.</dd></div>
+          <div><dt>Heuristik mod</dt><dd>Karşılaştırma için elle yazılmış bir değerlendirme (boş hücre, monotonluk, birleşme potansiyeli).</dd></div>
+        </dl>
+        <p class="note"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg>
+          <span>Bitboard gösterimi taşları 4 bitte tuttuğu için AI'ın iç motoru 32768'in üzerindeki taşları 32768 olarak görür; gerçek oyun sınırsızdır.</span></p>
+      </article>
+    </section>
+  </main>
+
+  <!-- Mobil: oyun kontrolleri alt çubukta -->
+  <div class="mobile-bar" id="mobileBar" aria-label="Oyun kontrolleri (mobil)">
+    <button class="btn btn-primary" id="btnPlayBar" type="button" disabled>
+      <svg class="icon" aria-hidden="true"><use href="#i-play"/></svg><span>AI'ı başlat</span>
+    </button>
+    <button class="btn btn-secondary btn-icon-lg" id="btnStepBar" type="button" disabled aria-label="Tek hamle">
+      <svg class="icon" aria-hidden="true"><use href="#i-step"/></svg>
+    </button>
+    <button class="btn btn-secondary btn-icon-lg" id="btnNewBar" type="button" aria-label="Yeni oyun">
+      <svg class="icon" aria-hidden="true"><use href="#i-restart"/></svg>
+    </button>
+  </div>
+
+  <footer class="lab-foot">
+    <span>© <span data-year>2026</span> STAR · <a href="/">starwww.dev</a> · 2048 AI laboratuvarı</span>
+    <span><a href="/gizlilik.html">Gizlilik</a> · <button type="button" data-consent-open>Çerez tercihleri</button></span>
+  </footer>
+
+  <script src="/2048/js/bitboard.js?v=903ccb21"></script>
+  <script src="/2048/js/game.js?v=1c708cb8"></script>
+  <script src="/2048/js/view.js?v=2281d01d"></script>
+  <script src="/2048/js/charts.js?v=b35f87ba"></script>
+  <script src="/2048/js/ai.js?v=e12edc52"></script>
+  <script src="/2048/js/app.js?v=82108e42"></script>
+  <script type="module" src="/2048/js/site.js?v=e3894179"></script>
+</body>
+</html>

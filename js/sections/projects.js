@@ -2,34 +2,94 @@ import { getRepos, getProjectsConfig } from '../data.js';
 import { esc, reducedMotion } from '../util.js';
 import { t, onLang } from '../i18n.js';
 
-const TILE = { 2: '#CBDBFC', 4: '#9BADB7', 8: '#5FCDE4', 16: '#639BFF', 32: '#99E550', 64: '#6ABE30', 128: '#FBF236', 256: '#DF7126', 512: '#D77BBA', 1024: '#AC3232', 2048: '#FFFFFF' };
+// Taş renkleri: 2048 laboratuvarıyla aynı DB32 paleti (koyu taşlarda beyaz yazı)
+const TILE = { 2: '#CBDBFC', 4: '#9BADB7', 8: '#5FCDE4', 16: '#639BFF', 32: '#99E550', 64: '#6ABE30', 128: '#FBF236', 256: '#DF7126', 512: '#D77BBA', 1024: '#AC3232', 2048: '#FFFFFF', 4096: '#76428A', 8192: '#3F3F74' };
+const DARK = new Set([1024, 4096, 8192]);
+
+// ---------- karttaki mini 2048: gerçek kurallar + küçük bir yapay zekâ ----------
+// Asıl yapay zekâ (eğitilmiş N-Tuple ağı) /2048/ laboratuvarında. Bu kart onu hafifçe taklit eder:
+// "yılan" sıralı ağırlıklarla (büyük taşlar sol üst köşede, zikzak dizilsin) iki hamle ileri bakan expectimax.
+const SNAKE = [15, 14, 13, 12, 8, 9, 10, 11, 7, 6, 5, 4, 0, 1, 2, 3].map((k) => 4 ** k);
+const LINES = [0, 1, 2, 3].map((dir) => [0, 1, 2, 3].map((k) => [0, 1, 2, 3].map((j) => (
+  dir === 0 ? j * 4 + k : dir === 1 ? k * 4 + 3 - j : dir === 2 ? (3 - j) * 4 + k : k * 4 + j))));
+
+// dir: 0 yukarı, 1 sağ, 2 aşağı, 3 sol → { b, gain, merged } ya da hamle geçersizse null
+function slide(b, dir) {
+  const out = b.slice();
+  let gain = 0; let moved = false; const merged = [];
+  for (const idx of LINES[dir]) {
+    const vals = idx.map((i) => b[i]).filter(Boolean);
+    const row = [];
+    for (let i = 0; i < vals.length; i++) {
+      if (vals[i] === vals[i + 1]) { row.push(vals[i] * 2); gain += vals[i] * 2; merged.push(idx[row.length - 1]); i++; } else row.push(vals[i]);
+    }
+    idx.forEach((cell, j) => { const v = row[j] || 0; if (out[cell] !== v) moved = true; out[cell] = v; });
+  }
+  return moved ? { b: out, gain, merged } : null;
+}
+const heur = (b) => b.reduce((s, v, i) => s + v * SNAKE[i], 0) + b.filter((v) => !v).length * 4 ** 10;
+function chance(b, depth) {
+  const empty = b.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
+  if (!empty.length) return heur(b);
+  let sum = 0;
+  for (const i of empty) {
+    for (const [v, p] of [[2, 0.9], [4, 0.1]]) {
+      const nb = b.slice(); nb[i] = v;
+      sum += p * (depth > 0 ? best(nb, depth - 1).score : heur(nb));
+    }
+  }
+  return sum / empty.length;
+}
+function best(b, depth) {
+  let top = { dir: -1, score: -Infinity };
+  for (let dir = 0; dir < 4; dir++) {
+    const r = slide(b, dir);
+    if (!r) continue;
+    const score = chance(r.b, depth);
+    if (score > top.score) top = { dir, score };
+  }
+  return top.dir < 0 ? { dir: -1, score: heur(b) } : top;
+}
+function spawn(b) {
+  const empty = b.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
+  if (!empty.length) return -1;
+  const i = empty[Math.floor(Math.random() * empty.length)];
+  b[i] = Math.random() < 0.9 ? 2 : 4;
+  return i;
+}
 
 export function init2048() {
   const el = document.getElementById('g2048');
   if (!el) return;
-  let board = [2, 4, 8, 16, 256, 128, 64, 32, 512, 1024, 2048, 0, 4, 0, 2, 8];
-  const render = (pop = -1) => {
+  const pts = document.getElementById('g2048Pts');
+  let board = [2, 4, 8, 16, 256, 128, 64, 32, 512, 1024, 2048, 0, 4, 0, 2, 8]; // hareket kapalıyken görünen vitrin
+  let score = 0;
+  const render = (pop = []) => {
     el.innerHTML = board.map((v, i) => {
-      const style = `background:${v ? TILE[v] : '#3F3F74'};${v === 1024 ? 'color:#fff;' : ''}${v === 2048 ? 'box-shadow:4px 4px 0 #D77BBA;' : ''}`;
-      return `<span class="${v >= 1000 ? 'big' : ''}${i === pop ? ' pop' : ''}" style="${style}">${v || ''}</span>`;
+      const style = `background:${v ? TILE[v] || '#000' : '#3F3F74'};${DARK.has(v) || v > 8192 ? 'color:#fff;' : ''}${v === 2048 ? 'box-shadow:4px 4px 0 #D77BBA;' : ''}`;
+      return `<span class="${v >= 1000 ? 'big' : ''}${pop.includes(i) ? ' pop' : ''}" style="${style}">${v || ''}</span>`;
     }).join('');
+    if (pts) pts.textContent = score.toLocaleString('tr-TR');
   };
   render();
   if (reducedMotion()) return;
+
+  const fresh = () => { board = Array(16).fill(0); score = 0; spawn(board); spawn(board); render(); };
+  fresh();
   let visible = false;
+  let pauseUntil = 0;
   new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(el);
   setInterval(() => {
-    if (!visible || document.hidden) return;
-    const empty = board.map((v, i) => (v ? -1 : i)).filter((i) => i >= 0);
-    if (empty.length < 2) {
-      board = board.map((v) => (v === 2048 || Math.random() > 0.35 ? v : 0));
-      render();
-      return;
-    }
-    const i = empty[Math.floor(Math.random() * empty.length)];
-    board[i] = Math.random() < 0.85 ? 2 : 4;
-    render(i);
-  }, 1600);
+    if (!visible || document.hidden || reducedMotion() || Date.now() < pauseUntil) return;
+    const empties = board.filter((v) => !v).length;
+    const { dir } = best(board, empties > 5 ? 0 : 1); // tahta doldukça bir hamle daha derine bak
+    const r = dir >= 0 ? slide(board, dir) : null;
+    if (!r) { pauseUntil = Date.now() + 2600; setTimeout(fresh, 2400); return; } // oyun bitti: kısa ara, yeni oyun
+    board = r.b;
+    score += r.gain;
+    const born = spawn(board);
+    render(born >= 0 ? r.merged.concat(born) : r.merged);
+  }, 420);
 }
 
 export async function initRepos() {

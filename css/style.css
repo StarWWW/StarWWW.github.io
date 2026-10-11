@@ -1098,10 +1098,12 @@ html[data-mode="drug"] .item-pips i { background: rgba(153, 229, 80, .12); }
 .g2048-side { display: flex; flex-direction: column; gap: 12px; max-width: 190px; }
 .g2048-live { align-self: flex-start; padding: 4px 8px; background: var(--ink); color: var(--acid); font-size: 10px; }
 .g2048-live .blink { color: var(--hot); animation: blink 1s steps(1) infinite; }
+.g2048-pts { align-self: flex-start; padding: 4px 8px; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 10px; }
+.g2048-pts b { font-family: var(--f-term); font-size: 18px; font-weight: 400; }
 .g2048-badge { flex-shrink: 0; display: grid; place-items: center; width: 58px; height: 58px; border: 3px solid var(--line); background: var(--yellow); color: var(--ink); font-size: 15px; font-weight: 700; box-shadow: 4px 4px 0 var(--shadow); }
 .chip-or { background: var(--orange); color: var(--ink); }
 .chip-cy { background: var(--cyan); color: var(--ink); }
-.g2048-soon { margin: 0; font-size: 25px; line-height: 1.05; color: var(--muted); rotate: -1deg; }
+.g2048-soon { margin: 14px 0 0; font-size: 25px; line-height: 1.05; color: var(--muted); rotate: -1deg; }
 .cta-arrow { display: inline-block; animation: arrow-bob 1.4s ease-in-out infinite; }
 @keyframes arrow-bob { 50% { translate: 0 5px; } }
 .lvl-sticker { user-select: none; -webkit-tap-highlight-color: transparent; }
@@ -1420,6 +1422,9 @@ html[data-mode="drug"] .foot-scene { background: #07060d; border-top-color: var(
 @media (hover: none) { .room-hint { display: none; } }
 
 .foot-bar { position: relative; z-index: 2; align-items: center; }
+/* sabit "yukarı çık" düğmesi (sağ alt, 22px + 60px) sayfanın en altında son satırın üstüne binmesin */
+.foot-bar { padding-right: max(var(--gut), 92px); }
+@media (max-width: 640px) { .foot-bar { padding-right: 76px; } } /* orada düğme 14px + 52px */
 .term-key { padding: 0 4px; border: 1px solid currentColor; font: inherit; }
 .foot-legal { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .foot-legal a, .foot-legal button, .legal-foot a, .legal-foot button { padding: 4px 0; margin-block: -4px; border: 0; background: none; color: var(--paper); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -1579,7 +1584,7 @@ html[data-mode="drug"] .ck-table th, html[data-mode="drug"] .ck-table td, html[d
   .mp3-sticker { right: -6px; }
   .g2048-cover { flex-direction: column; gap: 14px; aspect-ratio: auto; padding: 22px 12px; }
   .g2048-side { max-width: none; align-items: center; text-align: center; }
-  .g2048-side .g2048-live { align-self: center; }
+  .g2048-side .g2048-live, .g2048-side .g2048-pts { align-self: center; }
 }
 @media (max-width: 360px) {
   .lib-table th:nth-child(2), .lib-table td:nth-child(2) { display: none; }

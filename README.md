@@ -48,9 +48,21 @@ js/admin.js         Kontrol Odası: kabuk (menü, kısayollar, canlı bağlantı
 js/admin/*.js       Kontrol Odası sayfaları (pano, müzik, oyunlar, yetenekler, duvar, defter, skorlar) + ortak parçalar (ui.js, data.js)
 data/*.json         Supabase yokken kullanılan içerik
 supabase/           veritabanı şeması, başlangıç verisi, migration'lar, Edge Function'lar
-assets/             avatarlar, UltraTurk logosu, favicon
+assets/             avatarlar, UltraTurk logosu, favicon, paylaşım kartı (og.png)
 assets/fonts/       yazı tipleri (siteden yüklenir, Google'a istek gitmez; OFL lisanslı)
+2048/               2048 AI Laboratuvarı (starwww.dev/2048): sayfa, stiller, AI, model parçaları, service worker
 ```
+
+## 2048 AI Laboratuvarı (`/2048`)
+
+Ayrı projedeki (`Desktop\Code\2048`) laboratuvarın sitedeki hali. Projeler kartındaki **LABORATUVARA GİR** düğmesi buraya açılır; kartın kendi mini tahtası da gerçekten oynar (hafif bir arama, `js/sections/projects.js`).
+
+- **Model:** eğitilmiş ağ 256 MB (float32). Sitede 16 bitlik tam sayı halinde 4 parça (`2048/model/w0..w3.i16.gz`, toplam ~53 MB) + `ntuple16.json`. Rust kıyaslamasında güç farkı yok (derinlik 2: 16384 oranı %96,7 → %96,0). 8 bit denendi, model belirgin zayıflıyor.
+- Sayfa modelsiz açılır, AI heuristikle oynar. **Tam modeli yükle**'ye basınca parçalar paralel iner, tarayıcıda açılır ve işçiler yeniden kurulur. Ziyaretçi izin verdiyse bir dahaki gelişte kendiliğinden yüklenir.
+- **Çok çekirdek:** `SharedArrayBuffer` için sayfanın "cross-origin isolated" olması gerekir. GitHub Pages bu başlıkları gönderemez; `2048/sw.js` (sadece `/2048/` kapsamında) ekler. `2048/js/coi.js` ilk ziyarette service worker'ı kurar ve sayfayı bir kez yeniler. Olmazsa AI tek çekirdekte çalışır.
+- Sitenin çerez onayını kullanır (`2048/js/site.js` → `js/consent.js`). Ayarlar ve istatistikler `star.2048` anahtarında, sadece fonksiyonel izinle saklanır.
+- Model yeniden eğitilince: `node 2048/model/donustur.mjs <ntuple.bin>` parçaları ve `ntuple16.json`'ı yeniden üretir. `benchmarks.json` ve `training-log.jsonl` dosyalarını da projeden kopyala.
+- Laboratuvarın kodu projeden alınıp uyarlandı: `ai.js` (parçalı model yükleme, modelsiz başlangıç), `ai-worker.js` (16 bit ağırlık), `app.js` (model düğmesi, izinli depolama, site renkleri), `css/lab.css` (sonundaki "STAR // ODA teması"). Projede değişiklik yaparsan bu farkları koru.
 
 ## Yerelde çalıştırma
 

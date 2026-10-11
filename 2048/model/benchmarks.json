@@ -1,0 +1,65 @@
+{
+  "note": "Rust kıyaslama aracıyla ölçüldü: tarayıcıdaki aramanın aynısı, sabit derinlikte. Model 8.804.912 oyunla (7,25 saat) eğitilmiş hâldeyken ölçüldü. 2,34 milyon oyundaki önceki ölçüme göre anlamlı bir fark yok: öğrenme ~3 milyon oyundan sonra plato yaptı. Derinlik 2 bu model için en iyi hız/güç dengesidir.",
+  "results": [
+    {
+      "label": "Arama yok (yalnızca model)",
+      "depth": 0,
+      "games": 1000,
+      "avgScore": 239571,
+      "maxScore": 380968,
+      "avgMoves": 9256,
+      "reach": {
+        "2048": 0.994,
+        "4096": 0.961,
+        "8192": 0.902,
+        "16384": 0.604,
+        "32768": 0.0
+      }
+    },
+    {
+      "label": "Derinlik 1 (2 hamle ileri)",
+      "depth": 1,
+      "games": 300,
+      "avgScore": 306987,
+      "maxScore": 384768,
+      "avgMoves": 11649,
+      "reach": {
+        "2048": 1.0,
+        "4096": 1.0,
+        "8192": 0.98,
+        "16384": 0.873,
+        "32768": 0.0
+      }
+    },
+    {
+      "label": "Derinlik 2 (3 hamle ileri)",
+      "depth": 2,
+      "games": 200,
+      "avgScore": 324606,
+      "maxScore": 385172,
+      "avgMoves": 12266,
+      "reach": {
+        "2048": 1.0,
+        "4096": 0.995,
+        "8192": 0.995,
+        "16384": 0.945,
+        "32768": 0.0
+      }
+    },
+    {
+      "label": "Derinlik 3 (4 hamle ileri)",
+      "depth": 3,
+      "games": 100,
+      "avgScore": 320970,
+      "maxScore": 383332,
+      "avgMoves": 12151,
+      "reach": {
+        "2048": 1.0,
+        "4096": 1.0,
+        "8192": 1.0,
+        "16384": 0.94,
+        "32768": 0.0
+      }
+    }
+  ]
+}
