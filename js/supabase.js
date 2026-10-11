@@ -22,6 +22,31 @@ export function getSupabase() {
   return clientPromise;
 }
 
+// supabase-js (~220 KB) olmadan düz istekler: sayfa açılırken içerik okumak ve önizleme fonksiyonunu çağırmak için.
+// Kütüphane sadece canlı bağlantı ya da yazma gerektiğinde (duvar, defter, oyun skoru, Kontrol Odası) yüklenir.
+function request(path, opts = {}, ms = 9000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  const headers = { apikey: CONFIG.supabaseAnonKey, Authorization: `Bearer ${CONFIG.supabaseAnonKey}`, ...opts.headers };
+  return fetch(`${CONFIG.supabaseUrl}${path}`, { ...opts, headers, signal: ctl.signal }).finally(() => clearTimeout(t));
+}
+
+// Sadece okuma (RLS yine geçerli): restSelect('tracks', 'select=*&order=sort.asc')
+export async function restSelect(table, query, ms) {
+  const r = await request(`/rest/v1/${table}?${query}`, { headers: { Accept: 'application/json' } }, ms);
+  if (!r.ok) throw new Error(`${table}: ${r.status}`);
+  return r.json();
+}
+
+// Edge Function çağrısı; hata gövdesindeki mesajı da döndürür
+export async function callFunction(name, body, ms = 12000) {
+  const r = await request(`/functions/v1/${name}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, ms);
+  let data = null;
+  try { data = await r.json(); } catch { /* gövde yok */ }
+  if (!r.ok || data?.error) throw new Error(data?.error || `${name}: ${r.status}`);
+  return data;
+}
+
 // Tüm satırları 1000'lik sayfalarla çeker
 export async function selectAll(query, pageSize = 1000) {
   const out = [];

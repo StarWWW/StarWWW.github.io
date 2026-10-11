@@ -2,10 +2,10 @@
 // Spotify'ın gömülü çalarında ses ayarı yok; kendi çalarımızda ses Web Audio kazancıyla ayarlanır
 // (iPhone dahil her cihazda) ve spektrum gerçek sesten çizilir. Şarkının tamamı için "Spotify'da dinle" linki.
 import { getTracks } from '../data.js';
-import { esc, fmtDur, toast, store, API, nameLang, reducedMotion } from '../util.js';
+import { esc, fmtDur, toast, store, API, nameLang, reducedMotion, spImg } from '../util.js';
 import { t, onLang } from '../i18n.js';
 import { pixelate } from '../pixelate.js';
-import { getSupabase } from '../supabase.js';
+import { callFunction } from '../supabase.js';
 import { createVisualizer } from './visualizer.js';
 
 const isSpPreview = (u) => /^https:\/\/p\.scdn\.co\//.test(String(u || ''));
@@ -43,11 +43,8 @@ export async function initMusic() {
     const key = String(tr.id);
     if (pending.has(key)) return pending.get(key);
     const job = (async () => {
-      const sb = await getSupabase();
-      if (!sb) throw new Error('supabase yok');
-      const { data, error } = await sb.functions.invoke('spotify', { body: { preview: tr.id } });
-      if (error || !data || data.error) throw error || new Error(data?.error || 'boş cevap');
-      tr.preview_url = data.preview_url || '';
+      const data = await callFunction('spotify', { preview: tr.id });
+      tr.preview_url = data?.preview_url || '';
       pvCache[tr.spotify_id] = tr.preview_url;
       store.set('star.pv', pvCache);
       return tr.preview_url || null;
@@ -297,7 +294,7 @@ export async function initMusic() {
     if (!info) return;
     if (!tr) { info.innerHTML = `<p class="px dock-wait">${esc(t('mu.empty'))}</p>`; return; }
     const link = spLink(tr);
-    info.innerHTML = `<div class="di-art">${tr.artwork_url ? `<img src="${esc(tr.artwork_url)}" alt="" loading="lazy" decoding="async">` : ''}</div>
+    info.innerHTML = `<div class="di-art">${tr.artwork_url ? `<img src="${esc(spImg(tr.artwork_url, 300))}" alt="" loading="lazy" decoding="async">` : ''}</div>
       <div class="di-main">
         <span class="px di-idx">${String(idx + 1).padStart(2, '0')} / ${String(tracks.length).padStart(2, '0')}${tr.duration_ms ? ` · ${esc(t('mu.full', { d: fmtDur(tr.duration_ms) }))}` : ''}</span>
         <b class="brut di-t" lang="${nameLang(tr.title)}">${esc(tr.title)}</b>
@@ -330,9 +327,9 @@ export async function initMusic() {
     art.parentElement.classList.remove('lit');
     const miniArt = mini.querySelector('.mm-art img');
     miniArt.removeAttribute('src');
-    if (tr.artwork_url) pixelate(tr.artwork_url, 32).then((src) => { if (src && idx === i) { art.src = src; miniArt.src = src; art.parentElement.classList.add('lit'); } });
+    if (tr.artwork_url) pixelate(spImg(tr.artwork_url, 64), 32).then((src) => { if (src && idx === i) { art.src = src; miniArt.src = src; art.parentElement.classList.add('lit'); } });
     showMiniTitle(tr);
-    viz?.setArt(tr.artwork_url);
+    viz?.setArt(spImg(tr.artwork_url, 300));
     renderDock();
     render();
   }
@@ -457,7 +454,7 @@ export async function initMusic() {
       const link = spLink(tr) || tr.store_url;
       return `<tr data-i="${i}" data-d class="rv" style="--i:${k}">
       <td class="lib-n">${String(i + 1).padStart(2, '0')}</td>
-      <td><div class="lib-art"><img class="pixelated" alt="" width="40" height="40" data-art="${esc(tr.artwork_url || '')}"></div></td>
+      <td><div class="lib-art"><img class="pixelated" alt="" width="40" height="40" data-art="${esc(spImg(tr.artwork_url, 64) || '')}"></div></td>
       <td><div class="lib-t">${esc(tr.title)}${tr.explicit ? ' <span class="lib-e" title="explicit">E</span>' : ''}</div><div class="lib-a">${esc(tr.artist)}</div></td>
       <td class="lib-al hide-s">${esc(tr.album || '')}${tr.track_number ? `<small>${esc(t('mu.track', { a: tr.track_number, b: tr.track_count || '?' }))}</small>` : ''}</td>
       <td class="lib-y hide-s">${esc(tr.year || '')}</td>
@@ -466,10 +463,18 @@ export async function initMusic() {
       <td class="lib-act"><button type="button" class="lib-play" aria-label="${esc(t('mu.playRow', { t: tr.title }))}">▶</button> ${link ? `<a href="${esc(link)}" target="_blank" rel="noopener" aria-label="${esc(t('mu.openSp'))}" title="${esc(t('mu.openSp'))}">↗</a>` : ''}</td>
     </tr>`;
     }).join('');
-    body.querySelectorAll('img[data-art]').forEach((im) => {
-      if (im.dataset.art) pixelate(im.dataset.art, 32).then((src) => { if (src) im.src = src; });
-    });
+    hydrateLibArt();
     render();
+  }
+  // kitaplık kapakları müzik bölümüne yaklaşınca iner (sayfa açılışını yavaşlatmasın)
+  let libArtOn = false;
+  function hydrateLibArt() {
+    if (!libArtOn) return;
+    body.querySelectorAll('img[data-art]').forEach((im) => {
+      const url = im.dataset.art;
+      im.removeAttribute('data-art');
+      if (url) pixelate(url, 32).then((src) => { if (src) im.src = src; });
+    });
   }
 
   body.addEventListener('click', (e) => {
@@ -508,12 +513,14 @@ export async function initMusic() {
   viz?.resize();
   onLang(() => { renderLib(); show(idx); renderVol(); labelMini(); });
 
-  // Bölüm yaklaşınca önizleme adreslerini sırayla hazırla (ilk tıklamada beklemesin)
+  // Bölüm yaklaşınca kapakları indir ve önizleme adreslerini sırayla hazırla (ilk tıklamada beklemesin)
   const muzik = document.getElementById('muzik');
   if (muzik && tracks.length) {
     new IntersectionObserver(([e], io) => {
       if (!e.isIntersecting) return;
       io.disconnect();
+      libArtOn = true;
+      hydrateLibArt();
       viz?.resize();
       (async () => {
         for (const tr of [cur(), ...tracks]) {

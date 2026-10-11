@@ -65,6 +65,9 @@ Sonra tarayıcıda `http://localhost:8080`. (Dosyayı çift tıklayıp açma: ES
 Klasördeki **`yayinla.bat`** dosyasına çift tıkla: değişen dosyaları gösterir, kısa bir not ister, commit edip GitHub'a gönderir; site 1-2 dakikada güncellenir.
 - GitHub'da senin bilgisayarında olmayan bir değişiklik varsa önce onu alır.
 - `js/config.js` içinde gizli `service_role` anahtarı ya da `.env` gibi gizli dosyalar varsa göndermeyi durdurur.
+- Node.js kuruluysa bütün JS dosyalarını derleyip kontrol eder; sözdizimi hatası varsa göndermez.
+- **Sürüm damgası:** GitHub Pages dosyaları 10 dk önbellekte tutar; damga olmasa yayından hemen sonra tarayıcı eski ve yeni dosyaları karıştırabilir. Betik her JS/CSS dosyasının içerik özetini sayfalardaki adreslere (`?v=...`) ve `index.html` / `gizlilik.html`'deki import map'e yazar, CSP'deki parmak izini günceller. Bu satırlara elle dokunma; sadece damgayı yenilemek için: `.\yayinla.ps1 -Damga`.
+- Değişen sayfaların `sitemap.xml` tarihini günceller.
 - Denemek için terminalden: `.\yayinla.ps1 -Kuru` (hiçbir şey göndermeden ne yapacağını gösterir).
 
 ## GitHub Pages'e yayınlama (ilk kurulum)
@@ -115,13 +118,16 @@ supabase.com → **New project**. Bölge olarak Frankfurt (eu-central-1) Türkiy
 
 ### 2. Veritabanı
 **SQL Editor → New query**:
-1. `supabase/schema.sql` dosyasının tamamını yapıştır → **Run**.
-2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve 43 yetenek; sadece bir kez).
-3. Yeni bir sorguda `supabase/migrations/002_spotify.sql` → **Run** (Spotify sütunları; mevcut şarkıları Spotify'a bağlar).
-4. Yeni bir sorguda `supabase/migrations/003_kutu_kapak.sql` → **Run** (oyunlara `box_url` = DVD kutu kapağı; eski iTunes önizlemelerini temizler, çalar sadece Spotify önizlemesi çalar).
-5. Yeni bir sorguda `supabase/migrations/004_guvenlik.sql` → **Run** (güvenlik sıkılaştırması: ziyaretçi rollerinin yetkileri daraltılır, duvar çizgileri/defter notları/linkler veritabanında doğrulanır, toplam hız sınırı).
+1. `supabase/schema.sql` dosyasının tamamını yapıştır → **Run**. Her zaman en son hali içerir (bütün güvenlik kuralları dahil); tekrar çalıştırmak güvenlidir.
+2. Yeni bir sorguda `supabase/seed.sql` → **Run** (başlangıç şarkıları, oyunları ve yetenekleri = `data/*.json`; sadece bir kez, tablolar boşken).
 
-Daha önce kurduysan sadece henüz çalıştırmadığın migration'ları çalıştır (002, 003, 004). Hepsi tekrar çalıştırılabilir, bir şey bozmaz.
+Yeni kurulumda migration çalıştırmana gerek yok. **Daha önce kurduysan** henüz çalıştırmadığın migration'ları sırayla çalıştır; hepsi tekrar çalıştırılabilir, bir şey bozmaz:
+- `002_spotify.sql` — Spotify sütunları
+- `003_kutu_kapak.sql` — oyunlara `box_url` (DVD kutu kapağı), sadece Spotify önizlemeleri
+- `004_guvenlik.sql` — ziyaretçi rollerinin yetkileri daraltılır; duvar çizgileri, defter notları ve linkler veritabanında doğrulanır
+- `005_duvar_sinir.sql` — duvara toplam sınır dakikada 150 çizgi, bir duvarda en fazla 2000 çizgi (dolarsa Kontrol Odası'ndan BUFF at)
+
+> Bir güvenlik kuralını değiştirirken hem `schema.sql`'e hem yeni bir migration dosyasına yaz; yoksa `schema.sql`'i tekrar çalıştırmak eskisini geri getirir.
 
 ### 3. Siteyi bağla
 **Project Settings → API**: `Project URL` ve `anon public` anahtarını `js/config.js` içine yaz:
@@ -224,8 +230,11 @@ Hepsi **Kontrol Odası**'ndan (terminalde `login`). Sol menüdeki sayılar: turu
 
 ## SEO ve performans
 
-- `robots.txt` her şeyi açar, `?admin` / `?debug` parametrelerini kapatır; `sitemap.xml`'deki `lastmod` tarihlerini büyük güncellemelerde değiştir.
-- Yazı tipleri `assets/fonts/`'tan yüklenir (Latin + Türkçe alt kümeler), ana fontlar önceden yüklenir (preload). DRUG avatarı 384 KB GIF yerine 39 KB animasyonlu WebP ve sadece DRUG moduna geçince indirilir. Kapak görselleri tembel yüklenir (lazy).
+- `robots.txt` her şeyi açar, `?admin` / `?debug` parametrelerini kapatır; `sitemap.xml`'deki `lastmod` tarihlerini `yayinla.bat` kendisi günceller.
+- Paylaşım kartı: `assets/og.png` (1200×630, sitenin fontları ve paletiyle). Sekme başlığı ve arama açıklaması dil değişince değişir (`<title data-en>`, `<meta name="description" data-en>`).
+- Yazı tipleri `assets/fonts/`'tan yüklenir (Latin + Türkçe alt kümeler), ana fontlar önceden yüklenir (preload). DRUG avatarı 39 KB animasyonlu WebP ve sadece DRUG moduna geçince indirilir. Kapak görselleri tembel yüklenir (lazy).
+- Spotify kapakları boyuta göre istenir: 8-bit kapaklar için 64 px, büyük kutu için 300 px (640'lık asıl görsel hiç inmez). Kitaplık kapakları müzik bölümüne yaklaşınca iner.
+- Açılışta supabase-js yüklenmez: şarkı / oyun / yetenek listeleri düz istekle okunur (`supabase.js > restSelect`). Kütüphane duvara ya da deftere yaklaşınca, oyun ya da Kontrol Odası açılınca yüklenir. Footer'daki oda sahnesi (`room.js`) footer'a yaklaşınca yüklenir.
 - Yazılar seçilemez (`user-select: none`); formlar, terminal çıktısı ve gizlilik politikası metni hariç.
 - Akıcılık: animasyonlar sadece ekrandayken çalışır (görselleştirici, oda, sayaçlar). Kaydırma ya da müzik sırasında sayfanın köküne CSS değişkeni yazılmaz (4-5 bin öğenin stilini her karede yeniden hesaplatıyordu); efektler sadece ekrandaki birkaç öğeye doğrudan yazılır. Görselleştiricide `shadowBlur` yok.
 - Veri çekmede zaman aşımı var: Supabase ya da GitHub yanıt vermezse bölümler `data/*.json` yedeğine düşer, "yükleniyor"da takılı kalmaz.
@@ -235,7 +244,7 @@ Hepsi **Kontrol Odası**'ndan (terminalde `login`). Sol menüdeki sayılar: turu
 **Terminal komutları:** `help`, `whoami`, `ls`, `ls projects`, `cat about.txt`, `cat cow.txt`, `cat .secret.txt`, `cd duvar`, `games`, `music`, `play 2`, `pause`, `next`, `vol 5`, `vol mute`, `ses aç`, `ses kapat`, `ses 7`, `spray`, `drug`, `real`, `lang en`, `cowsay merhaba`, `github`, `discord`, `sudo rm -rf /`, `login`, `logout`. <kbd>Tab</kbd> tamamlar, <kbd>↑</kbd>/<kbd>↓</kbd> geçmiş.
 
 **Sayfayı Yok Et** (sitede hiçbir yerde yazmıyor, `help`'te de yok):
-- Açmanın yolları: klavyede <kbd>↑↑↓↓←→←→BA</kbd>, terminalde `destroy` (ya da `yoket`), mobilde hero'daki pembe **LVL 21** çıkartmasına art arda 5 kez dokun. İpucu sadece terminaldeki `.secret.txt` dosyasında.
+- Açmanın yolları: klavyede <kbd>↑↑↓↓←→←→BA</kbd>, terminalde `destroy` (ya da `yoket`), mobilde hero'daki pembe **LVL** çıkartmasına art arda 5 kez dokun. İpucu sadece terminaldeki `.secret.txt` dosyasında.
 - <kbd>WASD</kbd> uç, fare nişan, sol tık ateş, <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> (ya da tekerlek) silah, <kbd>Shift</kbd> atıl, <kbd>Esc</kbd> bitir.
 - Silahlar: **sprey bombası** (sınırsız, boya sıçratır), **glitch bombası** (3 hak, zincirleme patlar), **piksel çekiç** (yakın dövüş; atılırken çift hasar).
 - Kırılan şeylerden **bug**'lar çıkar; **MERGE CONFLICT** öldürülünce ikiye bölünür.

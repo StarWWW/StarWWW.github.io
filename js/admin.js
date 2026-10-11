@@ -2,7 +2,7 @@
 // Yazma yetkisini Supabase RLS korur (admins tablosu); bu dosyalar sadece arayüz.
 // Sayfalar js/admin/ altında; her biri { key, icon, label, sub, mount(el, ctx) } dışa aktarır.
 import { getSupabase } from './supabase.js';
-import { esc, toast, store, API } from './util.js';
+import { esc, toast, store, API, assetURL } from './util.js';
 import { onLang, getLang, setLang } from './i18n.js';
 import { L, sfx, setHost, note, ask, trapTab, dialogOpen, hasPending, flushDeletes, num, icon } from './admin/ui.js';
 import { summary } from './admin/data.js';
@@ -112,10 +112,10 @@ document.addEventListener('error', (e) => {
 }, true);
 
 function loadCSS() {
-  if (document.querySelector('link[href="css/admin.css"]')) return Promise.resolve();
+  if (document.querySelector('link[data-css="admin"]')) return Promise.resolve();
   return new Promise((res) => {
     const l = document.createElement('link');
-    l.rel = 'stylesheet'; l.href = 'css/admin.css';
+    l.rel = 'stylesheet'; l.href = assetURL('/css/admin.css'); l.dataset.css = 'admin';
     l.onload = res; l.onerror = res;
     document.head.append(l);
   });

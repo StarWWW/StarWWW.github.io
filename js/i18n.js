@@ -1,4 +1,4 @@
-import { store } from './util.js';
+import { store, API } from './util.js';
 
 // TR varsayılan dil: statik metinlerin Türkçesi HTML'in kendisinde durur, ilk açılışta hafızaya alınır.
 // EN çevirileri ve JS'in ürettiği metinlerin her iki dili burada.
@@ -8,7 +8,7 @@ const EN = {
   'mode.label': 'Switch mode: REAL / DRUG',
   'hero.entry': '[00] ENTRY // GİRİŞ', 'hero.sys': 'system:', 'hero.note': 'that\'s me. yes, just "star".',
   'hero.m1': 'PLAY. TRANSLATE. CODE.', 'hero.m2': 'REPEAT.',
-  'hero.sub': '21-year-old computer engineering student. This is my digital room — touch, paint, break things. I\'ll clean up later.',
+  'hero.sub': '<span data-age>21</span>-year-old computer engineering student. This is my digital room — touch, paint, break things. I\'ll clean up later.',
   'cta.spray': 'SPRAY MODE', 'cta.term': 'TERMINAL',
   'hero.pill': 'take the pill, go DRUG mode', 'hero.avReal': 'star\'s pixel avatar: a character with a green cap and closed eyes', 'hero.avDrug': 'psychedelic, color-cycling version of star\'s avatar', 'hero.avCap': '480×480 · HAND-MADE PIXELS',
   'st.playing': 'PLAYING', 'st.listening': 'LISTENING', 'st.where': 'LOCATION', 'st.whereVal': 'probably in a game',
@@ -16,7 +16,7 @@ const EN = {
   'oda.k1': 'LEVEL', 'oda.k2': 'MAJOR', 'oda.k3': 'MAIN QUEST', 'oda.k4': 'SIDE QUEST', 'oda.k5': 'WEAKNESS', 'oda.k6': 'STATUS',
   'oda.v2': 'Computer Engineering', 'oda.v5': '"one more round"', 'oda.v6': 'online',
   'oda.hello': 'hi, i\'m star',
-  'oda.p1': 'I\'m 21 and I study computer engineering. Most of my free time goes into games; the rest goes into UltraTurk, the dubbed Turkish translation of ULTRAKILL <span class="hand">(lead developer + translator)</span>.',
+  'oda.p1': 'I\'m <span data-age>21</span> and I study computer engineering. Most of my free time goes into games; the rest goes into UltraTurk, the dubbed Turkish translation of ULTRAKILL <span class="hand">(lead developer + translator)</span>.',
   'oda.p2': 'LoL, Minecraft, Cyberpunk, ULTRAKILL, VALORANT, Undertale, Outer Wilds… the list goes on. I\'ve played <mark>way too many</mark> games.',
   'oda.p3': 'I can\'t code without music. And I can\'t look at an empty canvas without drawing pixels on it.',
   'oda.todo': 'THINGS TO DO HERE → SPRAY THE WALL · POKE THE TERMINAL · LISTEN TO MUSIC · SIGN THE GUESTBOOK · (MAYBE THERE IS MORE)',
@@ -41,7 +41,7 @@ const EN = {
   'wl.title': 'WALL', 'wl.note': 'everyone\'s wall · buffed every monday', 'wl.canvas': 'Visitors\' spray paintings', 'wl.can': 'SPRAY CAN', 'wl.color': 'Color', 'wl.size': 'Nozzle size',
   'wl.thin': 'THIN', 'wl.mid': 'MEDIUM', 'wl.thick': 'FAT', 'wl.toggle': 'SPRAY MODE', 'wl.off': 'OFF', 'wl.buffIn': 'BUFF IN', 'wl.archive': '← OLD WALLS (ARCHIVE)', 'wl.archiveT': 'OLD WALLS',
   'gb.title': 'GUEST<br>BOOK', 'gb.name': 'NICKNAME', 'gb.msg': 'MESSAGE (MAX 140)', 'gb.ph': 'stick something on the wall...', 'gb.send': 'STICK IT ↘',
-  'ft.label': '[07] CONTACT // EXIT', 'ft.copy': 'COPY', 'ft.copy2': '© 2026 STAR · HOSTED ON GITHUB PAGES · HAND-MADE, NO TEMPLATES', 'ft.hint': '` = TERMINAL', 'ft.now': 'NOW',
+  'ft.label': '[07] CONTACT // EXIT', 'ft.copy': 'COPY', 'ft.copy2': '© <span data-year>2026</span> STAR · HOSTED ON GITHUB PAGES · HAND-MADE, NO TEMPLATES', 'ft.hint': '= TERMINAL', 'ft.now': 'NOW',
   'term.label': 'Hidden terminal', 'term.title': '~/room — HIDDEN TERMINAL', 'term.close': 'Close terminal', close: 'Close',
   // --- v3 ---
   'cta.tour': 'EXPLORE THE ROOM',
@@ -97,6 +97,9 @@ const DYN = {
   'wl.localNote': ['ÇEVRİMDIŞI MOD: SUPABASE AYARLANANA KADAR DUVAR SADECE SENİN TARAYICINDA DURUR.', 'OFFLINE MODE: UNTIL SUPABASE IS SET UP, THE WALL ONLY LIVES IN YOUR BROWSER.'],
   'wl.sprayHint': ['Sprey modu açık — duvara çiz!', 'Spray mode on — paint the wall!'],
   'wl.slow': ['Yavaş! Sprey kutun soğusun.', 'Slow down! Let the can cool off.'],
+  'wl.busy': ['Duvar şu an çok kalabalık, biraz bekle — son çizgin kaydedilmedi.', 'The wall is crowded right now, wait a bit — your last stroke was not saved.'],
+  'wl.full': ["Bu haftanın duvarı doldu! Pazartesi buff'lanınca yeniden çizebilirsin.", "This week's wall is full! You can paint again after Monday's buff."],
+  'wl.saveErr': ['Son çizgin kaydedilemedi (bağlantı sorunu).', 'Your last stroke could not be saved (connection problem).'],
   'wl.noArchive': ['Henüz arşivlenmiş duvar yok.', 'No archived walls yet.'],
   'wl.archWeek': ['HAFTA {w} · {n} ÇİZGİ', 'WEEK {w} · {n} STROKES'],
   'wl.archBuff': ['BUFF · {d} · {n} ÇİZGİ', 'BUFFED · {d} · {n} STROKES'],
@@ -104,6 +107,9 @@ const DYN = {
   'wl.visitor': ['ziyaretçi_{n}', 'visitor_{n}'],
   'gb.sent': ['YAPIŞTIRILDI ✓', 'STUCK ✓'],
   'gb.err': ['Gönderilemedi, birazdan tekrar dene.', 'Could not send, try again soon.'],
+  'gb.dupe': ['Bu not zaten duvarda asılı.', 'This note is already on the wall.'],
+  'gb.busy': ['Defter şu an çok kalabalık, bir dakika sonra tekrar dene.', 'The guestbook is busy right now, try again in a minute.'],
+  'gb.bad': ['Notta kullanılamayan karakterler var.', 'The note contains characters that are not allowed.'],
   'gb.local': ['Çevrimdışı mod: not sadece senin tarayıcında görünür.', 'Offline mode: the note is only visible in your browser.'],
   'gb.more': ['+ {n} NOT DAHA<br>TÜMÜNÜ GÖR →', '+ {n} MORE NOTES<br>SEE ALL →'],
   'gb.empty': ['İlk notu sen bırak.', 'Be the first to leave a note.'],
@@ -165,6 +171,18 @@ const listeners = new Set();
 
 export const getLang = () => lang;
 
+// Sekme başlığı ve arama açıklaması: TR hali HTML'de, EN hali data-en'de.
+// Sadece data-en'i olan sayfada çalışır (gizlilik sayfası kendi başlığını legal.js'te yönetir).
+const titleEl = document.querySelector('title[data-en]');
+const descEl = document.querySelector('meta[name="description"][data-en]');
+const metaTr = { title: titleEl?.textContent || '', desc: descEl?.content || '' };
+export const pageTitle = () => (titleEl ? (lang === 'en' ? titleEl.dataset.en : metaTr.title) : document.title);
+API.pageTitle = pageTitle;
+function applyMeta() {
+  if (titleEl) document.title = pageTitle();
+  if (descEl) descEl.content = lang === 'en' ? descEl.dataset.en : metaTr.desc;
+}
+
 export function t(key, vars = {}) {
   let s;
   if (DYN[key]) s = DYN[key][lang === 'en' ? 1 : 0];
@@ -196,6 +214,7 @@ export function applyI18n(root = document) {
     });
   });
   document.documentElement.lang = lang;
+  applyMeta();
   document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
 }
 

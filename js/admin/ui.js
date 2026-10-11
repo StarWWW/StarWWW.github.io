@@ -1,6 +1,6 @@
 // KONTROL ODASI — ortak parçalar: pencereler (onay/form), bildirimler, geri alınabilir silme,
 // sürükle-bırak sıralama, seviye blokları, küçük biçimlendiriciler.
-import { esc, API } from '../util.js';
+import { esc, API, spImg } from '../util.js';
 import { getLang } from '../i18n.js';
 import { pixelate } from '../pixelate.js';
 import { spriteSVG } from '../sprites.js';
@@ -32,7 +32,7 @@ export function hydrateArt(scope) {
     const url = im.dataset.px;
     im.removeAttribute('data-px');
     if (!url) return;
-    (im.dataset.wide ? pixelate(url, 48, 22) : pixelate(url, 32)).then((src) => { if (src) im.src = src; });
+    (im.dataset.wide ? pixelate(spImg(url, 64), 48, 22) : pixelate(spImg(url, 64), 32)).then((src) => { if (src) im.src = src; });
   });
 }
 

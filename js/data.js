@@ -1,12 +1,7 @@
 // İçerik kaynakları: Supabase ayarlıysa oradan, değilse /data/*.json'dan.
-import { CONFIG } from './config.js';
-import { getSupabase } from './supabase.js';
+import { CONFIG, hasSupabase } from './config.js';
+import { restSelect } from './supabase.js';
 
-// Uzun süre cevap gelmezse beklemeyi bırak (bölümler "yükleniyor"da takılı kalmasın)
-export function withTimeout(promise, ms, label = 'istek') {
-  let t;
-  return Promise.race([promise, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(`${label}: ${ms / 1000} sn içinde cevap yok`)), ms); })]).finally(() => clearTimeout(t));
-}
 const fetchT = (url, opts = {}, ms = 10000) => {
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), ms);
@@ -19,18 +14,16 @@ async function json(path) {
   return r.json();
 }
 
+// Sayfa açılırken supabase-js yüklenmesin diye düz istekle okunur (bkz. supabase.js > restSelect)
 async function fromDb(table, order, fallbackPath) {
-  try {
-    const sb = await withTimeout(getSupabase(), 10000, 'supabase-js');
-    if (sb) {
-      let q = sb.from(table).select('*');
-      for (const [col, asc] of order) q = q.order(col, { ascending: asc, nullsFirst: false });
-      const { data, error } = await withTimeout(q, 9000, table);
-      if (!error && data) return data;
-      console.warn(`[data] ${table} okunamadı, yedek dosyaya düşülüyor`, error);
+  if (hasSupabase()) {
+    try {
+      const ord = order.map(([col, asc]) => `${col}.${asc ? 'asc' : 'desc'}.nullslast`).join(',');
+      const data = await restSelect(table, `select=*&order=${ord}`);
+      if (Array.isArray(data)) return data;
+    } catch (err) {
+      console.warn(`[data] ${table}: ${err.message} — yedek dosyaya düşülüyor`);
     }
-  } catch (err) {
-    console.warn(`[data] ${table}: ${err.message} — yedek dosyaya düşülüyor`);
   }
   return json(fallbackPath);
 }

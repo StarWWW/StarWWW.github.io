@@ -13,6 +13,21 @@ export const CONFIG = {
 
   // Duvarın haftalık buff'ı Pazartesi 00:00 Türkiye saatiyle (UTC+3, yaz saati yok)
   tzOffsetHours: 3,
+
+  // Sitedeki yaş (hero, karakter kartı, LVL çıkartması, şerit, terminal) buradan hesaplanır: 'YYYY-AA-GG'.
+  // Boşsa ageFallback kullanılır.
+  birthDate: '',
+  ageFallback: 21,
 };
 
 export const hasSupabase = () => Boolean(CONFIG.supabaseUrl && CONFIG.supabaseAnonKey);
+
+// Yaş: doğum gününde (Türkiye saatiyle) bir artar
+export function age(now = Date.now()) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(CONFIG.birthDate || '');
+  if (!m) return CONFIG.ageFallback;
+  const d = new Date(now + CONFIG.tzOffsetHours * 3600000);
+  const [y, mo, da] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const beforeBirthday = d.getUTCMonth() + 1 < mo || (d.getUTCMonth() + 1 === mo && d.getUTCDate() < da);
+  return d.getUTCFullYear() - y - (beforeBirthday ? 1 : 0);
+}

@@ -2,7 +2,6 @@
 // piksel oda sahnesi (gece) ve canlı oda durumu.
 import { $, $$, esc, API, reducedMotion } from '../util.js';
 import { t, onLang } from '../i18n.js';
-import { initRoom } from './room.js';
 
 export function initFooter() {
   const foot = $('#iletisim');
@@ -20,7 +19,18 @@ export function initFooter() {
   onLang(buildMq);
 
   // ---------- piksel oda sahnesi ----------
-  const room = initRoom($('#roomCanvas'));
+  // room.js sadece footer'a yaklaşınca yüklenir (sayfa açılışında gereksiz)
+  let room = null;
+  let roomJob = null;
+  const loadRoom = () => {
+    if (!roomJob) {
+      roomJob = import('./room.js')
+        .then((m) => { room = m.initRoom($('#roomCanvas')); if (visible) room?.start(); })
+        .catch((err) => console.warn('[oda]', err));
+    }
+    return roomJob;
+  };
+  new IntersectionObserver(([e], io) => { if (e.isIntersecting) { io.disconnect(); loadRoom(); } }, { rootMargin: '900px' }).observe(foot);
 
   // ---------- canlı oda durumu ----------
   const stat = $('#footStat');
@@ -51,6 +61,7 @@ export function initFooter() {
     if (visible) {
       paintStat();
       statTimer = setInterval(paintStat, 1000);
+      loadRoom();
       room?.start();
     } else {
       clearInterval(statTimer); statTimer = 0;

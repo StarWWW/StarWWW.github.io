@@ -1,6 +1,6 @@
 // SAYFAYI YOK ET — sayfanın kendi elemanlarını hedef alan serbest uçuşlu yıkım oyunu.
 import { spriteCanvas, spriteSVG } from '../sprites.js';
-import { API, store, esc } from '../util.js';
+import { API, store, esc, assetURL } from '../util.js';
 import { getLang } from '../i18n.js';
 import { getSupabase } from '../supabase.js';
 
@@ -55,7 +55,7 @@ function loadCSS() {
   if (!cssReady) {
     cssReady = new Promise((res) => {
       const l = document.createElement('link');
-      l.rel = 'stylesheet'; l.href = 'css/game.css';
+      l.rel = 'stylesheet'; l.href = assetURL('/css/game.css');
       l.onload = res; l.onerror = res;
       document.head.append(l);
     });

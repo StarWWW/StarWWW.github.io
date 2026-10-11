@@ -1,5 +1,5 @@
 import { getSupabase, selectAll } from '../supabase.js';
-import { $, esc, store, toast, uuid, API } from '../util.js';
+import { $, esc, store, toast, uuid, API, keepFocus } from '../util.js';
 import { t, onLang } from '../i18n.js';
 import { spriteSVG } from '../sprites.js';
 import { COLORS, SIZES, MAX_POINTS, WALL_W, WALL_H, drawStroke, drawDrip, drawFull, cleanStroke, cleanPoints, weekStart, nextBuff, isoWeek } from '../spray.js';
@@ -138,6 +138,15 @@ export async function initWall() {
     sentIdx = cur.points.length;
   }
 
+  // Veritabanının reddetme nedeni (supabase/schema.sql > wall_guard)
+  function failKey(err) {
+    const m = String(err?.message || '');
+    if (/yavaş/.test(m)) return 'wl.slow';
+    if (/kalabalık/.test(m)) return 'wl.busy';
+    if (/doldu/.test(m)) return 'wl.full';
+    return 'wl.saveErr';
+  }
+
   async function finish() {
     if (!cur) return;
     broadcastPartial(true);
@@ -145,8 +154,19 @@ export async function initWall() {
     cur = null;
     strokes.push(st);
     if (sb) {
-      const { error } = await sb.from('wall_strokes').insert({ id: st.id, client_id: st.client_id, color: st.color, size: st.size, points: st.points, drips: st.drips });
-      if (error) { console.warn('[wall] kaydedilemedi', error); toast(t('wl.slow')); }
+      let error = null;
+      try {
+        ({ error } = await sb.from('wall_strokes').insert({ id: st.id, client_id: st.client_id, color: st.color, size: st.size, points: st.points, drips: st.drips }));
+      } catch (err) { error = err; }
+      if (error) {
+        // kaydedilmeyen çizgi duvarda kalmasın: benden ve canlı izleyenlerden silinir
+        console.warn('[wall] kaydedilemedi', error);
+        strokes = strokes.filter((x) => x !== st);
+        known.delete(st.id);
+        channel?.send({ type: 'broadcast', event: 'drop', payload: { id: st.id } });
+        scheduleRedraw(0);
+        toast(t(failKey(error)), 4200);
+      }
     } else {
       const local = store.get(LOCAL_KEY, []);
       local.push({ ...st, created_at: new Date().toISOString() });
@@ -228,7 +248,8 @@ export async function initWall() {
   function redraw() {
     ctx.clearRect(0, 0, WALL_W, WALL_H);
     const token = ++drawToken;
-    const list = strokes.slice();
+    // kayıtlılar + henüz kaydı gelmemiş canlı çizgiler + benim çizmekte olduğum
+    const list = strokes.concat([...live.values()], cur ? [cur] : []);
     let i = 0;
     const step = () => {
       if (token !== drawToken) return;
@@ -237,6 +258,12 @@ export async function initWall() {
       if (i < list.length) requestAnimationFrame(step);
     };
     step();
+  }
+  // Art arda gelen silmelerde (Kontrol Odası'ndan toplu silme) duvar bir kez çizilsin
+  let redrawTm = 0;
+  function scheduleRedraw(ms = 150) {
+    clearTimeout(redrawTm);
+    redrawTm = setTimeout(redraw, ms);
   }
 
   async function loadStrokes() {
@@ -257,9 +284,15 @@ export async function initWall() {
   }
 
   // ---------- haftalık sayaç ----------
+  // Hedef zaman bir kez hesaplanır; pazartesi 00:00 gelince duvar kendiliğinden yenilenir (sayfa açık kalsa da)
+  let buffAt = nextBuff();
+  let started = false;
   function tick() {
-    const left = nextBuff() - Date.now();
-    if (left <= 0) { loadStrokes(); return; }
+    if (Date.now() >= buffAt) {
+      buffAt = nextBuff();
+      if (started) loadStrokes();
+    }
+    const left = Math.max(0, buffAt - Date.now());
     const d = Math.floor(left / 86400000);
     const hh = Math.floor((left % 86400000) / 3600000);
     const mm = Math.floor((left % 3600000) / 60000);
@@ -268,6 +301,7 @@ export async function initWall() {
     $('#wallWeek').textContent = t('wl.week', { w: week, y: year });
   }
   setInterval(tick, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
 
   // ---------- arşiv ----------
   // Bir "duvar" = iki sıfırlama arasındaki çizgiler. Sıfırlamalar: her pazartesi 00:00 + Kontrol Odası'ndan elle yapılan buff'lar.
@@ -275,7 +309,16 @@ export async function initWall() {
   const modal = $('#archive');
   const fmtWhen = (ts) => new Intl.DateTimeFormat(lang() === 1 ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Istanbul' }).format(ts);
   const fmtDay = (ts) => new Intl.DateTimeFormat(lang() === 1 ? 'en-GB' : 'tr-TR', { day: 'numeric', month: 'short', timeZone: 'Europe/Istanbul' }).format(ts);
+  let archFrom = null;
+  function closeArchive() {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    // odak pencereyi açan düğmeye geri döner
+    if (archFrom && document.contains(archFrom)) archFrom.focus({ preventScroll: true });
+    archFrom = null;
+  }
   async function openArchive() {
+    archFrom = document.activeElement;
     modal.hidden = false;
     modal.querySelector('[data-close]')?.focus();
     const grid = $('#archiveGrid');
@@ -334,8 +377,9 @@ export async function initWall() {
     });
   }
   $('#archiveBtn').addEventListener('click', openArchive);
-  modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('[data-close]')) modal.hidden = true; });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) modal.hidden = true; });
+  modal.addEventListener('click', (e) => { if (e.target === modal || e.target.closest('[data-close]')) closeArchive(); });
+  modal.addEventListener('keydown', (e) => keepFocus(e, modal));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) closeArchive(); });
 
   // ---------- gerçek zamanlı ----------
   function liveLabel(n) {
@@ -401,9 +445,16 @@ export async function initWall() {
         strokes.push(row);
         drawFull(ctx, row);
       })
+      // çizen kişinin kaydı başarısız oldu: yarım kalan canlı çizgisi silinir (kayıtlı çizgilere dokunamaz)
+      .on('broadcast', { event: 'drop' }, ({ payload: p }) => {
+        if (!inBudget() || !p || typeof p.id !== 'string' || !live.has(p.id)) return;
+        live.delete(p.id);
+        known.delete(p.id);
+        scheduleRedraw();
+      })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'wall_strokes' }, ({ old }) => {
         strokes = strokes.filter((s) => s.id !== old.id);
-        redraw();
+        scheduleRedraw();
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'wall_buffs' }, () => loadStrokes())
       .subscribe((status) => {
@@ -422,6 +473,7 @@ export async function initWall() {
     io.disconnect();
     await connect();
     await loadStrokes();
+    started = true;
   }, { rootMargin: '600px' });
   io.observe(wall);
 
@@ -433,6 +485,6 @@ export async function initWall() {
       setSpray(true);
     },
     reload: loadStrokes,
-    count: () => strokes.length,
+    count: () => (started ? strokes.length : null), // duvar yüklenmeden "0 çizgi" demesin
   };
 }

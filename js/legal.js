@@ -25,6 +25,7 @@ function paintConsent() {
 }
 
 document.querySelectorAll('[data-ck-tables]').forEach((el) => { el.innerHTML = cookieTablesHTML(el.dataset.ckTables); });
+document.querySelectorAll('[data-year]').forEach((el) => { el.textContent = String(new Date().getFullYear()); });
 initConsent();
 apply(getLang());
 paintConsent();

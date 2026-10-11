@@ -521,17 +521,18 @@ export function pixelSwap(fn) {
 
 // ---------------------------------------------------------------- sekme başlığı + konsol
 function initTabTitle() {
-  const base = document.title;
+  // asıl başlık dile göre değişir (i18n.js): geri dönerken o anki dilin başlığı yazılır
+  const base = () => API.pageTitle?.() || document.title;
   let timer = null;
   document.addEventListener('visibilitychange', () => {
     clearTimeout(timer);
     if (document.hidden) document.title = L('gitme... ;( — STAR', 'don\'t go... ;( — STAR');
-    else { document.title = L('selam tekrar! — STAR', 'hello again! — STAR'); timer = setTimeout(() => { document.title = base; }, 1800); }
+    else { document.title = L('selam tekrar! — STAR', 'hello again! — STAR'); timer = setTimeout(() => { document.title = base(); }, 1800); }
   });
 }
 function consoleSig() {
   const css = 'font-family:monospace;font-size:12px;line-height:1.1;color:#99E550;background:#222034;padding:8px 12px';
-  console.log('%c ███ ███ ███ ███ \n █    █  █ █ █ █ \n ███  █  ███ ██  \n   █  █  █ █ █ █ \n ███  █  █ █ █ █ \n\n every hello comes with a goodbye.\n psst: ` tuşu.', css);
+  console.log('%c ███ ███ ███ ███ \n █    █  █ █ █ █ \n ███  █  ███ ██  \n   █  █  █ █ █ █ \n ███  █  █ █ █ █ \n\n every hello comes with a goodbye.\n psst: klavyede 1 tuşunun solundaki tuş (` ya da ").', css);
 }
 
 // ---------------------------------------------------------------- oyun / panel sırasında

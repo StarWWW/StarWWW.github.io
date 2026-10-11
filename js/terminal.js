@@ -1,14 +1,14 @@
 import { $, esc, API, copyText, toast } from './util.js';
 import { t, getLang, setLang } from './i18n.js';
-import { CONFIG, hasSupabase } from './config.js';
+import { CONFIG, hasSupabase, age } from './config.js';
 
 const en = () => getLang() === 'en';
 const L = (tr, enS) => (en() ? enS : tr);
 
 const FILES = {
   'about.txt': () => L(
-    'star — 21 — bilgisayar mühendisliği öğrencisi.\nUltraTurk\'ün baş geliştiricisi ve çevirmeni.\noyun oynar, müzik dinler, piksel çizer.',
-    'star — 21 — computer engineering student.\nlead developer & translator of UltraTurk.\nplays games, listens to music, draws pixels.'),
+    `star — ${age()} — bilgisayar mühendisliği öğrencisi.\nUltraTurk'ün baş geliştiricisi ve çevirmeni.\noyun oynar, müzik dinler, piksel çizer.`,
+    `star — ${age()} — computer engineering student.\nlead developer & translator of UltraTurk.\nplays games, listens to music, draws pixels.`),
   'cow.txt': () => L('C.O.W. = ????\ndosya boş. hiçbir anlamı yok. sorma.', 'C.O.W. = ????\nfile is empty. it means nothing. don\'t ask.'),
   'readme.md': () => L(
     '# dijital oda\n- duvara sprey sık (herkes görür, pazartesi silinir)\n- deftere not bırak\n- mp3 çalarda müzik dinle\n- oyun rafındaki kutuları aç\n- ...ve belki daha fazlası',
@@ -71,7 +71,7 @@ export function initTerminal() {
       say('  date · echo · history · clear · exit · login · admin', 'd');
     },
     whoami() {
-      say(L('kimlik ..... star  /  seviye ..... 21', 'id ..... star  /  level ..... 21'));
+      say(L(`kimlik ..... star  /  seviye ..... ${age()}`, `id ..... star  /  level ..... ${age()}`));
       say(L('sınıf ...... bilgisayar mühendisi (çırak)', 'class ...... computer engineer (apprentice)'));
       say(L('ana görev .. UltraTurk (baş geliştirici + çevirmen)', 'main quest .. UltraTurk (lead dev + translator)'));
       print(`${esc(L('konum', 'location'))} ..... <span class="err">[${esc(L('GİZLİ', 'CLASSIFIED'))}]</span>`);
@@ -234,6 +234,17 @@ export function initTerminal() {
     e.stopPropagation();
   });
   $('#termClose').addEventListener('click', close);
+
+  // Terminal 1 tuşunun solundaki tuşla açılır (konumu dinlenir, karakteri değil): ABD klavyesinde `, Türkçe Q'da ".
+  // Tarayıcı klavye düzenini söyleyebiliyorsa (Chrome / Edge) ipuçlarında o tuşun gerçek karakteri yazar.
+  const paintKey = (key) => {
+    document.querySelectorAll('[data-term-key]').forEach((el) => { el.textContent = key || '` / "'; });
+    $('#termClose').textContent = key ? `${key} / ESC ✕` : 'ESC ✕';
+  };
+  paintKey('');
+  navigator.keyboard?.getLayoutMap?.()
+    .then((map) => { const k = map.get('Backquote'); if (k && k.trim()) paintKey(k); })
+    .catch(() => { /* izin yok / desteklenmiyor */ });
 
   document.addEventListener('keydown', (e) => {
     if (e.code !== 'Backquote' || e.ctrlKey || e.metaKey || e.altKey) return;

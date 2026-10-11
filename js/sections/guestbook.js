@@ -29,6 +29,7 @@ export async function initGuestbook() {
   let sb = null;
   let notes = [];
   let total = 0;
+  let loaded = false;
 
   function noteHTML(n, k = 0) {
     const hsh = hashStr(String(n.id));
@@ -59,7 +60,42 @@ export async function initGuestbook() {
       notes = all.slice(0, n);
       total = all.length;
     }
+    loaded = true;
     render();
+  }
+
+  // Bağlantı defter görünmeye yaklaşınca kurulur: supabase-js sayfa açılışında yüklenmesin
+  let starting = null;
+  function start() {
+    if (!starting) {
+      starting = (async () => {
+        sb = await getSupabase();
+        await load();
+        if (sb) {
+          sb.channel('guestbook')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'guestbook' }, ({ new: row }) => {
+              if (notes.some((n) => n.id === row.id)) return;
+              notes.unshift(row); total++;
+              render();
+            })
+            .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'guestbook' }, ({ old }) => {
+              notes = notes.filter((n) => n.id !== old.id); total = Math.max(0, total - 1);
+              render();
+            })
+            .subscribe();
+        }
+      })();
+    }
+    return starting;
+  }
+
+  // Veritabanının reddetme nedeni ziyaretçinin dilinde (supabase/schema.sql > book_guard ve kısıtlar)
+  function reason(err) {
+    const m = String(err?.message || '');
+    if (/zaten asılı/.test(m)) return t('gb.dupe');
+    if (/kalabalık/.test(m)) return t('gb.busy');
+    if (/guestbook_clean_text|check constraint/i.test(m)) return t('gb.bad');
+    return t('gb.err');
   }
 
   box.addEventListener('click', (e) => { if (e.target.closest('#gbMore')) load(true); });
@@ -75,6 +111,7 @@ export async function initGuestbook() {
     const btn = form.querySelector('button[type="submit"]');
     btn.disabled = true;
     try {
+      await start();
       if (sb) {
         const row = { id: uuid(), name, message };
         const { error } = await sb.from('guestbook').insert(row);
@@ -95,30 +132,20 @@ export async function initGuestbook() {
       render();
     } catch (err) {
       console.warn('[guestbook]', err);
-      status.textContent = t('gb.err');
+      status.textContent = reason(err);
       API.sfx?.play('error');
     } finally {
       btn.disabled = false;
     }
   });
 
-  sb = await getSupabase();
-  await load();
-  if (sb) {
-    sb.channel('guestbook')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'guestbook' }, ({ new: row }) => {
-        if (notes.some((n) => n.id === row.id)) return;
-        notes.unshift(row); total++;
-        render();
-      })
-      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'guestbook' }, ({ old }) => {
-        notes = notes.filter((n) => n.id !== old.id); total = Math.max(0, total - 1);
-        render();
-      })
-      .subscribe();
-  }
-  onLang(render);
+  new IntersectionObserver(([e], io) => {
+    if (!e.isIntersecting) return;
+    io.disconnect();
+    start().catch((err) => console.warn('[guestbook]', err));
+  }, { rootMargin: '600px' }).observe(form.closest('.gb-grid') || form);
+  onLang(() => { if (loaded) render(); });
   // zaman etiketlerini yenile (notları yeniden çizmeden, animasyonlar baştan oynamasın)
   setInterval(() => box.querySelectorAll('[data-ts]').forEach((el) => { el.textContent = ago(el.dataset.ts); }), 60000);
-  API.guestbook = { count: () => total };
+  API.guestbook = { count: () => (loaded ? total : null) };
 }

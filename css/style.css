@@ -824,7 +824,7 @@ html[data-mode="drug"] .topbar-prog i { background: linear-gradient(90deg, var(-
 .fx-toggle { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 0 10px; border: 3px solid var(--line); background: var(--panel); color: var(--fg); font-size: 10px; transition: background-color .2s, color .2s, transform .3s var(--ease-out); }
 .fx-dot { width: 9px; height: 9px; background: var(--grey); }
 .fx-toggle[aria-pressed="true"] .fx-dot { background: var(--green); box-shadow: 0 0 0 2px var(--ink); animation: blink 1.4s steps(1) infinite; }
-.foot-fx { padding: 2px 6px; border: 2px solid var(--steel); background: transparent; color: var(--steel); font-size: 10px; }
+.foot-fx { min-height: 24px; padding: 2px 6px; border: 2px solid var(--steel); background: transparent; color: var(--steel); font-size: 10px; }
 @media (hover: hover) and (pointer: fine) {
   .fx-toggle:hover { background: var(--yellow); color: var(--ink); }
   .foot-fx:hover { background: var(--acid); border-color: var(--acid); color: var(--ink); }
@@ -1400,7 +1400,7 @@ html[data-mode="drug"] .foot-mq { background: var(--pink); color: #000; border-c
 html[data-mode="drug"] .foot-col { border-color: rgba(153, 229, 80, .35); }
 .foot-h { display: block; margin-bottom: 10px; font-size: 10px; color: var(--acid); }
 .foot-nav { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
-.foot-nav a { white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; color: var(--paper); font-family: var(--f-px); font-size: 12px; text-decoration: none; transition: color .15s, translate .25s var(--ease-out); }
+.foot-nav a { white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; padding-block: 4px; margin-block: -4px; color: var(--paper); font-family: var(--f-px); font-size: 12px; text-decoration: none; transition: color .15s, translate .25s var(--ease-out); }
 .foot-nav a::before { content: '▸'; color: var(--steel); transition: color .15s; }
 @media (hover: hover) and (pointer: fine) { .foot-nav a:hover { color: var(--yellow); translate: 6px 0; } .foot-nav a:hover::before { color: var(--yellow); } }
 .foot-nav a:focus-visible { outline: 2px dashed var(--acid); outline-offset: 3px; }
@@ -1420,8 +1420,9 @@ html[data-mode="drug"] .foot-scene { background: #07060d; border-top-color: var(
 @media (hover: none) { .room-hint { display: none; } }
 
 .foot-bar { position: relative; z-index: 2; align-items: center; }
+.term-key { padding: 0 4px; border: 1px solid currentColor; font: inherit; }
 .foot-legal { display: flex; flex-wrap: wrap; gap: 6px 16px; }
-.foot-legal a, .foot-legal button, .legal-foot a, .legal-foot button { padding: 0; border: 0; background: none; color: var(--paper); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.foot-legal a, .foot-legal button, .legal-foot a, .legal-foot button { padding: 4px 0; margin-block: -4px; border: 0; background: none; color: var(--paper); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .foot-legal a:hover, .foot-legal button:hover, .legal-foot a:hover, .legal-foot button:hover { color: var(--acid); }
 
 /* ---------- arşiv: buff'lanmış duvarlar ---------- */
@@ -1447,7 +1448,7 @@ html[data-mode="drug"] .foot-scene { background: #07060d; border-top-color: var(
 .ck-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ck-acts .btn, .ck-foot .btn { --sh: 4px; min-height: 44px; padding: 0 10px; font-size: 11px; }
 .ck-acts [data-ck="prefs"] { grid-column: 1 / -1; }
-.ck-link { align-self: flex-start; color: var(--fg); font-size: 10px; }
+.ck-link { align-self: flex-start; padding-block: 5px; margin-block: -5px; color: var(--fg); font-size: 10px; }
 .ck-modal { position: fixed; inset: 0; z-index: 91; display: grid; place-items: center; padding: 16px; background: rgba(34, 32, 52, .72); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
 .ck-modal[hidden] { display: none; }
 .ck-card { display: flex; flex-direction: column; width: min(740px, 100%); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); border: var(--b) solid var(--line); background: var(--panel); color: var(--fg); box-shadow: 12px 12px 0 var(--shadow); }
@@ -1689,19 +1690,19 @@ html.trip-melt body::after {
 .mini-mp3.roomy.open .mm-body { border-left: var(--b) solid var(--ink); border-radius: 18px; }
 .mm-head { display: flex; align-items: center; justify-content: space-between; }
 .mm-brand { font-size: 10px; font-weight: 700; }
-.mm-x { width: 22px; height: 22px; padding: 0; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 9px; transition: background-color .15s, color .15s; }
+.mm-x { width: 24px; height: 24px; padding: 0; border: 2px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 9px; transition: background-color .15s, color .15s; }
 .mm-screen { display: flex; flex-direction: column; gap: 4px; padding: 8px 8px 10px; border: 3px solid var(--ink); border-radius: 6px; background: var(--ink); color: var(--paper); box-shadow: inset 0 0 0 2px var(--navy); }
 .mm-state { overflow: hidden; color: var(--acid); font-size: 8px; white-space: nowrap; text-overflow: ellipsis; }
 .mm-art { align-self: center; width: 100%; aspect-ratio: 1; padding: 0; border: 2px solid var(--paper); background: repeating-linear-gradient(45deg, var(--navy) 0 6px, var(--ink) 6px 12px); }
 .mm-art img { display: block; width: 100%; height: 100%; }
 .mm-art img:not([src]) { visibility: hidden; }
-.mm-title { display: block; overflow: hidden; margin-top: 2px; padding: 0; border: 0; background: none; color: var(--paper); font-size: 14px; font-stretch: 100%; font-weight: 800; line-height: 1.1; text-align: left; white-space: nowrap; }
+.mm-title { display: block; overflow: hidden; margin: -3px 0 -5px; padding: 5px 0; border: 0; background: none; color: var(--paper); font-size: 14px; font-stretch: 100%; font-weight: 800; line-height: 1.1; text-align: left; white-space: nowrap; }
 .mm-t { display: inline-flex; }
 .mm-title.long .mm-t { animation: mq 8s linear infinite; }
 .mm-title.long .mm-t > span { padding-right: 30px; }
 .mm-artist { overflow: hidden; color: var(--ice); font-size: 16px; line-height: 1; white-space: nowrap; text-overflow: ellipsis; }
 .mm-bar { position: relative; height: 4px; margin-top: 5px; background: var(--navy); cursor: pointer; }
-.mm-bar::before { content: ''; position: absolute; inset: -7px 0; }
+.mm-bar::before { content: ''; position: absolute; inset: -10px 0; }
 .mm-bar i { position: absolute; inset: 0; background: var(--acid); transform-origin: 0 50%; transform: scaleX(0); transition: transform .25s linear; }
 .mm-bar:focus-visible { outline: 2px dashed var(--paper); outline-offset: 3px; }
 .mm-ctrl { display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 5px; }

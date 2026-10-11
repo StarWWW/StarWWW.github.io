@@ -57,6 +57,21 @@ export function purgeStore() {
   } catch { /* yok */ }
 }
 
+// Sürümlü dosya adresi: yayinla.ps1'in sayfaya yazdığı import map'ten (?v=...), harita yoksa düz adres.
+// JS'in sonradan eklediği CSS dosyaları da yayından sonra eski kopyaya takılmasın diye.
+export function assetURL(path) {
+  try { if (typeof import.meta.resolve === 'function') return import.meta.resolve(path); } catch { /* eski tarayıcı */ }
+  return new URL(path, location.href).href;
+}
+
+// Spotify albüm kapakları 640, 300 ve 64 piksellik sürümlerle gelir; adresteki boyut kodu değiştirilerek seçilir.
+// (8-bit kapaklar 32 px'e indiği için 640'lık ~200 KB yerine 64'lük ~3 KB'lık sürüm yeter)
+const SP_SIZE = { 64: 'ab67616d00004851', 300: 'ab67616d00001e02', 640: 'ab67616d0000b273' };
+export function spImg(url, size) {
+  const m = String(url || '').match(/^(https:\/\/i\.scdn\.co\/image\/)(?:ab67616d00004851|ab67616d00001e02|ab67616d0000b273)([0-9a-f]{24})$/);
+  return m && SP_SIZE[size] ? m[1] + SP_SIZE[size] + m[2] : url;
+}
+
 export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
@@ -73,6 +88,18 @@ export function h(tag, attrs = {}, ...kids) {
   }
   for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
   return el;
+}
+
+// Açık bir pencerede Tab / Shift+Tab odağı pencerenin içinde döndürür (keydown içinden çağrılır)
+export function keepFocus(e, root) {
+  if (e.key !== 'Tab') return;
+  const list = [...root.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea, select, [tabindex]:not([tabindex="-1"])')]
+    .filter((el) => el.getClientRects().length);
+  if (!list.length) return;
+  const first = list[0];
+  const last = list[list.length - 1];
+  if (e.shiftKey && (document.activeElement === first || !root.contains(document.activeElement))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && (document.activeElement === last || !root.contains(document.activeElement))) { e.preventDefault(); first.focus(); }
 }
 
 export function toast(msg, ms = 2600, { sound = true } = {}) {

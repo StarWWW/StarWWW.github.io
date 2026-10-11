@@ -13,6 +13,7 @@ import { initConsent } from './consent.js';
 import { initFooter } from './sections/footer.js';
 import { initDrug } from './drug.js';
 import { initSfx } from './sfx.js';
+import { age } from './config.js';
 
 // ---------- mod: REAL / DRUG ----------
 // DRUG avatarı (animasyonlu WebP) sadece gerekince yüklenir; REAL modda hiç indirilmez
@@ -36,11 +37,21 @@ function setMode(mode, announce = true) {
 }
 API.setMode = setMode;
 
+// ---------- yaş + yıl ----------
+// HTML'deki ve çevirilerdeki <span data-age> / <span data-year> yerleri config.js'ten doldurulur
+function paintAge() {
+  const a = String(age());
+  $$('[data-age]').forEach((el) => { el.textContent = a; });
+  $$('[data-age-count]').forEach((el) => { el.dataset.count = a; el.textContent = a; });
+  const y = String(new Date().getFullYear());
+  $$('[data-year]').forEach((el) => { el.textContent = y; });
+}
+
 // ---------- ticker ----------
 function buildTicker() {
   const words = document.documentElement.lang === 'en'
-    ? ['STAR', '21 Y/O', 'COMPUTER ENGINEERING', 'ULTRATURK', 'ULTRAKILL TURKISH DUB', 'PIXEL ART', 'GAMER', 'MUSIC ADDICT', 'EVERY HELLO COMES WITH A GOODBYE']
-    : ['STAR', '21 YAŞ', 'BİLGİSAYAR MÜHENDİSLİĞİ', 'ULTRATURK', 'ULTRAKILL TÜRKÇE DUBLAJ', 'PIXEL ART', 'OYUNCU', 'MÜZİK BAĞIMLISI', 'EVERY HELLO COMES WITH A GOODBYE'];
+    ? ['STAR', `${age()} Y/O`, 'COMPUTER ENGINEERING', 'ULTRATURK', 'ULTRAKILL TURKISH DUB', 'PIXEL ART', 'GAMER', 'MUSIC ADDICT', 'EVERY HELLO COMES WITH A GOODBYE']
+    : ['STAR', `${age()} YAŞ`, 'BİLGİSAYAR MÜHENDİSLİĞİ', 'ULTRATURK', 'ULTRAKILL TÜRKÇE DUBLAJ', 'PIXEL ART', 'OYUNCU', 'MÜZİK BAĞIMLISI', 'EVERY HELLO COMES WITH A GOODBYE'];
   // DRUG modunda araya gizli mesajlar karışır
   const secret = document.documentElement.dataset.mode === 'drug' ? (API.drug?.tickerWords?.() || []) : [];
   const all = secret.length ? words.flatMap((w, i) => (secret[i] ? [w, secret[i]] : [w])) : words;
@@ -103,7 +114,7 @@ function initKonami() {
     pos = e.code === KONAMI[pos] ? pos + 1 : (e.code === KONAMI[0] ? 1 : 0);
     if (pos === KONAMI.length) { pos = 0; startGame(); }
   });
-  // klavyesi olmayanlar için gizli kapı: LVL 21 çıkartmasına art arda 5 kez dokun
+  // klavyesi olmayanlar için gizli kapı: LVL çıkartmasına art arda 5 kez dokun
   const sticker = $('.lvl-sticker');
   let taps = [];
   sticker?.addEventListener('click', () => {
@@ -141,42 +152,57 @@ function initCursors() {
 }
 
 // ---------- başlat ----------
+// Her bölüm ayrı başlar: biri hata verirse (ya da yayından hemen sonra önbellekte eski bir dosya kalırsa)
+// sayfanın geri kalanı yine çalışır. async bölümlerin hatası da yakalanır.
+function safe(name, fn) {
+  try {
+    const r = fn();
+    if (r && typeof r.catch === 'function') r.catch((err) => console.error(`[${name}]`, err));
+  } catch (err) {
+    console.error(`[${name}]`, err);
+  }
+}
+
 function boot() {
-  initConsent();
-  initSfx({ label: (on) => t(on ? 'sfx.on' : 'sfx.off') });
+  safe('çerez', initConsent);
+  safe('ses', () => initSfx({ label: (on) => t(on ? 'sfx.on' : 'sfx.off') }));
   onLang(() => API.sfxPaint?.());
-  applyI18n();
-  hydrateSprites();
-  buildTicker();
-  onLang(buildTicker);
-  setMode(document.documentElement.dataset.mode, false);
-  initCursors();
-  initNav();
+  safe('dil', applyI18n);
+  safe('yaş', paintAge);
+  onLang(() => safe('yaş', paintAge));
+  safe('sprite', hydrateSprites);
+  safe('şerit', buildTicker);
+  onLang(() => safe('şerit', buildTicker));
+  safe('mod', () => setMode(document.documentElement.dataset.mode, false));
+  safe('imleç', initCursors);
+  safe('menü', initNav);
 
   const flipMode = () => {
     const next = document.documentElement.dataset.mode === 'drug' ? 'real' : 'drug';
     if (API.fx?.pixelSwap) API.fx.pixelSwap(() => setMode(next)); else setMode(next);
   };
   API.flipMode = flipMode;
-  $('#modeToggle').addEventListener('click', flipMode);
-  ['pointerenter', 'focus'].forEach((ev) => $('#modeToggle').addEventListener(ev, loadDrugAvatar, { once: true }));
-  $$('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
-  $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => { API.sfx?.play('copy'); toast(t('ft.copied'), 2600, { sound: false }); }));
-  $('#ctaTerm').addEventListener('click', () => API.terminal?.open());
-  $('#ctaSpray').addEventListener('click', () => API.wall?.focus());
+  safe('düğmeler', () => {
+    $('#modeToggle').addEventListener('click', flipMode);
+    ['pointerenter', 'focus'].forEach((ev) => $('#modeToggle').addEventListener(ev, loadDrugAvatar, { once: true }));
+    $$('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+    $('#copyDiscord').addEventListener('click', () => copyText('stariscrazy').then(() => { API.sfx?.play('copy'); toast(t('ft.copied'), 2600, { sound: false }); }));
+    $('#ctaTerm').addEventListener('click', () => API.terminal?.open());
+    $('#ctaSpray').addEventListener('click', () => API.wall?.focus());
+  });
 
-  initTerminal();
-  initKonami();
-  init2048();
-  initUltraturkIntro();
-  initRepos();
-  initSkills();
-  initShelf();
-  initMusic();
-  initWall();
-  initGuestbook();
-  initFooter();
-  initDrug();
+  safe('terminal', initTerminal);
+  safe('konami', initKonami);
+  safe('2048', init2048);
+  safe('ultraturk', initUltraturkIntro);
+  safe('repolar', initRepos);
+  safe('envanter', initSkills);
+  safe('raf', initShelf);
+  safe('müzik', initMusic);
+  safe('duvar', initWall);
+  safe('defter', initGuestbook);
+  safe('footer', initFooter);
+  safe('drug', initDrug);
 
   // GitHub girişinden dönüş: ?admin&code=... (ya da hata: ?error_description=... / #error_description=...)
   const qs = new URLSearchParams(location.search);
@@ -184,7 +210,7 @@ function boot() {
   window.addEventListener('hashchange', () => { if (location.hash === '#admin') openAdmin(); });
 
   store.set('star.visits', (store.get('star.visits', 0) || 0) + 1);
-  initFx();
+  safe('fx', initFx);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
